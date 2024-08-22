@@ -86,10 +86,36 @@ const AddAssetForm = () => {
   };
 
   const handleSubmit = async (event) => {
-    
+      // const testData={
+      //   "assetTag": "ASSET123456",
+      //   "nodeName": "Node-1",
+      //   "serialNumber": "SN123456789",
+      //   "manufacturer": "Dell",
+      //   "type": "Laptop",
+      //   "model": "Latitude 7490",
+      //   "expires": "2025-12-31T00:00:00.000Z",
+      //   "category": "Electronics",
+      //   "status": "New Purchase",
+      //   "department": "IT",
+      //   "issueTo": "64e2f1b2f8d23e4d28a7c12a", 
+      //   "note": "Assigned to new employee.",
+      //   "defaultLocation": "Head Office",
+      //   "costCenter": "IT-2024",
+      //   "receivedDate": "2024-08-20T00:00:00.000Z",
+      //   "assetOwner": "John Doe",
+      //   "condition": "Excellent",
+      //   "storeLocation": "Warehouse A",
+      //   "killdiskDate": "2024-12-31T00:00:00.000Z",
+      //   "attachedFile": "manual.pdf",
+      //   "disposedDate": null,
+      //   "poNumber": "PO987654321",
+      //   "order": "Order123456",
+      //   "purchaseDate": "2024-08-01T00:00:00.000Z"
+      // }
+      
     event.preventDefault();
     try {
-      const response = await fetch("/api/assets", {
+      const response = await fetch("/api/asset/post", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

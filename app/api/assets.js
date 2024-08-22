@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   switch (method) {
     case "GET":
       try {
-        const assets = await Asset.find({}); // Fetch all assets
+        const assets = await Asset.find({}); 
         res.status(200).json({ success: true, data: assets });
       } catch (error) {
         res.status(400).json({ success: false });
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       break;
     case "POST":
       try {
-        const asset = await Asset.create(req.body); // Create a new asset
+        const asset = await Asset.create(req.body); 
         res.status(201).json({ success: true, data: asset });
       } catch (error) {
         res.status(400).json({ success: false, error: error.message });

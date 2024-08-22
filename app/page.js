@@ -3,8 +3,20 @@ import { IoMail } from "react-icons/io5";
 import { BiWorld } from "react-icons/bi";
 import dbConnect from "../lib/dbConnect";
 
+const connectDb = async () => {
+  try {
+    await dbConnect();
+    console.log("Connected to server!");
+    return true;
+  } catch (e) {
+    console.log("Failed to connect to server!", e);
+    return false;
+  }
+};
+
+
 export default async function Home() {
-  const isConnected = await dbConnect();
+  const isConnected = await connectDb();
   if (!isConnected) {
     return <p> Oops we are sorry !!</p>;
   }
