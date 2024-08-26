@@ -144,6 +144,11 @@ const Sidebar = () => {
           </li>
           <li className="my-2">
             <a href="#" className="text-gray-400 hover:text-white">
+              Deleted
+            </a>
+          </li>
+          <li className="my-2">
+            <a href="#" className="text-gray-400 hover:text-white">
               Imports
             </a>
           </li>

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 const AssetSchema = new mongoose.Schema({
-  assetTag: { type: String, required: true },
+  assetTag: { type: String },
   nodeName: String,
   serialNumber: {
     type: String,
