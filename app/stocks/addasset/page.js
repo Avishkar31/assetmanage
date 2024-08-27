@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Sidebar from "@/components/Sidebar";
-import axios from "axios";
 import {
   IoCloseSharp,
   IoMdAdd,
@@ -15,7 +14,7 @@ const AddAssetForm = () => {
   const [formData, setFormData] = useState({
     assetTag: "", // Asset Tag number, auto-incremented and fetched from the server
     nodeName: "", // Name of the node
-    manufacturer: "Default", // Manufacturer of the asset
+    manufacturer: "", // Manufacturer of the asset
     serialNumber: "", // Serial number of the asset
     type: "", // Type of the asset (e.g., laptop, desktop)
     model: "", // Model of the asset
@@ -199,13 +198,14 @@ const AddAssetForm = () => {
 
   // Handle form submission
   const handleSubmit = async () => {
+   let  formDataFinal = Object.fromEntries(Object.entries(formData).filter(([_, v]) => v !== ""));
     try {
       const response = await fetch("/api/asset/post", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(formDataFinal)
       });
       if (response.ok) {
         alert("Asset added successfully");
@@ -234,8 +234,8 @@ const AddAssetForm = () => {
               <IoCloseSharp />
             </div> */}
           </div>
-          {/* Asset Tag */}
-          <div className="mb-4">
+          {/* Asset Tag  and button to add duplicate with same data */}
+          {/* <div className="mb-4">
             <div className="flex items-center">
               <label htmlFor="assetTag" className="w-52 text-gray-500 mr-2">
                 Asset Tag
@@ -246,7 +246,6 @@ const AddAssetForm = () => {
                 value={formData.assetTag} // Ensure formData.assetTag has a value
                 onChange={handleInputChange} // Remove this if the input should remain read-only
                 className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-                readOnly // Remove this if the input should be editable
               />
               <button
                 // onClick={handleAddAsset} // Ensure this function is correctly implemented
@@ -256,7 +255,7 @@ const AddAssetForm = () => {
                 <IoMdAdd />
               </button>
             </div>
-          </div>
+          </div> */}
 
           {/* Node Name */}
           <div className="mb-4">
@@ -397,7 +396,7 @@ const AddAssetForm = () => {
                 onChange={handleSelectChange}
                 className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
               >
-                <option value="default">Default</option>
+                <option value="">Default</option>
                 <option value="desktop">Desktop</option>
                 <option value="laptop">Laptop</option>
                 <option value="monitor">Monitor</option>
