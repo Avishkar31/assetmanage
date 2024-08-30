@@ -1,7 +1,6 @@
 import mongoose from "mongoose";
 
 const AssetSchema = new mongoose.Schema({
-  assetTag: { type: String },
   nodeName: String,
   serialNumber: {
     type: String,
@@ -24,10 +23,11 @@ const AssetSchema = new mongoose.Schema({
       "Inactive",
       "Deployed"
     ],
-    default: "Inpool"
+    default: ""
   },
   department: String,
-  issueTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  issueTo:{type: String},
+  // { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   note: String,
   defaultLocation: String,
   costCenter: String,
@@ -36,7 +36,7 @@ const AssetSchema = new mongoose.Schema({
   condition: {
     type: String,
     enum: ["Excellent", "Good", "Fair", "Bad"],
-    default: "Excellent"
+    default: ""
   },
   storeLocation: String,
   killdiskDate: Date,
