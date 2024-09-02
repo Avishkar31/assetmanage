@@ -38,12 +38,10 @@ export default async function handler(req, res) {
         // Validate required fields (you can customize this based on your schema)
         const { assetTag, nodeName } = req.body;
         if (!assetTag || !nodeName) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              error: "Asset tag and node name are required."
-            });
+          return res.status(400).json({
+            success: false,
+            error: "Asset tag and node name are required."
+          });
         }
 
         // Create a new asset

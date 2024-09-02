@@ -27,14 +27,14 @@ export default async function Home() {
         autoPlay
         muted
         loop
-        className="absolute z-0 top-0 left-0 w-full h-full object-cover"
+        className="absolute top-0 left-0 w-full h-full object-cover z-0"
       >
         <source src="/videos/bgvideo.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
 
       {/* Header Section */}
-      <header className="w-full h-20 z-10 p-4 md:p-8 flex justify-between items-center text-white bg-black bg-opacity-75 fixed top-0">
+      <header className="w-full h-20 z-30 p-4 md:p-8 flex justify-between items-center text-white bg-black bg-opacity-75 fixed top-0">
         <div className="flex items-center">
           <img
             src="https://www.siemens.com/img/svg/logo-dark-3958fff2.svg"
@@ -75,7 +75,7 @@ export default async function Home() {
       </header>
 
       {/* Navigation Section */}
-      <nav className="flex justify-evenly z-10 py-4 md:py-8 bg-black bg-opacity-75 shadow-md fixed inset-x-0 top-20 w-full">
+      <nav className="flex justify-evenly z-20 py-4 md:py-8 bg-black bg-opacity-75 shadow-md fixed inset-x-0 top-20 w-full">
         <ul className="flex space-x-4 md:space-x-8 text-white">
           <li className="cursor-pointer">
             <Link href="/">Home</Link>
@@ -139,7 +139,7 @@ export default async function Home() {
       </div>
 
       {/* Footer Section */}
-      <footer className="fixed right-4 bottom-4 z-10 text-white">
+      <footer className="fixed right-4 bottom-4 z-30 text-white">
         <button className="w-40 md:w-52 h-10 md:h-12 bg-teal-600 border-none rounded cursor-pointer">
           <a
             href="http://"

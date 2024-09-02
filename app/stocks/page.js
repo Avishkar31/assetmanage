@@ -1,6 +1,10 @@
 "use client";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar"
+import Sidebar from "@/components/Sidebar";
+import SimpleRadialBarChart from "@/components/SimpleRadialBarChart";
+import ManufacturerPieChart from "@/components/ManufacturerPieChart";
+import StackedBarChart from "@/components/StackedBarChart";
+import AssetTimeline from "@/components/AssetTimeline";
 import { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 
@@ -17,7 +21,6 @@ function Page() {
       setter(false);
     }
   };
-
 
   useEffect(() => {
     if (isReportsOpen) {
@@ -39,12 +42,10 @@ function Page() {
     };
   }, [isReportsOpen]);
 
-
-
   return (
     <main>
       <div className="flex h-screen bg-gray-900 text-white">
-        <Sidebar/>
+        <Sidebar />
         <div className="flex-1 p-5 overflow-y-auto">
           <header className="flex justify-between items-center mb-5">
             <div>
@@ -148,19 +149,28 @@ function Page() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
             <div className="bg-gray-800 p-5 rounded-lg">
               <h2 className="text-lg mb-3">Assets Timeline</h2>
-              <canvas id="lineChart" height="150"></canvas>
+              <div>
+                <AssetTimeline />
+              </div>
+              
             </div>
             <div className="bg-gray-800 p-5 rounded-lg">
               <h2 className="text-lg mb-3">Category wise Assets</h2>
-              <canvas id="pieChart" height="150"></canvas>
+              <div>
+                <StackedBarChart />
+              </div>
             </div>
             <div className="bg-gray-800 p-5 rounded-lg">
               <h2 className="text-lg mb-3">Assets Department Wise</h2>
-              <canvas id="barChart" height="150"></canvas>
+              <div>
+                <SimpleRadialBarChart />
+              </div>
             </div>
             <div className="bg-gray-800 p-5 rounded-lg">
               <h2 className="text-lg mb-3">Manufacturer Wise</h2>
-              <canvas id="pieChart2" height="150"></canvas>
+              <div>
+                <ManufacturerPieChart />
+              </div>
             </div>
           </div>
         </div>
