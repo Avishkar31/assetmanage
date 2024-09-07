@@ -47,25 +47,7 @@ const view = () => {
                 </div>
               )}
             </div>
-            <div className="relative">
-              <button className="bg-teal-600 text-white px-4 py-2 rounded-lg">
-                Download Reports
-              </button>
-              <div className="absolute right-0 bg-gray-800 shadow-lg rounded-lg mt-2 w-48">
-                <a href="#" className="block py-2 px-4 hover:bg-gray-700">
-                  Report 1
-                </a>
-                <a href="#" className="block py-2 px-4 hover:bg-gray-700">
-                  Report 2
-                </a>
-                <a href="#" className="block py-2 px-4 hover:bg-gray-700">
-                  Report 3
-                </a>
-                <a href="#" className="block py-2 px-4 hover:bg-gray-700">
-                  Report 4
-                </a>
-              </div>
-            </div>
+            
             <div className="text-white cursor-pointer" title="logout">
               <i className="fa-solid fa-arrow-right-from-bracket"></i>
             </div>
@@ -153,6 +135,12 @@ const view = () => {
               className="py-2.5 px-5 mb-2 w-80 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
             >
               Update
+            </button>
+            <button
+              type="button"
+              className="py-2.5 px-5 mb-2 w-80 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+            >
+              Request to allocate
             </button>
             <button
               type="button"

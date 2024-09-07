@@ -42,6 +42,8 @@ const AddAssetForm = () => {
   const [openSection, setOpenSection] = useState("");
   // State to manage the loading indicator for the serial number
   const [showLoader, setShowLoader] = useState(false);
+  // State to manage duplicate serial number error
+  const [duplicateError, setDuplicateError] = useState("");
 
   const dropdownRef = useRef(null); // Reference to the dropdown for click detection
 
@@ -198,23 +200,24 @@ const AddAssetForm = () => {
 
   // Handle form submission
   const handleSubmit = async () => {
-   let  formDataFinal = Object.fromEntries(Object.entries(formData).filter(([_, v]) => v !== ""));
     try {
+      const formDataFinal = Object.fromEntries(
+        Object.entries(formData).filter(([_, v]) => v !== "")
+      );
+
       const response = await fetch("/api/asset/post", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formDataFinal)
       });
+
       if (response.ok) {
+        await response.json();
         alert("Asset added successfully");
-      } else {
-        
-        alert("Failed to add asset");
       }
     } catch (error) {
-      console.log("Error submitting form:", error);
+      console.error("Error submitting form:", error);
+      alert(`Error: ${error.message}`);
     }
   };
 
