@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import AssetTable from "@/components/table/AssetTable";
+import Sidebar from "@/components/Sidebar";
 
 export default function AllAssetsPage() {
   const [assets, setAssets] = useState([]);
@@ -33,8 +34,23 @@ export default function AllAssetsPage() {
   // if (error) return <p className="text-red-500">Error: {error}</p>;
 
   return (
-    <div className="p-4">
-      <AssetTable />
+    <div className="flex">
+      <Sidebar />
+      <div className="flex-grow p-5 rounded-lg">
+        <header className="flex justify-between items-center mb-5">
+          <h1 className="text-2xl">All Asset</h1>
+          <div className="">
+            <button className="w-28 md:w-28 h-10 md:h-12 bg-teal-600 border-none rounded cursor-pointer">
+              Add Asset
+            </button>
+          </div>
+        </header>
+        <div className="bg-gray-800 p-3 rounded-lg w-full mx-auto">
+          <div className="flex justify-between items-center mb-5">
+            <AssetTable />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

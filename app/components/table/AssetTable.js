@@ -3,167 +3,208 @@ import {
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  SortingFn,
-  SortingState,
   useReactTable
 } from "@tanstack/react-table";
 import React from "react";
-import testData from "./testData";
-
-//custom sorting logic for one of our enum columns
-const sortStatusFn = (rowA, rowB, _columnId) => {
-  const statusA = rowA.original.status;
-  const statusB = rowB.original.status;
-  const statusOrder = ["single", "complicated", "relationship"];
-  return statusOrder.indexOf(statusA) - statusOrder.indexOf(statusB);
-};
+import testData from "./testData"; // Replace with your actual data source
 
 function AssetTable() {
   const rerender = React.useReducer(() => ({}), {})[1];
-
   const [sorting, setSorting] = React.useState([]);
 
   const columns = React.useMemo(
     () => [
       {
-        accessorKey: "SerialNumber",
+        accessorKey: "nodeName",
+        header: "Node Name", // Custom header for nodeName
         cell: (info) => info.getValue()
-        //this column will sort in ascending order by default since it is a string column
       },
       {
-        accessorFn: (row) => row.lastName,
-        id: "manufacturer",
-        cell: (info) => info.getValue(),
-        header: () => <span>Manufacturer</span>,
-        sortUndefined: "manufacturer", //force undefined values to the end
-        sortDescFirst: false //first sort order will be ascending (nullable values can mess up auto detection of sort order)
+        accessorKey: "serialNumber",
+        header: "Serial Number", // Custom header for serialNumber
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "manufacturer",
+        header: "Manufacturer", // Custom header for manufacturer
+        cell: (info) => info.getValue()
       },
       {
         accessorKey: "type",
-        header: () => "Type"
-        //this column will sort in descending order by default since it is a number column
+        header: "Type", // Custom header for type
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "model",
+        header: "Model", // Custom header for model
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "expires",
+        header: "Expiration Date", // Custom header for expires
+        cell: (info) => new Date(info.getValue()).toLocaleDateString()
       },
       {
         accessorKey: "category",
-        header: () => <span>Category</span>,
-        sortUndefined: "last" //force undefined values to the end
+        header: "Category", // Custom header for category
+        cell: (info) => info.getValue()
       },
       {
         accessorKey: "status",
-        header: "Status",
-        sortingFn: sortStatusFn //use our custom sorting function for this enum column
+        header: "Status", // Custom header for status
+        cell: (info) => info.getValue()
       },
       {
-        accessorKey: "progress",
-        header: "Profile Progress"
-        // enableSorting: false, //disable sorting for this column
+        accessorKey: "department",
+        header: "Department", // Custom header for department
+        cell: (info) => info.getValue()
       },
       {
-        accessorKey: "rank",
-        header: "Rank",
-        invertSorting: true //invert the sorting order (golf score-like where smaller is better)
+        accessorKey: "issueTo",
+        header: "Issued To", // Custom header for issueTo
+        cell: (info) => info.getValue()
       },
       {
-        accessorKey: "createdAt",
-        header: "Created At"
-        // sortingFn: 'datetime' //make sure table knows this is a datetime column (usually can detect if no null values)
+        accessorKey: "note",
+        header: "Notes", // Custom header for note
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "defaultLocation",
+        header: "Default Location", // Custom header for defaultLocation
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "costCenter",
+        header: "Cost Center", // Custom header for costCenter
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "receivedDate",
+        header: "Received Date", // Custom header for receivedDate
+        cell: (info) => new Date(info.getValue()).toLocaleDateString()
+      },
+      {
+        accessorKey: "assetOwner",
+        header: "Asset Owner", // Custom header for assetOwner
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "condition",
+        header: "Condition", // Custom header for condition
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "storeLocation",
+        header: "Store Location", // Custom header for storeLocation
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "killdiskDate",
+        header: "Killdisk Date", // Custom header for killdiskDate
+        cell: (info) => new Date(info.getValue()).toLocaleDateString()
+      },
+      {
+        accessorKey: "attachedFile",
+        header: "Attached File", // Custom header for attachedFile
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "disposedDate",
+        header: "Disposed Date", // Custom header for disposedDate
+        cell: (info) => new Date(info.getValue()).toLocaleDateString()
+      },
+      {
+        accessorKey: "poNumber",
+        header: "PO Number", // Custom header for poNumber
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "order",
+        header: "Order", // Custom header for order
+        cell: (info) => info.getValue()
+      },
+      {
+        accessorKey: "purchaseDate",
+        header: "Purchase Date", // Custom header for purchaseDate
+        cell: (info) => new Date(info.getValue()).toLocaleDateString()
+      },
+      {
+        accessorKey: "action",
+        header: "Action",
+        cell: () => (
+          <div className="flex space-x-2">
+            <button className="bg-blue-500 text-white px-2 py-1 rounded">
+              Update
+            </button>
+            <button className="bg-red-500 text-white px-2 py-1 rounded">
+              Delete
+            </button>
+          </div>
+        )
       }
     ],
     []
   );
 
-  const [data, setData] = React.useState(testData);
-  const refreshData = () => setData(testData); //stress test with 100k rows
+  const [data, setData] = React.useState(testData); // Use your actual data here
 
   const table = useReactTable({
     columns,
     data,
-    debugTable: true,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(), //client-side sorting
-    onSortingChange: setSorting, //optionally control sorting state in your own scope for easy access
-    // sortingFns: {
-    //   sortStatusFn, //or provide our custom sorting function globally for all columns to be able to use
-    // },
-    //no need to pass pageCount or rowCount with client-side pagination as it is calculated automatically
+    getSortedRowModel: getSortedRowModel(),
+    onSortingChange: setSorting,
     state: {
       sorting
     }
-    // autoResetPageIndex: false, // turn off page index reset when sorting or filtering - default on/true
-    // enableMultiSort: false, //Don't allow shift key to sort multiple columns - default on/true
-    // enableSorting: false, // - default on/true
-    // enableSortingRemoval: false, //Don't allow - default on/true
-    // isMultiSortEvent: (e) => true, //Make all clicks multi-sort - default requires `shift` key
-    // maxMultiSortColCount: 3, // only allow 3 columns to be sorted at once - default is Infinity
   });
-
-  //access sorting state from the table instance
-  console.log(table.getState().sorting);
 
   return (
     <div className="p-2">
-      <div className="h-2" />
       <table>
         <thead>
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <th key={header.id} colSpan={header.colSpan}>
-                    {header.isPlaceholder ? null : (
-                      <div
-                        className={
-                          header.column.getCanSort()
-                            ? "cursor-pointer select-none"
-                            : ""
-                        }
-                        onClick={header.column.getToggleSortingHandler()}
-                        title={
-                          header.column.getCanSort()
-                            ? header.column.getNextSortingOrder() === "asc"
-                              ? "Sort ascending"
-                              : header.column.getNextSortingOrder() === "desc"
-                              ? "Sort descending"
-                              : "Clear sort"
-                            : undefined
-                        }
-                      >
-                        {flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                        {{
-                          asc: " 🔼",
-                          desc: " 🔽"
-                        }[header.column.getIsSorted()] ?? null}
-                      </div>
-                    )}
-                  </th>
-                );
-              })}
+              {headerGroup.headers.map((header) => (
+                <th key={header.id} colSpan={header.colSpan}>
+                  {header.isPlaceholder ? null : (
+                    <div
+                      className={
+                        header.column.getCanSort()
+                          ? "cursor-pointer select-none"
+                          : ""
+                      }
+                      onClick={header.column.getToggleSortingHandler()}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {{
+                        asc: " 🔼",
+                        desc: " 🔽"
+                      }[header.column.getIsSorted()] ?? null}
+                    </div>
+                  )}
+                </th>
+              ))}
             </tr>
           ))}
         </thead>
         <tbody>
           {table
             .getRowModel()
-            .rows.slice(0, 10)
-            .map((row) => {
-              return (
-                <tr key={row.id}>
-                  {row.getVisibleCells().map((cell) => {
-                    return (
-                      <td key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+            .rows.slice(0, 10) // Limiting to 10 rows for simplicity
+            .map((row) => (
+              <tr key={row.id}>
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
         </tbody>
       </table>
     </div>
