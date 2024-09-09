@@ -11,14 +11,15 @@ export default function AllAssetsPage() {
   useEffect(() => {
     async function fetchAssets() {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BASE_URL}/api/assets`
-        );
+        const res = await fetch(`/api/asset/getAll`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" }
+        });
         if (!res.ok) {
           throw new Error("Failed to fetch assets");
         }
-        const data = await res.json();
-        setAssets(data);
+        const tblData = await res.json();
+        setAssets(tblData.data);
       } catch (error) {
         console.error("Error fetching assets:", error);
         setError(error.message || "An unexpected error occurred.");
@@ -26,13 +27,14 @@ export default function AllAssetsPage() {
         setLoading(false);
       }
     }
-
-    // fetchAssets();
+    fetchAssets();
   }, []);
 
-  // if (loading) return <p>Loading assets...</p>;
-  // if (error) return <p className="text-red-500">Error: {error}</p>;
+  if (loading) return <p>Loading assets...</p>;
+  if (error) return <p className="text-red-500">Error: {error}</p>;
 
+
+  console.log("assets",assets)
   return (
     <div className="flex min-h-screen">
       <Sidebar />
@@ -47,7 +49,7 @@ export default function AllAssetsPage() {
         </header>
         <div className="bg-gray-800 p-3 rounded-lg overflow-x-auto">
           <div className="w-1/2">
-            <AssetTable />
+            <AssetTable  assetData={assets} />
           </div>
         </div>
       </div>
