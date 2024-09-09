@@ -99,7 +99,7 @@ const Dashboard = () => {
                 <i className="fas fa-times"></i>
               </div>
             </header>
-            <form>
+            
               <div className="mb-4">
                 <div className="flex items-center mb-2">
                   <label htmlFor="nodeName" className="w-52 text-gray-500 mr-2">
@@ -240,7 +240,7 @@ const Dashboard = () => {
                   Checkin to {formData.issueTo || "Username"}
                 </button>
               </div>
-            </form>
+            
           </div>
         </div>
       </div>

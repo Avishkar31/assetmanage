@@ -233,9 +233,6 @@ const AddAssetForm = () => {
         <div className="bg-gray-800 p-8 rounded-lg w-[90%] mx-auto">
           <div className="flex justify-between items-center mb-5">
             <h2 className="text-xl">Adding Asset</h2>
-            {/* <div className="cursor-pointer text-3xl ">
-              <IoCloseSharp />
-            </div> */}
           </div>
           {/* Asset Tag  and button to add duplicate with same data */}
           {/* <div className="mb-4">

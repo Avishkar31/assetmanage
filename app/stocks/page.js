@@ -105,11 +105,13 @@ function Page() {
             </div>
           </header>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="bg-gray-800 p-5 rounded-lg text-center">
-              <h3 className="text-lg">All assets</h3>
-              <p className="text-2xl">2,361</p>
-              <span className="text-teal-500">+12%</span>
-            </div>
+            <Link href="./stocks/allasset" passHref>
+              <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
+                <h3 className="text-lg">All assets</h3>
+                <p className="text-2xl">2,361</p>
+                <span className="text-teal-500">+12%</span>
+              </div>
+            </Link>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
               <h3 className="text-lg text-green-500">Inpool</h3>
               <p className="text-2xl">1,741</p>
@@ -152,7 +154,6 @@ function Page() {
               <div>
                 <AssetTimeline />
               </div>
-              
             </div>
             <div className="bg-gray-800 p-5 rounded-lg">
               <h2 className="text-lg mb-3">Category wise Assets</h2>

@@ -6,139 +6,161 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import React from "react";
-import testData from "./testData"; // Replace with your actual data source
+import testData from "./testData";
+import { FaEdit, FaTrash } from "react-icons/fa";
+// Replace with your actual data source
 
 function AssetTable() {
-  const rerender = React.useReducer(() => ({}), {})[1];
   const [sorting, setSorting] = React.useState([]);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   const columns = React.useMemo(
     () => [
       {
         accessorKey: "nodeName",
-        header: "Node Name", // Custom header for nodeName
+        header: "Node Name",
+        minWidth: 150,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "serialNumber",
-        header: "Serial Number", // Custom header for serialNumber
+        header: "Serial Number",
+        minWidth: 150,
         cell: (info) => info.getValue()
       },
+      // ... other columns ...
+
       {
         accessorKey: "manufacturer",
-        header: "Manufacturer", // Custom header for manufacturer
+        header: "Manufacturer",
+        minWidth: 120,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "type",
-        header: "Type", // Custom header for type
+        header: "Type",
+        minWidth: 100,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "model",
-        header: "Model", // Custom header for model
+        header: "Model",
+        minWidth: 120,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "expires",
-        header: "Expiration Date", // Custom header for expires
+        header: "Expiration Date",
+        minWidth: 150,
         cell: (info) => new Date(info.getValue()).toLocaleDateString()
       },
       {
         accessorKey: "category",
-        header: "Category", // Custom header for category
+        header: "Category",
+        minWidth: 100,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "status",
-        header: "Status", // Custom header for status
+        header: "Status",
+        minWidth: 100,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "department",
-        header: "Department", // Custom header for department
+        header: "Department",
+        minWidth: 130,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "issueTo",
-        header: "Issued To", // Custom header for issueTo
-        cell: (info) => info.getValue()
-      },
-      {
-        accessorKey: "note",
-        header: "Notes", // Custom header for note
+        header: "Issued To",
+        minWidth: 120,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "defaultLocation",
-        header: "Default Location", // Custom header for defaultLocation
+        header: "Default Location",
+        minWidth: 150,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "costCenter",
-        header: "Cost Center", // Custom header for costCenter
+        header: "Cost Center",
+        minWidth: 120,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "receivedDate",
-        header: "Received Date", // Custom header for receivedDate
+        header: "Received Date",
+        minWidth: 150,
         cell: (info) => new Date(info.getValue()).toLocaleDateString()
       },
       {
         accessorKey: "assetOwner",
-        header: "Asset Owner", // Custom header for assetOwner
+        header: "Asset Owner",
+        minWidth: 130,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "condition",
-        header: "Condition", // Custom header for condition
+        header: "Condition",
+        minWidth: 120,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "storeLocation",
-        header: "Store Location", // Custom header for storeLocation
+        header: "Store Location",
+        minWidth: 130,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "killdiskDate",
-        header: "Killdisk Date", // Custom header for killdiskDate
+        header: "Killdisk Date",
+        minWidth: 150,
         cell: (info) => new Date(info.getValue()).toLocaleDateString()
       },
       {
         accessorKey: "attachedFile",
-        header: "Attached File", // Custom header for attachedFile
+        header: "Attached File",
+        minWidth: 120,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "disposedDate",
-        header: "Disposed Date", // Custom header for disposedDate
+        header: "Disposed Date",
+        minWidth: 150,
         cell: (info) => new Date(info.getValue()).toLocaleDateString()
       },
       {
         accessorKey: "poNumber",
-        header: "PO Number", // Custom header for poNumber
+        header: "PO Number",
+        minWidth: 120,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "order",
-        header: "Order", // Custom header for order
+        header: "Order",
+        minWidth: 100,
         cell: (info) => info.getValue()
       },
       {
         accessorKey: "purchaseDate",
-        header: "Purchase Date", // Custom header for purchaseDate
+        header: "Purchase Date",
+        minWidth: 150,
         cell: (info) => new Date(info.getValue()).toLocaleDateString()
       },
       {
         accessorKey: "action",
         header: "Action",
+        minWidth: 150,
         cell: () => (
-          <div className="flex space-x-2">
-            <button className="bg-blue-500 text-white px-2 py-1 rounded">
-              Update
+          <div className="flex space-x-2 justify-center">
+            <button className="bg-blue-600 text-white p-2 rounded-lg shadow-sm hover:bg-blue-700 transition duration-300">
+              <FaEdit className="w-5 h-5" />
             </button>
-            <button className="bg-red-500 text-white px-2 py-1 rounded">
-              Delete
+            <button className="bg-red-600 text-white p-2 rounded-lg shadow-sm hover:bg-red-700 transition duration-300">
+              <FaTrash className="w-5 h-5" />
             </button>
           </div>
         )
@@ -147,11 +169,17 @@ function AssetTable() {
     []
   );
 
-  const [data, setData] = React.useState(testData); // Use your actual data here
+  const filteredData = React.useMemo(() => {
+    return testData.filter((item) =>
+      Object.values(item).some((value) =>
+        value.toString().toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    );
+  }, [searchQuery]);
 
   const table = useReactTable({
     columns,
-    data,
+    data: filteredData,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onSortingChange: setSorting,
@@ -161,19 +189,38 @@ function AssetTable() {
   });
 
   return (
-    <div className="p-2">
-      <table>
-        <thead>
+    <div className="p-4 overflow-x-auto bg-gray-900 rounded-lg shadow-md">
+      {/* Search Input */}
+      <div className="mb-6">
+        <input
+          type="text"
+          placeholder="Search..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-600 rounded-lg bg-gray-800 text-gray-200 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-300"
+        />
+      </div>
+
+      <table className="min-w-full divide-y divide-gray-800">
+        <thead className="bg-gray-700 text-gray-300">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th key={header.id} colSpan={header.colSpan}>
+                <th
+                  key={header.id}
+                  colSpan={header.colSpan}
+                  className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider bg-gray-800 border-b border-gray-600"
+                  style={{
+                    minWidth: header.column.columnDef.minWidth,
+                    whiteSpace: "nowrap"
+                  }}
+                >
                   {header.isPlaceholder ? null : (
                     <div
                       className={
                         header.column.getCanSort()
-                          ? "cursor-pointer select-none"
-                          : ""
+                          ? "cursor-pointer select-none flex items-center"
+                          : "flex items-center"
                       }
                       onClick={header.column.getToggleSortingHandler()}
                     >
@@ -182,8 +229,8 @@ function AssetTable() {
                         header.getContext()
                       )}
                       {{
-                        asc: " 🔼",
-                        desc: " 🔽"
+                        asc: <span className="ml-2 text-gray-400">🔼</span>,
+                        desc: <span className="ml-2 text-gray-400">🔽</span>
                       }[header.column.getIsSorted()] ?? null}
                     </div>
                   )}
@@ -192,14 +239,24 @@ function AssetTable() {
             </tr>
           ))}
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-gray-800">
           {table
             .getRowModel()
             .rows.slice(0, 10) // Limiting to 10 rows for simplicity
             .map((row) => (
-              <tr key={row.id}>
+              <tr
+                key={row.id}
+                className="hover:bg-gray-700 transition duration-300"
+              >
                 {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-300"
+                    style={{
+                      minWidth: cell.column.columnDef.minWidth,
+                      whiteSpace: "nowrap"
+                    }}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
@@ -207,6 +264,71 @@ function AssetTable() {
             ))}
         </tbody>
       </table>
+      <nav className="flex items-center gap-x-1" aria-label="Pagination">
+        <button
+          type="button"
+          className="min-h-[38px] min-w-[38px] py-2 px-2.5 inline-flex justify-center items-center gap-x-2 text-sm rounded-lg border border-transparent text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
+          aria-label="Previous"
+        >
+          <svg
+            className="shrink-0 size-3.5"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
+          <span className="sr-only">Previous</span>
+        </button>
+        <div className="flex items-center gap-x-1">
+          <button
+            type="button"
+            className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-gray-200 text-gray-600 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
+            aria-current="page"
+          >
+            1
+          </button>
+          <button
+            type="button"
+            className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-transparent text-gray-600 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            2
+          </button>
+          <button
+            type="button"
+            className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-transparent text-gray-600 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
+          >
+            3
+          </button>
+        </div>
+        <button
+          type="button"
+          className="min-h-[38px] min-w-[38px] py-2 px-2.5 inline-flex justify-center items-center gap-x-2 text-sm rounded-lg border border-transparent text-gray-600 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none "
+          aria-label="Next"
+        >
+          <span className="sr-only">Next</span>
+          <svg
+            className="shrink-0 size-3.5"
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
+      </nav>
     </div>
   );
 }

@@ -99,7 +99,7 @@ const Dashboard = () => {
                 <i className="fas fa-times"></i>
               </div>
             </header>
-            <form>
+            
               {/* Model */}
               <div className="mb-4">
                 <div className="flex items-center mb-2">
@@ -238,7 +238,7 @@ const Dashboard = () => {
                   Checkout to {formData.issueTo || "Username"}
                 </button>
               </div>
-            </form>
+            
           </div>
         </div>
       </div>
