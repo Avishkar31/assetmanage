@@ -1,8 +1,27 @@
 "use client";
 import { useState } from "react";
-import Sidebar from "@/components/Sidebar"
+import Sidebar from "@/components/Sidebar";
 
-const view = () => {
+// Example asset data (this would typically come from an API or database)
+const assetData = {
+  status: "In Pool",
+  assetName: "pl2inpuno389nb",
+  serial: "J65LIT2",
+  category: "Hardware",
+  model: "EX1234",
+  expires: "2024-12-31",
+  location: "IT",
+  assetOwner: "John Doe",
+  costCenter: "Finance",
+  receivedDate: "2023-08-01",
+  condition: "Good",
+  note: "Requires inspection next month",
+  misStoreLocation: "Store 5",
+  poNumber: "PO12345",
+  order: "Order123"
+};
+
+const ViewAsset = () => {
   const [dropdown, setDropdown] = useState(false);
   const [accessoriesMenu, setAccessoriesMenu] = useState(false);
   const [settingsMenu, setSettingsMenu] = useState(false);
@@ -17,7 +36,7 @@ const view = () => {
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
-      <Sidebar/>
+      <Sidebar />
       <div className="flex-1 p-6 bg-gray-900">
         <header className="flex justify-between items-center mb-6">
           <h1 className="text-2xl">Stocks</h1>
@@ -47,7 +66,6 @@ const view = () => {
                 </div>
               )}
             </div>
-            
             <div className="text-white cursor-pointer" title="logout">
               <i className="fa-solid fa-arrow-right-from-bracket"></i>
             </div>
@@ -59,71 +77,71 @@ const view = () => {
               <h3 className="text-lg sticky">View Asset</h3>
             </header>
             <div className="space-y-4">
+              {/* Dynamically render asset details */}
               <div className="flex justify-between">
-                <span className="text-gray-400">Status:</span>{" "}
-                <span>In Pool</span>
+                <span className="text-gray-400">Status:</span>
+                <span>{assetData.status}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Asset Name:</span>{" "}
-                <span>pl2inpuno389nb</span>
+                <span className="text-gray-400">Asset Name:</span>
+                <span>{assetData.assetName}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Serial:</span>{" "}
-                <span>J65LIT2</span>
+                <span className="text-gray-400">Serial:</span>
+                <span>{assetData.serial}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Category:</span>{" "}
-                <span>Hardware</span>
+                <span className="text-gray-400">Category:</span>
+                <span>{assetData.category}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Model:</span>{" "}
-                <span>EX1234</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-400">Expires:</span>{" "}
-                <span>Example Corp</span>
-              </div>
-
-              <div className="flex justify-between">
-                <span className="text-gray-400">Default Location:</span>{" "}
-                <span>IT</span>
+                <span className="text-gray-400">Model:</span>
+                <span>{assetData.model}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Asset Owner:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">Expires:</span>
+                <span>{assetData.expires}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Cost Center:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">Default Location:</span>
+                <span>{assetData.location}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Received Date:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">Asset Owner:</span>
+                <span>{assetData.assetOwner}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Asset Condition:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">Cost Center:</span>
+                <span>{assetData.costCenter}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Note:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">Received Date:</span>
+                <span>{assetData.receivedDate}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">MIS Store Location:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">Asset Condition:</span>
+                <span>{assetData.condition}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">PO Number:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">Note:</span>
+                <span>{assetData.note}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-400">Order:</span>{" "}
-                <span>John Doe</span>
+                <span className="text-gray-400">MIS Store Location:</span>
+                <span>{assetData.misStoreLocation}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">PO Number:</span>
+                <span>{assetData.poNumber}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Order:</span>
+                <span>{assetData.order}</span>
               </div>
             </div>
           </div>
           <div className="flex-1 flex flex-col space-y-2 ">
+            {/* Action buttons */}
             <button
               type="button"
               className="py-2.5 px-5 mb-2 w-80 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
@@ -155,4 +173,4 @@ const view = () => {
   );
 };
 
-export default view;
+export default ViewAsset;

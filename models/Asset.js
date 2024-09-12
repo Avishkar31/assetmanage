@@ -23,10 +23,11 @@ const AssetSchema = new mongoose.Schema({
       "Inactive",
       "Deployed"
     ],
-    default: ""
+    default: "",
+    required: true
   },
   department: String,
-  issueTo:{type: String},
+  issueTo: { type: String },
   // { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   note: String,
   defaultLocation: String,

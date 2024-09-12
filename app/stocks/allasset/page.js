@@ -33,15 +33,14 @@ export default function AllAssetsPage() {
   if (loading) return <p>Loading assets...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
-
-  console.log("assets",assets)
+  console.log("assets", assets);
   return (
     <div className="flex min-h-screen">
       <Sidebar />
       <div className="flex-grow p-5 bg-gray-900 rounded-lg">
         <header className="flex justify-between items-center mb-5">
           <h1 className="text-2xl text-white">All Assets</h1>
-          <div>
+          <div href="./stocks/allasset">
             <button className="w-28 h-10 bg-teal-600 text-white rounded-lg border-none cursor-pointer hover:bg-teal-700 transition duration-300">
               Add Asset
             </button>
@@ -49,7 +48,7 @@ export default function AllAssetsPage() {
         </header>
         <div className="bg-gray-800 p-3 rounded-lg overflow-x-auto">
           <div className="w-1/2">
-            <AssetTable  assetData={assets} />
+            <AssetTable assetData={assets} />
           </div>
         </div>
       </div>
