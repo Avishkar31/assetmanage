@@ -11,10 +11,10 @@ import testData from "./testData";
 import columnData from "./AssetTableColumn";
 // Replace with your actual data source
 
-function AssetTable({assetData}) {
+function AssetTable({ assetData }) {
   const [sorting, setSorting] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const columns = React.useMemo( () =>columnData, []);
+  const columns = React.useMemo(() => columnData, []);
 
   const filteredData = React.useMemo(() => {
     return assetData.filter((item) =>

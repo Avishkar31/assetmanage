@@ -1,13 +1,13 @@
 
 
-// showing all asset in thay allasset and also that perticular status wale 
-// add button 
+// Asset Will show perticular status wale 
 // inactive/inpool/ show in all perticular section
 // we can update asset
 // checkin form / update form - showing to perticular status
 // checkout form / i.e update form - showing to perticular status
-// stocks page will show allover data
+// stocks page will show allover data main page
 // view on perticular data
 // search button main page / perticular section also
 // transction will shows to percular asset and
+// Dell API working
     

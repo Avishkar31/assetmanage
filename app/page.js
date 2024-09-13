@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import { IoMail } from "react-icons/io5";
 import { BiWorld } from "react-icons/bi";
@@ -49,7 +50,12 @@ export default async function Home() {
             </span>
             <span className="ml-1">India</span>
           </div>
-          <button className="flex items-center space-x-1">
+          <button
+            onClick={() =>
+              (window.location.href = "mailto:avishkar.gadkar.ext@siemens.com")
+            }
+            className="flex items-center space-x-1"
+          >
             <span className="text-3xl">
               <IoMail />
             </span>
@@ -142,10 +148,9 @@ export default async function Home() {
       <footer className="fixed right-4 bottom-4 z-30 text-white">
         <button className="w-40 md:w-52 h-10 md:h-12 bg-teal-600 border-none rounded cursor-pointer">
           <a
-            href="http://"
+            href="mailto:avishkar.gadkar.ext@siemens.com"
             target="_blank"
-            rel="noopener noreferrer"
-            className=" w-full h-full flex items-center justify-center"
+            className="w-full h-full flex items-center justify-center"
           >
             Contact us
           </a>
