@@ -135,6 +135,23 @@ const columnData = [
     cell: (info) => new Date(info.getValue()).toLocaleDateString()
   },
   {
+    accessorKey: "checkinCheckout",
+    header: "Checkin / Checkout",
+    minWidth: 150,
+    cell: (info) => (
+      <button
+        className={`${
+          info.getValue() === "Checkin"
+            ? "bg-green-600 hover:bg-green-800"
+            : "bg-red-600 hover:bg-red-800"
+        } text-white p-2 rounded-lg shadow-sm transition duration-300`}
+      >
+        {info.getValue() === "Checkin" ? "Checkin" : "Checkout"}
+      </button>
+    )
+  },
+
+  {
     accessorKey: "action",
     header: "Action",
     minWidth: 150,
