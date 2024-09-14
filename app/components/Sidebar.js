@@ -83,7 +83,7 @@ const Sidebar = () => {
           </li>
           <li className="my-2">
             <a
-              href="./stocks/allasset"
+              href="./allasset"
               className="text-gray-400 hover:text-white"
             >
               All assets

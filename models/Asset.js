@@ -45,7 +45,9 @@ const AssetSchema = new mongoose.Schema({
   disposedDate: Date,
   poNumber: String,
   order: String,
-  purchaseDate: Date
+  purchaseDate: Date,
+  checkInDate:Date,
+  checkOutDate:Date
 });
 
 export default mongoose.models.Asset || mongoose.model("Asset", AssetSchema);
