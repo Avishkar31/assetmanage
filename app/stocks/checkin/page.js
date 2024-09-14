@@ -4,54 +4,55 @@ import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 
 import Sidebar from "@/components/Sidebar";
 
-const Dashboard = () => {
-  const ramOptions = [
-    { label: "Default", description: "" },
-    {
-      label: "Inpool",
-      description:
-        "✓  That status is deployable. This asset can be checked out.",
-      color: "text-green-500"
-    },
-    {
-      label: "New Purchase",
-      description:
-        "✗ That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "MIS Store",
-      description:
-        "✓  That status is deployable. This asset can be checked out.",
-      color: "text-green-500"
-    },
-    {
-      label: "Buyback",
-      description:
-        "✗  That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "Disposed",
-      description:
-        "✗  That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "Inactive",
-      description:
-        "✗  That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "Deployed",
-      description:
-        "✓  That status is deployable. This asset can be checked out.",
-      color: "text-green-500"
-    }
-  ];
 
-  const StatusDropdown = () => {
+const ramOptions = [
+  { label: "Default", description: "" },
+  {
+    label: "Inpool",
+    description:
+      "✓  That status is deployable. This asset can be checked out.",
+    color: "text-green-500"
+  },
+  {
+    label: "New Purchase",
+    description:
+      "✗ That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "MIS Store",
+    description:
+      "✓  That status is deployable. This asset can be checked out.",
+    color: "text-green-500"
+  },
+  {
+    label: "Buyback",
+    description:
+      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "Disposed",
+    description:
+      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "Inactive",
+    description:
+      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "Deployed",
+    description:
+      "✓  That status is deployable. This asset can be checked out.",
+    color: "text-green-500"
+  }
+];
+
+
+const Dashboard = () => {
     const [formData, setFormData] = useState({
       status: "Default",
       nodeName: "Node A",
@@ -74,6 +75,9 @@ const Dashboard = () => {
 
     useEffect(() => {
       document.addEventListener("mousedown", handleClickOutside);
+      //@avishkar
+      // Call get api to setform data 
+      // using a serial number
       return () => {
         document.removeEventListener("mousedown", handleClickOutside);
       };
@@ -85,6 +89,33 @@ const Dashboard = () => {
         [e.target.id]: e.target.value
       });
     };
+
+    const handleCheckIn = async()=>{
+      const dummyData={
+        "serialNumber": "3e2s4ds",
+        "nodeName": "Di2inpun3412wmb",
+        "status": "Inpool",
+        "issueTo": "John",
+        "storeLocation": "Storage Room A",
+        "note": "Checked in after repair",
+        "checkType": "checkin"
+      }
+      try {
+        const response = await fetch("/api/asset/checkAsset", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dummyData)
+        });
+        if (response.ok) {
+          await response.json();
+          alert("Asset CheckIn successfully");
+        }else{
+          alert("Failed to checkin asset successfully !");
+        }
+      } catch (error) {
+        alert(`Error: ${error.message}`);
+      }
+    }
     return (
       <div className="flex">
         <Sidebar />
@@ -236,7 +267,7 @@ const Dashboard = () => {
               </div>
 
               <div className="flex justify-center">
-                <button className="px-5 py-2 mt-10 bg-blue-500 text-white rounded">
+                <button className="px-5 py-2 mt-10 bg-blue-500 text-white rounded" onClick={handleCheckIn}>
                   Checkin to {formData.issueTo || "Username"}
                 </button>
               </div>
@@ -247,7 +278,6 @@ const Dashboard = () => {
     );
   };
 
-  return <StatusDropdown />;
-};
+
 
 export default Dashboard;
