@@ -4,16 +4,25 @@ import Asset from "../../../../models/Asset";
 export async function POST(req) {
   try {
     const data = await req.json();
-    const { note, storeLocation, issueTo, status, nodeName, serialNumber, checkType, model } = data;
+    const {
+      note,
+      storeLocation,
+      issueTo,
+      status,
+      nodeName,
+      serialNumber,
+      checkType,
+      model
+    } = data;
 
     // Basic validation for required fields
     if (!serialNumber || !nodeName) {
       return NextResponse.json(
-        { error: "Serial number  and nodename is required." },
+        { error: "Serial number and node name are required." },
         { status: 400 }
       );
     }
-    
+
     if (!checkType) {
       return NextResponse.json(
         { error: "Check type is required (checkin or checkout)." },
@@ -21,11 +30,11 @@ export async function POST(req) {
       );
     }
 
-    // Find the existing asset by serial number
-    const existingAsset = await Asset.findOne({ serialNumber,nodeName });
+    // Find the existing asset by serial number and node name
+    const existingAsset = await Asset.findOne({ serialNumber, nodeName });
     if (!existingAsset) {
       return NextResponse.json(
-        { error: "Asset with this serial number or nodeName does not exist." },
+        { error: "Asset with this serial number or node name does not exist." },
         { status: 400 }
       );
     }
@@ -53,7 +62,10 @@ export async function POST(req) {
     const updatedAsset = await existingAsset.save();
     return NextResponse.json(updatedAsset, { status: 200 });
   } catch (err) {
-    console.log("ee",err)
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    console.error("Error in POST handler:", err); // Added more detailed logging
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }
