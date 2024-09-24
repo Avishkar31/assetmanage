@@ -27,8 +27,7 @@ const AssetSchema = new mongoose.Schema({
     required: true
   },
   department: String,
-  issueTo: { type: String },
-  // { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  issueTo:  { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   note: String,
   defaultLocation: String,
   costCenter: String,
@@ -47,7 +46,13 @@ const AssetSchema = new mongoose.Schema({
   order: String,
   purchaseDate: Date,
   checkInDate:Date,
-  checkOutDate:Date
+  checkOutDate:Date,
+  assetHistory: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    action: { type: String, enum: ["checkIn", "checkOut"] },
+    date: { type: Date, default: Date.now },
+    status: String,
+  }]
 });
 
 export default mongoose.models.Asset || mongoose.model("Asset", AssetSchema);
