@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Asset from "../../../../models/Asset";
+import User from "../../../../models/User";
 
 export async function POST(req) {
   try {
@@ -41,17 +42,57 @@ export async function POST(req) {
 
     // Common updates for both check-in and check-out
     existingAsset.status = status || existingAsset.status;
-    existingAsset.issueTo = issueTo || existingAsset.issueTo;
     existingAsset.storeLocation = storeLocation || existingAsset.storeLocation;
     existingAsset.note = note || existingAsset.note;
+ 
+    
+    let user = await User.findOne({ fullName: issueTo?.fullName?.toLowerCase() });
+    console.log("user",user)
+    if (!user) {
+      user = new User({
+        fullName: issueTo?.fullName?.toLowerCase(), // Ensure the new user is saved with a lowercase fullName
+        department: issueTo?.department
+      });
+      await user.save();
+    }
+    
+    // Handling Check-Out
+    if (checkType === "checkout") {
+      // Check if 'issueTo' (user assignment) is provided
+      if (!issueTo?.fullName || !issueTo?.department) {
+        return NextResponse.json(
+          { error: "IssueTo (fullName and department) is required for checkout." },
+          { status: 400 }
+        );
+      }
 
-    if (checkType === "checkin") {
-      // Check-in specific update
-      existingAsset.checkInDate = new Date(); // Update check-in date to current time
-    } else if (checkType === "checkout") {
-      // Check-out specific update
-      existingAsset.checkOutDate = new Date();
+      // Create or fetch the user who is receiving the asset
+     
+
+      // Update check-out specific fields
+      existingAsset.issueTo = user._id;
+      existingAsset.checkOutDate = new Date(); // Update check-out date to current time
       existingAsset.model = model || existingAsset.model;
+
+      // Add to asset history for checkout
+      existingAsset.assetHistory.push({
+        user: user._id,
+        action: "checkOut",
+        date: new Date(),
+        status: existingAsset.status,
+      });
+
+    } else if (checkType === "checkin") {
+      existingAsset.issueTo = user._id;
+      existingAsset.checkInDate = new Date(); // Update check-in date to current time
+
+      existingAsset.assetHistory.push({
+        user: existingAsset.issueTo, // Since no user is assigned on check-in, leave it as null
+        action: "checkIn",
+        date: new Date(),
+        status: existingAsset.status,
+      });
+
     } else {
       return NextResponse.json(
         { error: "Invalid check type. It must be 'checkin' or 'checkout'." },
@@ -59,8 +100,10 @@ export async function POST(req) {
       );
     }
 
+    // Save the updated asset
     const updatedAsset = await existingAsset.save();
     return NextResponse.json(updatedAsset, { status: 200 });
+
   } catch (err) {
     console.error("Error in POST handler:", err); // Added more detailed logging
     return NextResponse.json(
