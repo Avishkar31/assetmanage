@@ -46,12 +46,12 @@ export async function POST(req) {
     existingAsset.note = note || existingAsset.note;
  
     
-    let user = await User.findOne({ fullName: issueTo?.fullName?.toLowerCase() });
+    let user = await User.findOne({ fullName: issueTo?.toLowerCase() });
     console.log("user",user)
     if (!user) {
       user = new User({
-        fullName: issueTo?.fullName?.toLowerCase(), // Ensure the new user is saved with a lowercase fullName
-        department: issueTo?.department
+        name: issueTo?.toLowerCase(),
+        createdDate:date.now()
       });
       await user.save();
     }
@@ -59,9 +59,9 @@ export async function POST(req) {
     // Handling Check-Out
     if (checkType === "checkout") {
       // Check if 'issueTo' (user assignment) is provided
-      if (!issueTo?.fullName || !issueTo?.department) {
+      if (!issueTo) {
         return NextResponse.json(
-          { error: "IssueTo (fullName and department) is required for checkout." },
+          { error: "IssueTo  is required for checkout." },
           { status: 400 }
         );
       }
@@ -105,7 +105,7 @@ export async function POST(req) {
     return NextResponse.json(updatedAsset, { status: 200 });
 
   } catch (err) {
-    console.error("Error in POST handler:", err); // Added more detailed logging
+    console.log("Error in POST handler:", err); // Added more detailed logging
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 }

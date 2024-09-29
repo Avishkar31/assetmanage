@@ -144,7 +144,9 @@ const columnData = [
       const rowData = info.row.original;
       const { serialNumber, status } = rowData;
 
-      const navigateToCheckAsset = () => {
+      const navigateToCheckAsset = (e) => {
+        e.preventDefault();
+        e.stopPropagation(); 
         const targetUrl =
           status === "Deployed"
             ? `/stocks/checkin?SerialNumber=${serialNumber}`
@@ -160,7 +162,7 @@ const columnData = [
               ? "bg-green-600 hover:bg-green-800"
               : "bg-red-600 hover:bg-red-800"
           } text-white p-2 rounded-lg shadow-sm transition duration-300`}
-          onClick={navigateToCheckAsset}
+          onClick={(e)=>navigateToCheckAsset(e)}
         >
           {status === "Deployed" ? "Checkin" : "Checkout"}
         </button>
