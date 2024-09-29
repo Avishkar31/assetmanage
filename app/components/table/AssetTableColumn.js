@@ -1,4 +1,6 @@
+import { useRouter } from "next/router";
 import { FaEdit, FaTrash } from "react-icons/fa";
+
 const columnData = [
   {
     accessorKey: "nodeName",
@@ -12,7 +14,6 @@ const columnData = [
     minWidth: 150,
     cell: (info) => info.getValue()
   },
-  // ... other columns ...
 
   {
     accessorKey: "manufacturer",
@@ -22,6 +23,7 @@ const columnData = [
   },
   {
     accessorKey: "type",
+
     header: "Type",
     minWidth: 100,
     cell: (info) => info.getValue()
@@ -139,17 +141,22 @@ const columnData = [
     header: "Checkin / Checkout",
     minWidth: 150,
     cell: (info) => {
-      const rowData = info.row.original;  
-      const status = rowData.status;  
-      const navigateToCheckAsset=()=>{
-        //@avishkar
-        // navigate
-        // .../stock?SerialNumber="rowData.serilnumner"
-      }
+      const rowData = info.row.original;
+      const { serialNumber, status } = rowData;
+
+      const navigateToCheckAsset = () => {
+        const targetUrl =
+          status === "Deployed"
+            ? `/stocks/checkin?SerialNumber=${serialNumber}`
+            : `/stocks/checkout?SerialNumber=${serialNumber}`;
+
+        window.location.href = targetUrl;
+      };
+
       return (
         <button
           className={`${
-            info.getValue() === "Checkin"
+            status === "Deployed"
               ? "bg-green-600 hover:bg-green-800"
               : "bg-red-600 hover:bg-red-800"
           } text-white p-2 rounded-lg shadow-sm transition duration-300`}
@@ -158,13 +165,13 @@ const columnData = [
           {status === "Deployed" ? "Checkin" : "Checkout"}
         </button>
       );
-    },
-  },  
+    }
+  },
   {
     accessorKey: "action",
     header: "Action",
     minWidth: 150,
-    cell: () => (
+    cell: () => ( 
       <div className="flex space-x-2 justify-center">
         <button className="bg-gray-600 text-white p-2 rounded-lg shadow-sm hover:bg-gray-900 transition duration-300">
           <FaEdit className="w-5 h-5" />
@@ -176,4 +183,5 @@ const columnData = [
     )
   }
 ];
-export default columnData
+
+export default columnData;

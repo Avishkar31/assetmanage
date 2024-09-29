@@ -804,7 +804,7 @@ const AddAssetForm = () => {
                     Purchase Number
                   </label>
                   <input
-                    type="date"
+                    type="text"
                     id="purchase"
                     value={formData.purchase}
                     onChange={handleInputChange}

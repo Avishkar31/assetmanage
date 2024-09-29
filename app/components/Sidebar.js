@@ -31,7 +31,7 @@ const Sidebar = () => {
   }, []);
 
   return (
-    <div className="w-64 bg-gray-800 p-5">
+    <div className="w-64 shrink-0 bg-gray-800 p-5">
       <div className="text-center mb-5">
         <img
           src="https://www.siemens.com/img/svg/logo-dark-3958fff2.svg"
@@ -82,10 +82,7 @@ const Sidebar = () => {
             </a>
           </li>
           <li className="my-2">
-            <a
-              href="./allasset"
-              className="text-gray-400 hover:text-white"
-            >
+            <a href="./allasset" className="text-gray-400 hover:text-white">
               All assets
             </a>
           </li>

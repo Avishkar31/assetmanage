@@ -6,24 +6,30 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import React from "react";
-import testData from "./testData";
-
-import columnData from "./AssetTableColumn";
-// Replace with your actual data source
+import testData from "./testData"; // Assuming testData is sample data for testing
+import columnData from "./AssetTableColumn"; // AssetTableColumn to define column structure
 
 function AssetTable({ assetData }) {
   const [sorting, setSorting] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const columns = React.useMemo(() => columnData, []);
 
+  // Filter data based on search query
   const filteredData = React.useMemo(() => {
     return assetData.filter((item) =>
       Object.values(item).some((value) =>
         value.toString().toLowerCase().includes(searchQuery.toLowerCase())
       )
     );
-  }, [searchQuery]);
+  }, [searchQuery, assetData]);
 
+  const handleRowNavigations = (rowData) => {
+    // Log the serial number of the row
+    console.log("Navigating to:", rowData.original.serialNumber);
+
+    // Redirect to the desired URL
+    window.location.href = `/stocks/view?SerialNumber=${rowData.original.serialNumber}`;
+  };
   const table = useReactTable({
     columns,
     data: filteredData,
@@ -89,11 +95,12 @@ function AssetTable({ assetData }) {
         <tbody className="divide-y divide-gray-800">
           {table
             .getRowModel()
-            .rows.slice(0, 10) // Limiting to 10 rows for simplicity
+            .rows.slice(0, 10)
             .map((row) => (
               <tr
                 key={row.id}
                 className="hover:bg-gray-700 transition duration-300"
+                onClick={() => handleRowNavigations(row)}
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
@@ -111,18 +118,18 @@ function AssetTable({ assetData }) {
             ))}
         </tbody>
       </table>
+
+      {/* Pagination */}
       <nav className="flex items-center gap-x-1" aria-label="Pagination">
         <button
           type="button"
-          className="min-h-[38px] min-w-[38px] py-2 px-2.5 inline-flex justify-center items-center gap-x-2 text-sm rounded-lg border border-transparent text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
+          className="min-h-[38px] min-w-[38px] py-2 px-2.5 inline-flex justify-center items-center text-sm rounded-lg border border-transparent text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50"
           aria-label="Previous"
         >
           <svg
-            className="shrink-0 size-3.5"
             xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
-            viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"
@@ -131,41 +138,27 @@ function AssetTable({ assetData }) {
           >
             <path d="m15 18-6-6 6-6" />
           </svg>
-          <span className="sr-only">Previous</span>
         </button>
         <div className="flex items-center gap-x-1">
-          <button
-            type="button"
-            className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-gray-200 text-gray-600 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none"
-            aria-current="page"
-          >
+          <button className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-gray-200 text-gray-600 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-50">
             1
           </button>
-          <button
-            type="button"
-            className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-transparent text-gray-600 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
-          >
+          <button className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-transparent text-gray-600 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg">
             2
           </button>
-          <button
-            type="button"
-            className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-transparent text-gray-600 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none"
-          >
+          <button className="min-h-[38px] min-w-[38px] flex justify-center items-center border border-transparent text-gray-600 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg">
             3
           </button>
         </div>
         <button
           type="button"
-          className="min-h-[38px] min-w-[38px] py-2 px-2.5 inline-flex justify-center items-center gap-x-2 text-sm rounded-lg border border-transparent text-gray-600 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none "
+          className="min-h-[38px] min-w-[38px] py-2 px-2.5 inline-flex justify-center items-center text-sm rounded-lg border border-transparent text-gray-600 hover:bg-gray-100 focus:outline-none focus:bg-gray-100"
           aria-label="Next"
         >
-          <span className="sr-only">Next</span>
           <svg
-            className="shrink-0 size-3.5"
             xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
-            viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
             strokeWidth="2"

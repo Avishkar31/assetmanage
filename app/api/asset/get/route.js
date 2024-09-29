@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
-import  Asset from "../../../../models/Asset"
+import Asset from "../../../../models/Asset";
+import dbConnect from "lib/dbConnect";
 
 export async function GET(req) {
-  const { serialNumber} = req.query;
+  console.log("object");
+  const { searchParams } = req.nextUrl;
+  const serialNumber = searchParams.get("serialNumber");
+  await dbConnect();
+
   try {
-    const existingAsset = await Asset.findOne({ serialNumber });
+    console.log("serialNumber", serialNumber);
+    const existingAsset = await Asset.findOne({
+      serialNumber: String(serialNumber)
+    });
     if (!existingAsset) {
       return NextResponse.json({ error: "asset not found" }, { status: 404 });
     }
