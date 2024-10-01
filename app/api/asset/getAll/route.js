@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Asset from "../../../../models/Asset";
+import User from "../../../../models/User";
 import { connectDb } from "lib/dbConnect";
 
 const validSortColumns = [
@@ -76,6 +77,13 @@ export async function GET(req) {
 
     // Fetch assets with sorting, searching, status filtering, and pagination
     const assets = await Asset.find(searchQuery)
+      .populate('issueTo', 'name')
+      .populate({
+        path: 'assetHistory.user', 
+        model: User,
+        select: 'name',
+        options: { skipInvalidIds: true } // Ensures invalid references are skipped
+      })
       .sort({ [sort]: order === "asc" ? 1 : -1 })
       .skip(Number(offset))
       .limit(Number(limit));

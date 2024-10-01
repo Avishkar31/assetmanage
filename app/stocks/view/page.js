@@ -133,6 +133,10 @@ const ViewAsset = () => {
                 </div>
               ))}
               <div className="flex justify-between">
+                <span className="text-gray-400">History:</span>
+                {/* get the asset history array from the above api response and map here in ui  */}
+              </div>
+              <div className="flex justify-between">
                 <span className="text-gray-400">Note:</span>
                 <span>
                   <textarea

@@ -59,7 +59,7 @@ const columnData = [
     cell: (info) => info.getValue()
   },
   {
-    accessorKey: "issueTo",
+    accessorKey: "issueTo.name",
     header: "Issued To",
     minWidth: 120,
     cell: (info) => info.getValue()

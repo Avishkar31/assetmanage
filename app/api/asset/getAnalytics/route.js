@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import Asset from "../../../../models/Asset";
-import User from "../../../../models/User";
 import dbConnect from "lib/dbConnect";
 
 export async function GET(req) {
@@ -9,14 +8,8 @@ export async function GET(req) {
   await dbConnect();
 
   try {
-    console.log("serialNumber", serialNumber);
     const existingAsset = await Asset.findOne({
       serialNumber: String(serialNumber)
-    }).populate({
-      path: 'assetHistory.user', 
-      model: User,
-      select: 'name',
-      options: { skipInvalidIds: true } // Ensures invalid references are skipped
     });
     if (!existingAsset) {
       return NextResponse.json({ error: "asset not found" }, { status: 404 });
