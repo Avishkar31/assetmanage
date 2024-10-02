@@ -36,19 +36,21 @@ export default function AllAssetsPage() {
 
   console.log("assets", assets);
   return (
-    <div className="flex min-h-screen">
+    <div className="flex flex-col md:flex-row min-h-screen w-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-grow p-5 bg-gray-900 rounded-lg">
-        <header className="flex justify-between items-center mb-5">
-          <h1 className="text-2xl text-white">All Assets</h1>
+      <div className="flex-grow p-5 bg-gray-900">
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5">
+          <h1 className="text-2xl text-white mb-4 md:mb-0">All Assets</h1>
           <Link href="/stocks/addasset">
-            <button className="w-28 h-10 bg-teal-600 text-white rounded-lg border-none cursor-pointer hover:bg-teal-700 transition duration-300">
+            <button className="w-full md:w-28 h-10 bg-teal-600 text-white rounded-lg border-none cursor-pointer hover:bg-teal-700 transition duration-300">
               Add Asset
             </button>
           </Link>
         </header>
-        <div className="bg-gray-800 p-3 rounded-lg overflow-x-auto">
-          <div className="w-1/2">
+
+        <div className="bg-gray-800 p-3 rounded-lg">
+          {/* Set the table container to full width, but ensure no horizontal overflow */}
+          <div className="w-full md:w-1/2 overflow-x-auto">
             <AssetTable assetData={assets} />
           </div>
         </div>

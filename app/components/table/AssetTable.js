@@ -42,7 +42,7 @@ function AssetTable({ assetData }) {
   });
 
   return (
-    <div className="p-4 overflow-x-auto bg-gray-900 rounded-lg shadow-md">
+    <div className="p-4 bg-gray-900 rounded-lg shadow-md">
       {/* Search Input */}
       <div className="mb-6">
         <input
@@ -54,73 +54,82 @@ function AssetTable({ assetData }) {
         />
       </div>
 
-      <table className="min-w-full divide-y divide-gray-800">
-        <thead className="bg-gray-700 text-gray-300">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  colSpan={header.colSpan}
-                  className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider bg-gray-800 border-b border-gray-600"
-                  style={{
-                    minWidth: header.column.columnDef.minWidth,
-                    whiteSpace: "nowrap"
-                  }}
-                >
-                  {header.isPlaceholder ? null : (
-                    <div
-                      className={
-                        header.column.getCanSort()
-                          ? "cursor-pointer select-none flex items-center"
-                          : "flex items-center"
-                      }
-                      onClick={header.column.getToggleSortingHandler()}
-                    >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                      {{
-                        asc: <span className="ml-2 text-gray-400">🔼</span>,
-                        desc: <span className="ml-2 text-gray-400">🔽</span>
-                      }[header.column.getIsSorted()] ?? null}
-                    </div>
-                  )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody className="divide-y divide-gray-800">
-          {table
-            .getRowModel()
-            .rows.slice(0, 10)
-            .map((row) => (
-              <tr
-                key={row.id}
-                className="hover:bg-gray-700 transition duration-300"
-                onClick={() => handleRowNavigations(row)}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td
-                    key={cell.id}
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-300"
+      {/* Table container with horizontal scrolling */}
+      <div className="w-full overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-800 table-auto">
+          <thead className="bg-gray-700 text-gray-300">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider bg-gray-800 border-b border-gray-600"
                     style={{
-                      minWidth: cell.column.columnDef.minWidth,
+                      minWidth: header.column.columnDef.minWidth || "150px", // Ensuring each column has a minimum width
                       whiteSpace: "nowrap"
                     }}
                   >
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+                    {header.isPlaceholder ? null : (
+                      <div
+                        className={
+                          header.column.getCanSort()
+                            ? "cursor-pointer select-none flex items-center"
+                            : "flex items-center"
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                      >
+                        {flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                        {{
+                          asc: <span className="ml-2 text-gray-400">🔼</span>,
+                          desc: <span className="ml-2 text-gray-400">🔽</span>
+                        }[header.column.getIsSorted()] ?? null}
+                      </div>
+                    )}
+                  </th>
                 ))}
               </tr>
             ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-gray-800">
+            {table
+              .getRowModel()
+              .rows.slice(0, 10) // Adjust based on the number of rows you want to show per page
+              .map((row) => (
+                <tr
+                  key={row.id}
+                  className="hover:bg-gray-700 transition duration-300"
+                  onClick={() => handleRowNavigations(row)}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap"
+                      style={{
+                        minWidth: cell.column.columnDef.minWidth || "150px", // Same as thead for consistent column sizing
+                        whiteSpace: "nowrap"
+                      }}
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
 
       {/* Pagination */}
-      <nav className="flex items-center gap-x-1" aria-label="Pagination">
+      <nav
+        className="flex items-center gap-x-1 mt-4 justify-center"
+        aria-label="Pagination"
+      >
         <button
           type="button"
           className="min-h-[38px] min-w-[38px] py-2 px-2.5 inline-flex justify-center items-center text-sm rounded-lg border border-transparent text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 disabled:opacity-50"

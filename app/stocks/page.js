@@ -11,6 +11,13 @@ import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 function Page() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const reportsRef = useRef(null);
+  const [allAssetsCount, setAllAssetsCount] = useState(null);
+  const [inPoolCount, setInPoolCount] = useState(null);
+  const [newPurchaseCount, setNewPurchaseCount] = useState(null);
+  const [inactiveCount, setInactiveCount] = useState(null);
+  const [deployedCount, setDeployedCount] = useState(null); // Consistent naming
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const toggleDropdown = (setter) => {
     setter((prev) => !prev);
@@ -42,6 +49,51 @@ function Page() {
     };
   }, [isReportsOpen]);
 
+  // Fetching data
+  useEffect(() => {
+    async function fetchAssetData() {
+      try {
+        const response = await fetch("/api/asset/getAnalytics");
+        if (!response.ok) {
+          throw new Error("Failed to fetch asset data");
+        }
+        const data = await response.json();
+        setAllAssetsCount(data.allAssetsCount); // Set the count dynamically
+        setInPoolCount(data.inPoolCount);
+        setNewPurchaseCount(data.newPurchaseCount);
+        setInactiveCount(data.inactiveCount);
+        setDeployedCount(data.deployedCount); // Set deployed count dynamically
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAssetData();
+  }, []); // Empty dependency array ensures this only runs once when the component mounts
+
+  // Loading & Error Handling
+  if (loading) {
+    return <p>Loading...</p>; // Display loading while fetching
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>; // Display error message if fetching fails
+  }
+
+  // Calculating percentages based on the total number of assets
+  const inPoolPercentage = ((inPoolCount / allAssetsCount) * 100).toFixed(2);
+  const newPurchasePercentage = (
+    (newPurchaseCount / allAssetsCount) *
+    100
+  ).toFixed(2);
+  const inactivePercentage = ((inactiveCount / allAssetsCount) * 100).toFixed(
+    2
+  );
+  const deployedPercentage = ((deployedCount / allAssetsCount) * 100).toFixed(
+    2
+  );
   return (
     <main>
       <div className="flex h-screen bg-gray-900 text-white">
@@ -108,24 +160,35 @@ function Page() {
             <Link href="./stocks/allasset" passHref>
               <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
                 <h3 className="text-lg">All assets</h3>
-                <p className="text-2xl">2,361</p>
+                <p className="text-2xl">
+                  {allAssetsCount !== null ? allAssetsCount : "N/A"}
+                </p>
                 <span className="text-teal-500">+12%</span>
               </div>
             </Link>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
               <h3 className="text-lg text-green-500">Inpool</h3>
-              <p className="text-2xl">1,741</p>
-              <span className="text-teal-500">-53%</span>
+              {/* Render the inPoolCount dynamically */}
+              <p className="text-2xl">
+                {inPoolCount !== null ? inPoolCount.toLocaleString() : "N/A"}
+              </p>
+              <span className="text-teal-500">{inPoolPercentage}%</span>
             </div>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
               <h3 className="text-lg text-yellow-500">New purchase</h3>
-              <p className="text-2xl">5</p>
-              <span className="text-teal-500">+2%</span>
+              {/* Dynamically display the new purchase count */}
+              <p className="text-2xl">
+                {newPurchaseCount !== null ? newPurchaseCount : "N/A"}
+              </p>
+              <span className="text-teal-500">{newPurchasePercentage}%</span>
             </div>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
               <h3 className="text-lg text-red-500">Inactive</h3>
-              <p className="text-2xl">5</p>
-              <span className="text-teal-500">+2%</span>
+              {/* Dynamically display the inactive count */}
+              <p className="text-2xl">
+                {inactiveCount !== null ? inactiveCount : "N/A"}
+              </p>
+              <span className="text-teal-500">{inactivePercentage}%</span>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
@@ -134,10 +197,13 @@ function Page() {
               <p className="text-2xl">5</p>
               <span className="text-teal-500">Since last month</span>
             </div>
-            <div className="bg-gray-800 p-3 rounded-lg text-center">
-              <h3 className="text-lg text-purple-500">Assigned</h3>
-              <p className="text-2xl">5</p>
-              <span className="text-teal-500">+2%</span>
+            <div className="bg-gray-800 p-5 rounded-lg text-center">
+              <h3 className="text-lg text-purple-500">Deployed</h3>
+              {/* Dynamically display the deployed count */}
+              <p className="text-2xl">
+                {deployedCount !== null ? deployedCount : "N/A"}
+              </p>
+              <span className="text-teal-500">{deployedPercentage}%</span>
             </div>
             <div className="bg-gray-800 p-3 rounded-lg text-center">
               <h3 className="text-lg text-white-500">

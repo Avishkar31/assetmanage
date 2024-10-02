@@ -3,18 +3,12 @@ Checkout -> Checkin date, issueTo and Default Location is important need to stor
 
             Asset will update and store the transaction.
                * transaction stores location and issue to and date. Transction will shown in view button
-
-In view ->    History will show 
-
-Line navigate to view and button directly navigate to checkout/checkin button
-
-after every submittion clear form navigate to allasset  
+               after every submittion clear form navigate to allasset  
 
 Dell data fetch. DELL API.
 
 SEARCH BUTTON.
 
-MAIN Page will show all data count redirect from there.
 
 
 

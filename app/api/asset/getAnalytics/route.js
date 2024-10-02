@@ -7,14 +7,18 @@ export async function GET(req) {
 
   try {
     const inPoolCount = await Asset.countDocuments({ status: "Inpool" });
-    const newPurchaseCount = await Asset.countDocuments({ status: "New Purchase" });
+    const newPurchaseCount = await Asset.countDocuments({
+      status: "New Purchase"
+    });
     const inactiveCount = await Asset.countDocuments({ status: "Inactive" });
+    const deployedCount = await Asset.countDocuments({ status: "Deployed" });
     const allAssetsCount = await Asset.countDocuments({});
 
     const analytics = {
       inPoolCount,
       newPurchaseCount,
       inactiveCount,
+      deployedCount,
       allAssetsCount
     };
 

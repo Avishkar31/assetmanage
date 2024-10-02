@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Sidebar from "@/components/Sidebar";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 // Reusable InputComponent
 const InputComponent = ({ id, value, onChange, readOnly }) => (
@@ -33,11 +33,13 @@ const ViewAsset = () => {
     order: ""
   });
 
+  const [history, setHistory] = useState([]); // To store asset history
+
   const searchParams = useSearchParams();
   const serialNumber = searchParams.get("SerialNumber");
   const [isReadOnly, setIsReadOnly] = useState(true);
 
-  // Fetch data from API
+  // Fetch asset data and history from API
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -45,7 +47,8 @@ const ViewAsset = () => {
           `/api/asset/get?serialNumber=${serialNumber}`
         );
         const data = await response.json();
-        setFormData(data);
+        setFormData(data); // Assuming the asset details are returned as 'asset'
+        setHistory(data.assetHistory); // Assuming history is returned as 'history'
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -111,6 +114,7 @@ const ViewAsset = () => {
                 ["Category", "category"],
                 ["Model", "model"],
                 ["Expires", "expires"],
+                ["Issue To", "issueTo"],
                 ["Default Location", "defaultLocation"],
                 ["Asset Owner", "assetOwner"],
                 ["Cost Center", "costCenter"],
@@ -125,17 +129,14 @@ const ViewAsset = () => {
                   <span>
                     <InputComponent
                       id={id}
-                      value={formData[id]}
+                      value={formData[id] || ""} // Default to empty string if undefined
                       onChange={handleInputChange}
                       readOnly={isReadOnly}
                     />
                   </span>
                 </div>
               ))}
-              <div className="flex justify-between">
-                <span className="text-gray-400">History:</span>
-                {/* get the asset history array from the above api response and map here in ui  */}
-              </div>
+
               <div className="flex justify-between">
                 <span className="text-gray-400">Note:</span>
                 <span>
@@ -148,9 +149,31 @@ const ViewAsset = () => {
                   />
                 </span>
               </div>
+
+              {/* History Section */}
+              <div className="mt-6">
+                <h3 className="text-lg text-gray-400">Asset History:</h3>
+                {history.length > 0 ? (
+                  history.map((entry, index) => (
+                    <div key={index} className="bg-gray-700 p-3 rounded mb-2">
+                      <div>
+                        {entry.previousUser ? `${entry.previousUser} ` : "N/A "}
+                        changed status
+                        <strong> {entry.status} </strong>
+                        {entry.checkOutTime
+                          ? ` on ${new Date(entry.date).toLocaleString()} to`
+                          : ` on ${new Date(entry.date).toLocaleString()} to`}
+                        <strong> {entry.issueTo} </strong>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <p>No history available for this asset.</p>
+                )}
+              </div>
             </div>
           </div>
-          <div className="flex-1 flex flex-col space-y-2 ">
+          <div className="flex-1 flex flex-col space-y-2">
             {/* Action buttons */}
             <button
               type="button"
