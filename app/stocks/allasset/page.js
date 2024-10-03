@@ -36,9 +36,9 @@ export default function AllAssetsPage() {
 
   console.log("assets", assets);
   return (
-    <div className="flex flex-col md:flex-row min-h-screen w-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row min-h-screen max-w-screen">
       <Sidebar />
-      <div className="flex-grow p-5 bg-gray-900">
+      <div className="p-5 bg-gray-900 " style={{ width: "83%" }}>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5">
           <h1 className="text-2xl text-white mb-4 md:mb-0">All Assets</h1>
           <Link href="/stocks/addasset">
@@ -48,9 +48,9 @@ export default function AllAssetsPage() {
           </Link>
         </header>
 
-        <div className="bg-gray-800 p-3 rounded-lg">
+        <div className="bg-gray-800 p-3 rounded-lg" style={{ width: "100%" }}>
           {/* Set the table container to full width, but ensure no horizontal overflow */}
-          <div className="w-full md:w-1/2 overflow-x-auto">
+          <div className="overflow-x-auto">
             <AssetTable assetData={assets} />
           </div>
         </div>

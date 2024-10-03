@@ -44,7 +44,7 @@ function AssetTable({ assetData }) {
   return (
     <div className="p-4 bg-gray-900 rounded-lg shadow-md">
       {/* Search Input */}
-      <div className="mb-6">
+      <div className="mb-6 " style={{ width: "40%" }}>
         <input
           type="text"
           placeholder="Search..."
