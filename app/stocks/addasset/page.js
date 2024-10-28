@@ -9,6 +9,93 @@ import {
 } from "react-icons/io";
 import { FiLoader } from "react-icons/fi";
 
+// const getAssetDetails =(serialnumber)=>{
+
+//     // fetch the cooky value if token has expried
+//     //then fetch new token using post API of get token
+//     // and then fetch asset details using get API
+//     //return thwe response and set data accordingly
+//     //
+
+// }
+
+const getAssetDetails = async (serialNumber) => {
+  try {
+    setShowLoader(true); // Start loader
+
+    // Get token from cookies or storage (you may be using a library like js-cookie or localStorage)
+    let token = getTokenFromCookies(); // Assume this function retrieves the token
+
+    // Check if the token is expired
+    if (isTokenExpired(token)) {
+      // Assume this function checks the token expiry
+      // Fetch new token using POST API
+      token = await fetchNewToken();
+      setTokenInCookies(token); // Save the new token in cookies or storage
+    }
+
+    // Use the token to fetch asset details
+    const assetDetails = await fetchAssetDetails(token, serialNumber);
+
+    // Update the form or state with asset details
+    setFormData((prevData) => ({
+      ...prevData,
+      type: assetDetails.type,
+      model: assetDetails.model
+    }));
+  } catch (error) {
+    console.error("Error fetching asset details:", error);
+    // Handle error (show error message, etc.)
+  } finally {
+    setShowLoader(false); // Stop loader
+  }
+};
+
+const fetchNewToken = async () => {
+  const response = await fetch(
+    "https://apigtwb2c.us.dell.com/auth/oauth/v2/token",
+    {
+      method: "POST",
+      body: JSON.stringify({  }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }
+  );
+  const data = await response.json();
+  return data.token;
+};
+
+const fetchAssetDetails = async (token, serialNumber) => {
+  const response = await fetch(`https://api.dell.com/assets/${serialNumber}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  });
+  const data = await response.json();
+  return data;
+};
+
+// Example token expiration check (this can vary depending on your token structure)
+const isTokenExpired = (token) => {
+  const expiry = JSON.parse(atob(token.split(".")[1])).exp;
+  return expiry * 1000 < Date.now(); // Check if token is expired
+};
+
+const handleSerialNumberChange = (e) => {
+  setFormData({
+    ...formData,
+    serialNumber: e.target.value
+  });
+
+  // Optionally trigger the asset details fetch when the serial number changes
+  if (e.target.value.length === 7) {
+    // Check for valid serial number length (example)
+    getAssetDetails(e.target.value);
+  }
+};
+
 const AddAssetForm = () => {
   // State to manage form data
   const [formData, setFormData] = useState({
