@@ -183,7 +183,7 @@ function Page() {
               <span className="text-teal-500">{newPurchasePercentage}%</span>
             </div>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
-              <h3 className="text-lg text-red-500">Inactive</h3>
+              <h3 className="text-lg text-red-500">Buyback assets</h3>
               {/* Dynamically display the inactive count */}
               <p className="text-2xl">
                 {inactiveCount !== null ? inactiveCount : "N/A"}
