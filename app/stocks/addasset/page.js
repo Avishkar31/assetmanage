@@ -222,118 +222,6 @@ const AddAssetForm = () => {
     { label: "Bad" }
   ];
 
-  const fetchNewToken = async () => {
-    const response = await fetch(
-      "https://apigtwb2c.us.dell.com/auth/oauth/v2/token",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          grant_type: 'client_credentials',
-          client_id: 'l7e4dfdc32c32d45fca160aa38496e3647',
-          client_secret: "f2307c67b74346e29e229afabcdf6f18"
-        }),
-        headers: {
-          "Content-Type": 'application/json'
-        }
-      }
-    );
-  
-    const data = await response.json();
-    console.log("data", data);
-    return data.access_token;
-  };
-  
-
-const fetchAssetDetails = async (token, serialNumber) => {
-  const response = await fetch(`https://api.dell.com/assets/${serialNumber}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-  const data = await response.json();
-  return data;
-};
-
-// Example token expiration check (this can vary depending on your token structure)
-const isTokenExpired = (token) => {
-  const expiry = JSON.parse(atob(token.split(".")[1])).exp;
-  return expiry * 1000 < Date.now(); // Check if token is expired
-};
-
-
-const AddAssetForm = () => {
-  // State to manage form data
-  const [formData, setFormData] = useState({
-    assetTag: "", // Asset Tag number, auto-incremented and fetched from the server
-    nodeName: "", // Name of the node
-    manufacturer: "", // Manufacturer of the asset
-    serialNumber: "", // Serial number of the asset
-    type: "", // Type of the asset (e.g., laptop, desktop)
-    model: "", // Model of the asset
-    expires: "", // Expiry date of the asset
-    category: "", // Category of the asset, derived from type
-    status: "Default", // Status of the asset (e.g., deployed, inpool)
-    department: "", // Department where the asset is allocated
-    issueTo: "", // Person to whom the asset is issued
-    note: "", // Additional notes
-    defaultLocation: "Select Location", // Default location of the asset, updated when status is "Deployed"
-    costCenter: "", // Cost center associated with the asset
-    receivedDate: "", // Date when the asset was received
-    assetOwner: "", // Owner of the asset
-    condition: "", // Condition of the asset (e.g., excellent, good)
-    storeLocation: "Rack No", // Store location, e.g., rack number
-    killdiskDate: "", // Date when killdisk was applied (if applicable)
-    attachedFile: "", // File attached to the asset record
-    disposedDate: "", // Date when the asset was disposed (if applicable)
-    poNumber: "", // Purchase order number
-    order: "", // Order number
-    purchaseDate: "" // Date of purchase
-  });
-
-  // State to manage the visibility of sections
-  const [openSection, setOpenSection] = useState("");
-  // State to manage the loading indicator for the serial number
-  const [showLoader, setShowLoader] = useState(false);
-  // State to manage duplicate serial number error
-  const [duplicateError, setDuplicateError] = useState("");
-
-  const dropdownRef = useRef(null); // Reference to the dropdown for click detection
-
-
-  const getAssetDetails = async (serialNumber) => {
-    try {
-      setShowLoader(true); // Start loader
-  
-      // Get token from cookies or storage (you may be using a library like js-cookie or localStorage)
-      let token ;
-      // = getTokenFromCookies(); // Assume this function retrieves the token
-  
-      // Check if the token is expired
-      // if (isTokenExpired(token)) {
-        // Assume this function checks the token expiry
-        // Fetch new token using POST API
-        token = await fetchNewToken();
-        setTokenInCookies(token); // Save the new token in cookies or storage
-      // }
-  
-      // Use the token to fetch asset details
-      const assetDetails = await fetchAssetDetails(token, serialNumber);
-  
-      // Update the form or state with asset details
-      setFormData((prevData) => ({
-        ...prevData,
-        type: assetDetails.type,
-        model: assetDetails.model
-      }));
-    } catch (error) {
-      console.log("Error fetching asset details:", error);
-      // Handle error (show error message, etc.)
-    } finally {
-      setShowLoader(false); // Stop loader
-    }
-  };
-
   // Effect to automatically set default location to "Home" when status is "Deployed"
   useEffect(() => {
     if (formData.status === "Deployed") {
@@ -370,10 +258,11 @@ const AddAssetForm = () => {
     }));
 
     if (id === "serialNumber") {
-      if (value.length === 7) {
-        // Check for valid serial number length (example)
-        getAssetDetails(value);
-      }
+      setShowLoader(true);
+
+      setTimeout(() => {
+        setShowLoader(false);
+      }, 2000); // 2 seconds
     }
 
     if (errors.serialNumber) {

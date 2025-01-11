@@ -2,22 +2,27 @@
 
 import { useState } from "react";
 
-export default function Signup() {
+export default function AddUser() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("user");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const token = localStorage.getItem("token");
 
     const res = await fetch("/api/users/create", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, password, role: "user" })
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ username, password, role })
     });
 
     const data = await res.json();
     if (res.ok) {
-      alert("Signup successful!");
+      alert("User created successfully!");
     } else {
       alert(`Error: ${data.message}`);
     }
@@ -39,7 +44,11 @@ export default function Signup() {
         onChange={(e) => setPassword(e.target.value)}
         required
       />
-      <button type="submit">Signup</button>
+      <select value={role} onChange={(e) => setRole(e.target.value)}>
+        <option value="user">User</option>
+        <option value="admin">Administrator</option>
+      </select>
+      <button type="submit">Add User</button>
     </form>
   );
 }

@@ -1,116 +1,121 @@
-// 'use client'
-// import { useRouter } from "next/router";
-// import Link from "next/link";
+"use client";
 
-// const LoginPage = () => {
-//   const router = useRouter();
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
-//   async function handleSubmit(event) {
-//     event.preventDefault();
+export default function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null); // To manage errors
+  const router = useRouter();
 
-//     const formData = new FormData(event.currentTarget);
-//     const email = formData.get("email");
-//     const password = formData.get("password");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-//     const response = await fetch("/api/auth/login", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ email, password })
-//     });
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password })
+    });
 
-//     if (response.ok) {
-//       router.push("/profile");
-//     } else {
-//       // Handle errors
-//     }
-//   }
+    if (res.ok) {
+      const data = await res.json();
+      router.push("/"); // Redirect to the home page (or dashboard) after login
+    } else {
+      const error = await res.json();
+      setError(error.message); // Display the error message
+    }
+  };
 
-//   return (
-//     <main className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
-//       <section className="w-full max-w-md p-8 bg-white rounded-lg shadow dark:bg-gray-800 dark:border-gray-700">
-//         <Link href="#">
-//           <a className="flex items-center mb-6 text-2xl font-semibold text-gray-900 dark:text-white">
-//             <img
-//               className="w-8 h-8 mr-2"
-//               src="https://cdn.icon-icons.com/icons2/2699/PNG/512/siemens_logo_icon_170741.png"
-//               alt="logo"
-//             />
-//             Asset management
-//           </a>
-//         </Link>
-//         <div className="space-y-6">
-//           <h6 className="text-2xl leading-tight tracking-tight text-gray-900 dark:text-white">
-//             Sign in to your account
-//           </h6>
-//           <form onSubmit={handleSubmit} className="space-y-6">
-//             <div>
-//               <label
-//                 htmlFor="email"
-//                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-//               >
-//                 Your email
-//               </label>
-//               <input
-//                 type="email"
-//                 name="email"
-//                 id="email"
-//                 className="block w-full p-2.5 border rounded-lg bg-gray-50 text-gray-900 border-gray-300 focus:ring-primary-600 focus:border-primary-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-//                 placeholder="name@company.com"
-//                 required
-//               />
-//             </div>
-//             <div>
-//               <label
-//                 htmlFor="password"
-//                 className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-//               >
-//                 Password
-//               </label>
-//               <input
-//                 type="password"
-//                 name="password"
-//                 id="password"
-//                 className="block w-full p-2.5 border rounded-lg bg-gray-50 text-gray-900 border-gray-300 focus:ring-primary-600 focus:border-primary-600 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-//                 placeholder="••••••••"
-//                 required
-//               />
-//             </div>
-//             <div className="flex items-center justify-between">
-//               <div className="flex items-start">
-//                 <div className="flex items-center h-5">
-//                   <input
-//                     id="remember"
-//                     aria-describedby="remember"
-//                     type="checkbox"
-//                     className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600"
-//                   />
-//                 </div>
-//               </div>
-//               <Link href="/forgot-password">
-//                 <a className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500">
-//                   Forgot password?
-//                 </a>
-//               </Link>
-//             </div>
-//             <button
-//               type="submit"
-//               className="w-full py-2.5 px-5 text-sm font-medium text-white border border-1 bg-primary-600 rounded-lg focus:ring-4 focus:outline-none hover:bg-primary-700 dark:bg-primary-600 dark:hover:bg-primary-700 dark:focus:ring-primary-800"
-//             >
-//               Sign in
-//             </button>
-//             <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-//               Don’t have an account yet?{" "}
-//               <Link href="/signup">
-//                 <a className="font-medium text-primary-600 hover:underline dark:text-primary-500">
-//                   Sign up
-//                 </a>
-//               </Link>
-//             </p>
-//           </form>
-//         </div>
-//       </section>
-//     </main>
-//   );
-// };
+  return (
+    <div className="container">
+      <form onSubmit={handleSubmit} className="form">
+        <h2 className="heading">Login</h2>
+        {error && <p className="errorMessage">{error}</p>}
+        <input
+          type="text"
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          required
+          className="inputField"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          className="inputField"
+        />
+        <button type="submit" className="submitButton">
+          Login
+        </button>
+      </form>
 
-// export default LoginPage;
+      <style jsx>{`
+        .container {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          background-color: #f0f0f0;
+        }
+
+        .form {
+          width: 100%;
+          max-width: 400px;
+          padding: 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+          background-color: #fff;
+        }
+
+        .heading {
+          text-align: center;
+          margin-bottom: 20px;
+          font-size: 24px;
+        }
+
+        .inputField {
+          width: 100%;
+          padding: 10px;
+          margin: 10px 0;
+          border-radius: 4px;
+          border: 1px solid #ccc;
+          font-size: 16px;
+        }
+
+        .inputField:focus {
+          border-color: #0070f3;
+          outline: none;
+        }
+
+        .submitButton {
+          width: 100%;
+          padding: 10px;
+          background-color: #0070f3;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+        }
+
+        .submitButton:hover {
+          background-color: #005bb5;
+        }
+
+        .submitButton:focus {
+          outline: none;
+        }
+
+        .errorMessage {
+          color: red;
+          margin-top: 10px;
+          text-align: center;
+        }
+      `}</style>
+    </div>
+  );
+}

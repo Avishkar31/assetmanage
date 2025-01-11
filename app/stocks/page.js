@@ -83,8 +83,10 @@ function Page() {
   }
 
   // Calculating percentages based on the total number of assets
-  const totalActiveAssets = allAssetsCount - inactiveCount; // Exclude inactive assets from the total count
+  // Calculate total active assets as the sum of inPoolCount and deployedCount
+  const totalActiveAssets = inPoolCount + deployedCount;
 
+  // Calculate percentages relative to totalActiveAssets
   const inPoolPercentage = ((inPoolCount / totalActiveAssets) * 100).toFixed(2);
   const newPurchasePercentage = (
     (newPurchaseCount / totalActiveAssets) *
