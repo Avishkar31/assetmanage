@@ -83,17 +83,17 @@ function Page() {
   }
 
   // Calculating percentages based on the total number of assets
-  const inPoolPercentage = ((inPoolCount / allAssetsCount) * 100).toFixed(2);
+  const totalActiveAssets = allAssetsCount - inactiveCount; // Exclude inactive assets from the total count
+
+  const inPoolPercentage = ((inPoolCount / totalActiveAssets) * 100).toFixed(2);
   const newPurchasePercentage = (
-    (newPurchaseCount / allAssetsCount) *
+    (newPurchaseCount / totalActiveAssets) *
     100
   ).toFixed(2);
-  const inactivePercentage = ((inactiveCount / allAssetsCount) * 100).toFixed(
-    2
-  );
-  const deployedPercentage = ((deployedCount / allAssetsCount) * 100).toFixed(
-    2
-  );
+  const deployedPercentage = (
+    (deployedCount / totalActiveAssets) *
+    100
+  ).toFixed(2);
   return (
     <main>
       <div className="flex h-screen bg-gray-900 text-white">
@@ -156,7 +156,7 @@ function Page() {
               </div>
             </div>
           </header>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
             <Link href="./stocks/allasset" passHref>
               <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
                 <h3 className="text-lg">All assets</h3>
@@ -181,14 +181,6 @@ function Page() {
                 {newPurchaseCount !== null ? newPurchaseCount : "N/A"}
               </p>
               <span className="text-teal-500">{newPurchasePercentage}%</span>
-            </div>
-            <div className="bg-gray-800 p-5 rounded-lg text-center">
-              <h3 className="text-lg text-red-500">Buyback assets</h3>
-              {/* Dynamically display the inactive count */}
-              <p className="text-2xl">
-                {inactiveCount !== null ? inactiveCount : "N/A"}
-              </p>
-              <span className="text-teal-500">{inactivePercentage}%</span>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">

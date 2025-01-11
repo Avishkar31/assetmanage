@@ -80,7 +80,6 @@ const Dashboard = () => {
           issueTo: data.issueTo,
           nodeName: data.nodeName
         };
-        console.log("dfa", data);
         setFormData(intitialFormData); // Set the form data with the API response
       } catch (error) {
         console.error("Error fetching form data:", error);
@@ -88,7 +87,7 @@ const Dashboard = () => {
     };
 
     fetchFormData();
-    // using a serial number
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -102,15 +101,29 @@ const Dashboard = () => {
   };
 
   const handleCheckIn = async () => {
+    if (
+      !formData.status ||
+      !formData.issueTo ||
+      !formData.defaultLocation ||
+      !formData.checkinDate
+    ) {
+      alert(
+        "Please fill in all mandatory fields: Status, Issue To, Default Location, and Check-in Date."
+      );
+      return;
+    }
+
     const ddata = {
       nodeName: formData.nodeName,
       status: formData.status,
       issueTo: formData.issueTo,
-      storeLocation: "Storage Room A",
-      note: "Checked in after repair",
+      storeLocation: formData.defaultLocation,
+      note: formData.note || "Checked in after repair",
       checkType: "checkin",
+      checkinDate: formData.checkinDate,
       serialNumber: serialNumber
     };
+
     try {
       const response = await fetch("/api/asset/checkAsset", {
         method: "POST",
@@ -119,16 +132,16 @@ const Dashboard = () => {
       });
       if (response.ok) {
         await response.json();
-        alert("Asset CheckIn successfully");
-        // Navigate to the allassets page after successful check-in
+        alert("Asset Check-In successfully");
         router.push("stocks/allassets");
       } else {
-        alert("Failed to checkin asset!");
+        alert("Failed to check-in asset!");
       }
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
   };
+
   return (
     <div className="flex">
       <Sidebar />
@@ -161,16 +174,13 @@ const Dashboard = () => {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <label htmlFor="status" className="w-52 text-gray-500 mr-2">
-                Status
+                Status <span className="text-red-500">*</span>
               </label>
               <div className="w-3/5 relative">
                 <input
                   type="text"
                   id="status"
                   value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
                   onClick={() => toggleSection("status")}
                   className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400 cursor-pointer w-full"
                   readOnly
@@ -182,7 +192,6 @@ const Dashboard = () => {
                     <IoMdArrowDropdown />
                   )}
                 </span>
-
                 {openSection === "status" && (
                   <div
                     ref={dropdownRef}
@@ -214,11 +223,10 @@ const Dashboard = () => {
             </div>
           </div>
 
-          {/* Issue To */}
           <div className="mb-4 ml-10">
             <div className="flex items-center mb-2">
               <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
-                Issue To
+                Issue To <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -233,20 +241,28 @@ const Dashboard = () => {
 
           <div className="mb-4 ml-10">
             <div className="flex items-center mb-2">
-              <label htmlFor="Default" className="w-52 text-gray-500 mr-2">
-                Default Location
+              <label
+                htmlFor="defaultLocation"
+                className="w-52 text-gray-500 mr-2"
+              >
+                Default Location <span className="text-red-500">*</span>
               </label>
               <select
                 id="defaultLocation"
-                value={formData.defaultLocation}
+                value={formData.defaultLocation || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, defaultLocation: e.target.value })
+                }
                 className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
               >
-                <option value="default">Default</option>
-                <option value="default">Home</option>
-                <option value="default">MIS Store-2nd Compactor Floor</option>
-                <option value="default">MIS Store-4th Floor</option>
-                <option value="default">MIS Store-Basement</option>
-                <option value="default">Buyback</option>
+                <option value="">Select Location</option>
+                <option value="Home">Home</option>
+                <option value="MIS Store-2nd Compactor Floor">
+                  MIS Store-2nd Compactor Floor
+                </option>
+                <option value="MIS Store-4th Floor">MIS Store-4th Floor</option>
+                <option value="MIS Store-Basement">MIS Store-Basement</option>
+                <option value="Buyback">Buyback</option>
               </select>
             </div>
           </div>
@@ -254,11 +270,15 @@ const Dashboard = () => {
           <div className="mb-4 ml-10">
             <div className="flex items-center mb-2">
               <label htmlFor="checkinDate" className="w-52 text-gray-500 mr-2">
-                Checkin Date
+                Check-in Date <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 id="checkinDate"
+                value={formData.checkinDate || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, checkinDate: e.target.value })
+                }
                 className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
               />
             </div>
@@ -272,7 +292,11 @@ const Dashboard = () => {
               <textarea
                 id="note"
                 rows="3"
-                className="block p-2 w-2/3 text-sm text-gray-900 bg-gray-900 rounded-lg border border-gray-300 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                value={formData.note || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, note: e.target.value })
+                }
+                className="block p-2 w-2/3 text-sm bg-gray-900 border border-gray-700 rounded text-gray-400"
                 placeholder="Note"
               ></textarea>
             </div>
@@ -280,10 +304,23 @@ const Dashboard = () => {
 
           <div className="flex justify-center">
             <button
-              className="px-5 py-2 mt-10 bg-blue-500 text-white rounded"
+              className={`px-5 py-2 mt-10 ${
+                formData.status &&
+                formData.issueTo &&
+                formData.defaultLocation &&
+                formData.checkinDate
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-500 text-gray-300 cursor-not-allowed"
+              } rounded`}
               onClick={handleCheckIn}
+              disabled={
+                !formData.status ||
+                !formData.issueTo ||
+                !formData.defaultLocation ||
+                !formData.checkinDate
+              }
             >
-              Checkin to {formData.issueTo || "Username"}
+              Check-in to {formData.issueTo || "Username"}
             </button>
           </div>
         </div>

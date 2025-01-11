@@ -49,13 +49,15 @@ const CheckoutForm = () => {
     nodeName: "",
     model: "",
     issueTo: "",
-    checkOutDate: ""
+    checkOutDate: "",
+    note: ""
   });
 
   const searchParams = useSearchParams();
   const serialNumber = searchParams.get("SerialNumber");
   const [openSection, setOpenSection] = useState("");
   const dropdownRef = useRef(null);
+  const router = useRouter();
 
   const toggleSection = (section) => {
     setOpenSection((prevSection) => (prevSection === section ? "" : section));
@@ -70,7 +72,6 @@ const CheckoutForm = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Replace with your actual API call
         const response = await fetch(
           `/api/asset/get?serialNumber=${serialNumber}`
         );
@@ -80,7 +81,8 @@ const CheckoutForm = () => {
           nodeName: data.nodeName || "",
           model: data.model || "",
           issueTo: data.issueTo || "",
-          checkOutDate: data.checkOutDate || ""
+          checkOutDate: data.checkOutDate || "",
+          note: ""
         });
       } catch (error) {
         console.error("Error fetching asset details:", error);
@@ -88,8 +90,6 @@ const CheckoutForm = () => {
     };
 
     fetchData();
-
-    console.log("nodeName", nodeName);
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -105,6 +105,27 @@ const CheckoutForm = () => {
   };
 
   const handleCheckOut = async () => {
+    const { status, issueTo, checkOutDate } = formData;
+
+    if (!status || !issueTo) {
+      alert("Please fill out all mandatory fields: Status and Issue To.");
+      return;
+    }
+
+    // Check if status is 'Inpool'
+    if (status === "Inpool") {
+      alert(
+        "Status cannot be 'Inpool' for checkout. Please select a different status."
+      );
+      return;
+    }
+
+    // Ensure checkout date is set
+    if (!checkOutDate) {
+      alert("Please select a checkout date.");
+      return;
+    }
+
     const ddata = {
       model: formData.model,
       nodeName: formData.nodeName,
@@ -116,6 +137,7 @@ const CheckoutForm = () => {
       serialNumber: serialNumber,
       checkOutDate: formData.checkOutDate
     };
+
     try {
       const response = await fetch("/api/asset/checkAsset", {
         method: "POST",
@@ -123,10 +145,10 @@ const CheckoutForm = () => {
         body: JSON.stringify(ddata)
       });
       if (response.ok) {
-        await response.json();
         alert("Asset CheckOut successfully");
+        router.push("/stocks/allasset"); // Redirect to All Assets page
       } else {
-        alert("Failed to checkOut asset!");
+        alert("Failed to check out asset!");
       }
     } catch (error) {
       alert(`Error: ${error.message}`);
