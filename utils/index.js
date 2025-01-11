@@ -13,10 +13,9 @@ export  const storeToken = (token) => {
 export const fetchNewToken = async () => {
     try {
       const response = await fetch(
-        "https://apigtwb2c.us.dell.com/auth/oauth/v2/token",
+        "/api/asset/gettoken",
         {
           method: "POST",
-          body: JSON.stringify({}),
           headers: {
             "Content-Type": "application/json"
           }
