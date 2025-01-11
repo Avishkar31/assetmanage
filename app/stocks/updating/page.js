@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Sidebar from "@/components/Sidebar"
+import Sidebar from "components/Sidebar"
 
 const Dashboard = () => {
   const [selectedRam, setSelectedRam] = useState("16 GB");
