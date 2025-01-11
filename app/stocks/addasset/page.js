@@ -56,7 +56,7 @@ const fetchNewToken = async () => {
     "https://apigtwb2c.us.dell.com/auth/oauth/v2/token",
     {
       method: "POST",
-      body: JSON.stringify({  }),
+      body: JSON.stringify({}),
       headers: {
         "Content-Type": "application/json"
       }
@@ -99,37 +99,45 @@ const handleSerialNumberChange = (e) => {
 const AddAssetForm = () => {
   // State to manage form data
   const [formData, setFormData] = useState({
-    assetTag: "", // Asset Tag number, auto-incremented and fetched from the server
-    nodeName: "", // Name of the node
-    manufacturer: "", // Manufacturer of the asset
-    serialNumber: "", // Serial number of the asset
-    type: "", // Type of the asset (e.g., laptop, desktop)
-    model: "", // Model of the asset
-    expires: "", // Expiry date of the asset
-    category: "", // Category of the asset, derived from type
-    status: "Default", // Status of the asset (e.g., deployed, inpool)
-    department: "", // Department where the asset is allocated
-    issueTo: "", // Person to whom the asset is issued
-    note: "", // Additional notes
+    assetTag: "",
+    nodeName: "",
+    manufacturer: "",
+    serialNumber: "",
+    type: "",
+    model: "",
+    expires: "",
+    category: "",
+    status: "",
+    department: "",
+    issueTo: "",
+    note: "",
     defaultLocation: "Select Location", // Default location of the asset, updated when status is "Deployed"
     costCenter: "", // Cost center associated with the asset
     receivedDate: "", // Date when the asset was received
     assetOwner: "", // Owner of the asset
     condition: "", // Condition of the asset (e.g., excellent, good)
     storeLocation: "Rack No", // Store location, e.g., rack number
-    killdiskDate: "", // Date when killdisk was applied (if applicable)
-    attachedFile: "", // File attached to the asset record
-    disposedDate: "", // Date when the asset was disposed (if applicable)
-    poNumber: "", // Purchase order number
-    order: "", // Order number
+    killdiskDate: "",
+    attachedFile: "",
+    disposedDate: "",
+    poNumber: "",
+    order: "",
     purchaseDate: "" // Date of purchase
   });
 
-  // State to manage the visibility of sections
+  const [errors, setErrors] = useState({
+    nodeName: false,
+    manufacturer: false,
+    serialNumber: false,
+    status: false,
+    department: false,
+    issueTo: false
+  });
+
   const [openSection, setOpenSection] = useState("");
   // State to manage the loading indicator for the serial number
   const [showLoader, setShowLoader] = useState(false);
-  // State to manage duplicate serial number error
+
   const [duplicateError, setDuplicateError] = useState("");
 
   const dropdownRef = useRef(null); // Reference to the dropdown for click detection
@@ -333,13 +341,12 @@ const AddAssetForm = () => {
     }
   }, [formData.status]);
 
-  // Handle input changes for text fields
   const handleInputChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
       [id]: value,
-      // Automatically set category based on type
+
       category:
         id === "type" && value.toLowerCase() === "laptop"
           ? "laptop"
@@ -349,9 +356,12 @@ const AddAssetForm = () => {
           ? "monitor"
           : prevData.category
     }));
+
+    if (errors[id]) {
+      setErrors((prev) => ({ ...prev, [id]: false }));
+    }
   };
 
-  // Handle serial number input with loader display for 2 seconds
   const handleSerialNumberChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevData) => ({
@@ -365,9 +375,12 @@ const AddAssetForm = () => {
         getAssetDetails(value);
       }
     }
+
+    if (errors.serialNumber) {
+      setErrors((prev) => ({ ...prev, serialNumber: false }));
+    }
   };
 
-  // Handle dropdown selection changes for select fields
   const handleSelectChange = (e) => {
     const { id, value } = e.target;
     setFormData((prevData) => ({
@@ -396,8 +409,38 @@ const AddAssetForm = () => {
     };
   }, []);
 
+  const handleStatusSelect = (label) => {
+    setFormData({ ...formData, status: label });
+    setOpenSection(null); // Close the dropdown
+  };
+
+  const [isLoading, setIsLoading] = useState(false);
+
   // Handle form submission
   const handleSubmit = async () => {
+    const requiredFields = [
+      "nodeName",
+      "manufacturer",
+      "serialNumber",
+      "status",
+      "department",
+      "issueTo"
+    ];
+
+    const newErrors = {};
+    requiredFields.forEach((field) => {
+      if (!formData[field]) {
+        newErrors[field] = `${field} is required.`;
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setIsLoading(true); // Start loading
+
     try {
       const formDataFinal = Object.fromEntries(
         Object.entries(formData).filter(([_, v]) => v !== "")
@@ -409,13 +452,20 @@ const AddAssetForm = () => {
         body: JSON.stringify(formDataFinal)
       });
 
-      if (response.ok) {
-        await response.json();
-        alert("Asset added successfully");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to add asset.");
       }
+
+      await response.json();
+      alert("Asset added successfully");
+      setFormData({}); // Reset the form if necessary
+      setErrors({}); // Clear any existing errors
     } catch (error) {
       console.error("Error submitting form:", error);
-      alert(`Error: ${error.message}`);
+      alert(`Error: ${error?.message || "Something went wrong!"}`);
+    } finally {
+      setIsLoading(false); // End loading
     }
   };
 
@@ -432,28 +482,6 @@ const AddAssetForm = () => {
           <div className="flex justify-between items-center mb-5">
             <h2 className="text-xl">Adding Asset</h2>
           </div>
-          {/* Asset Tag  and button to add duplicate with same data */}
-          {/* <div className="mb-4">
-            <div className="flex items-center">
-              <label htmlFor="assetTag" className="w-52 text-gray-500 mr-2">
-                Asset Tag
-              </label>
-              <input
-                type="text"
-                id="assetTag"
-                value={formData.assetTag} // Ensure formData.assetTag has a value
-                onChange={handleInputChange} // Remove this if the input should remain read-only
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-              />
-              <button
-                // onClick={handleAddAsset} // Ensure this function is correctly implemented
-                className="ml-2 p-2 bg-gray-700 text-gray-400 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                aria-label="Add Asset"
-              >
-                <IoMdAdd />
-              </button>
-            </div>
-          </div> */}
 
           {/* Node Name */}
           <div className="mb-4">
@@ -461,14 +489,23 @@ const AddAssetForm = () => {
               <label htmlFor="nodeName" className="w-52 text-gray-500 mr-2">
                 Node Name
               </label>
-              <input
-                type="text"
-                id="nodeName"
-                value={formData.nodeName}
-                onChange={handleInputChange}
-                placeholder="Enter the Node Name"
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-              />
+              <div className="flex flex-col w-3/5">
+                <input
+                  type="text"
+                  id="nodeName"
+                  value={formData.nodeName}
+                  onChange={handleInputChange}
+                  placeholder="Enter the Node Name"
+                  className={`p-3 bg-gray-900 border ${
+                    errors.nodeName ? "border-red-500" : "border-gray-700"
+                  } rounded text-sm text-gray-400`}
+                />
+                {errors.nodeName && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Node Name is required.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
 
@@ -478,18 +515,33 @@ const AddAssetForm = () => {
               <label htmlFor="manufacturer" className="w-52 text-gray-500 mr-2">
                 Manufacturer
               </label>
-              <select
-                id="manufacturer"
-                value={formData.manufacturer}
-                onChange={handleSelectChange}
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-300"
-              >
-                {manufacturerOptions.map((option) => (
-                  <option key={option.label} value={option.label.toLowerCase()}>
-                    {option.label}
+              <div className="flex flex-col w-3/5">
+                <select
+                  id="manufacturer"
+                  value={formData.manufacturer}
+                  onChange={handleSelectChange}
+                  className={`p-3 bg-gray-900 border ${
+                    errors.manufacturer ? "border-red-500" : "border-gray-700"
+                  } rounded text-sm text-gray-300`}
+                >
+                  <option value="" disabled>
+                    Select Manufacturer
                   </option>
-                ))}
-              </select>
+                  {manufacturerOptions.map((option) => (
+                    <option
+                      key={option.label}
+                      value={option.label.toLowerCase()}
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.manufacturer && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Manufacturer is required.
+                  </p>
+                )}
+              </div>
             </div>
 
             {/* Description for the selected manufacturer */}
@@ -508,29 +560,32 @@ const AddAssetForm = () => {
             <label htmlFor="serialNumber" className="w-52 text-gray-500 mr-2">
               Serial Number
             </label>
-            <input
-              type="text"
-              id="serialNumber"
-              value={formData.serialNumber}
-              onChange={handleSerialNumberChange}
-              placeholder="Enter the Serial number"
-              className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-            />
-            {showLoader && (
-              <span
-                className="ml-2 p-2 bg-gray-700 text-gray-400 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                aria-label="Loading"
-              >
-                <FiLoader />
-              </span>
-            )}
+            <div className="flex flex-col w-3/5">
+              <input
+                type="text"
+                id="serialNumber"
+                value={formData.serialNumber}
+                onChange={handleSerialNumberChange}
+                placeholder="Enter the Serial number"
+                className={`p-3 bg-gray-900 border ${
+                  errors.serialNumber ? "border-red-500" : "border-gray-700"
+                } rounded text-sm text-gray-400`}
+              />
+              {showLoader && (
+                <span
+                  className="ml-2 p-2 bg-gray-700 text-gray-400 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  aria-label="Loading"
+                >
+                  <FiLoader />
+                </span>
+              )}
+              {errors.serialNumber && (
+                <p className="text-red-500 text-xs mt-1">
+                  Serial Number is required.
+                </p>
+              )}
+            </div>
           </div>
-
-          {/* <div className="text-sm text-gray-500 mt-1 ml-56">
-                  {isSerialNumberDuplicate
-                    ? "This serial number is already in the database."
-                    : "Serial number must be unique for each asset"}
-                </div> */}
 
           {/* Type */}
           <div className="mb-4">
@@ -609,17 +664,17 @@ const AddAssetForm = () => {
               <label htmlFor="status" className="w-52 text-gray-500 mr-2">
                 Status
               </label>
-              <div className="w-3/5 relative">
+              <div className="w-3/5 relative flex flex-col">
                 <input
                   type="text"
                   id="status"
-                  value={formData.status}
-                  onChange={(e) =>
-                    setFormData({ ...formData, status: e.target.value })
-                  }
-                  onClick={() => toggleSection("status")} // Toggle dropdown
-                  className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400 cursor-pointer w-full"
-                  readOnly // Prevent manual typing
+                  value={formData.status || ""}
+                  onClick={() => toggleSection("status")}
+                  className={`p-3 bg-gray-900 border ${
+                    errors.status ? "border-red-500" : "border-gray-700"
+                  } rounded text-sm text-gray-400 cursor-pointer w-full`}
+                  readOnly
+                  placeholder="Select a status"
                 />
                 <span className="absolute right-2 top-2 text-gray-500">
                   {openSection === "status" ? (
@@ -631,16 +686,13 @@ const AddAssetForm = () => {
 
                 {openSection === "status" && (
                   <div
-                    ref={dropdownRef} // Attach the ref here
+                    ref={dropdownRef}
                     className="absolute bg-gray-800 border border-gray-700 mt-2 rounded w-full z-10"
                   >
                     {ramOptions.map((option) => (
                       <div
                         key={option.label}
-                        onClick={() => {
-                          setFormData({ ...formData, status: option.label });
-                          toggleSection("status"); // Close dropdown after selection
-                        }}
+                        onClick={() => handleStatusSelect(option.label)}
                         className="p-2 hover:bg-gray-700 cursor-pointer flex items-center"
                       >
                         <span className={`${option.color} mr-2`}>
@@ -650,6 +702,11 @@ const AddAssetForm = () => {
                       </div>
                     ))}
                   </div>
+                )}
+                {errors.status && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Status is required.
+                  </p>
                 )}
               </div>
             </div>
@@ -661,35 +718,53 @@ const AddAssetForm = () => {
 
           {/* Department */}
           <div className="mb-4 ml-10">
-            <div className="flex items-center mb-2">
-              <label htmlFor="department" className="w-52 text-gray-500 mr-2">
-                Department
-              </label>
-              <input
-                type="text"
-                id="department"
-                value={formData.department}
-                onChange={handleInputChange}
-                placeholder="Enter the department"
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-              />
+            <div className="flex flex-col">
+              <div className="flex items-center mb-2">
+                <label htmlFor="department" className="w-52 text-gray-500 mr-2">
+                  Department
+                </label>
+                <input
+                  type="text"
+                  id="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  placeholder="Enter the department"
+                  className={`w-3/5 p-3 bg-gray-900 border ${
+                    errors.department ? "border-red-500" : "border-gray-700"
+                  } rounded text-sm text-gray-400`}
+                />
+              </div>
+              {errors.department && (
+                <p className="text-red-500 text-xs mt-1">
+                  Department is required.
+                </p>
+              )}
             </div>
           </div>
 
           {/* Issue To */}
           <div className="mb-4 ml-10">
-            <div className="flex items-center mb-2">
-              <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
-                Issue To
-              </label>
-              <input
-                type="text"
-                id="issueTo"
-                value={formData.issueTo}
-                onChange={handleInputChange}
-                placeholder="Enter the name"
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-              />
+            <div className="flex flex-col">
+              <div className="flex items-center mb-2">
+                <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
+                  Issue To
+                </label>
+                <input
+                  type="text"
+                  id="issueTo"
+                  value={formData.issueTo}
+                  onChange={handleInputChange}
+                  placeholder="Enter the name"
+                  className={`w-3/5 p-3 bg-gray-900 border ${
+                    errors.issueTo ? "border-red-500" : "border-gray-700"
+                  } rounded text-sm text-gray-400`}
+                />
+              </div>
+              {errors.issueTo && (
+                <p className="text-red-500 text-xs mt-1">
+                  Issue To is required.
+                </p>
+              )}
             </div>
           </div>
 
