@@ -133,7 +133,7 @@ const Dashboard = () => {
       if (response.ok) {
         await response.json();
         alert("Asset Check-In successfully");
-        router.push("stocks/allassets");
+        router.push("/stocks/allasset");
       } else {
         alert("Failed to check-in asset!");
       }

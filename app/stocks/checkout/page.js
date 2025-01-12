@@ -9,37 +9,44 @@ const CheckoutForm = () => {
     { label: "Default", description: "" },
     {
       label: "Inpool",
-      description: "✓  This asset can be checked out.",
+      description:
+        "✓  This asset can be checked out. Please change the status accordingly.",
       color: "text-green-500"
     },
     {
       label: "New Purchase",
-      description: "✗ This asset cannot be checked out.",
+      description:
+        "✗ This asset cannot be checked out. Please change the status accordingly.",
       color: "text-red-500"
     },
     {
       label: "MIS Store",
-      description: "✓  This asset can be checked out.",
+      description:
+        "✓  This asset can be checked out.  Please change the status accordingly. ",
       color: "text-green-500"
     },
     {
       label: "Buyback",
-      description: "✗  This asset cannot be checked out.",
+      description:
+        "✗  This asset cannot be checked out.  Please changen the status accordingly.",
       color: "text-red-500"
     },
     {
       label: "Disposed",
-      description: "✗  This asset cannot be checked out.",
+      description:
+        "✗  This asset cannot be checked out.  Please change the status accordingly.",
       color: "text-red-500"
     },
     {
       label: "Inactive",
-      description: "✗  This asset cannot be checked out.",
+      description:
+        "✗  This asset cannot be checked out. Please change the status accordingly.",
       color: "text-red-500"
     },
     {
       label: "Deployed",
-      description: "✓  This asset can be checked out.",
+      description:
+        "✓  This asset can be checked out. Please change the status accordingly.",
       color: "text-green-500"
     }
   ];
@@ -206,7 +213,7 @@ const CheckoutForm = () => {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <label htmlFor="status" className="w-52 text-gray-500 mr-2">
-                Status
+                Status <span className="text-red-600">*</span>
               </label>
               <div className="w-3/5 relative">
                 <input
@@ -260,7 +267,7 @@ const CheckoutForm = () => {
           <div className="mb-4 ml-10">
             <div className="flex items-center mb-2">
               <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
-                Issue To
+                Issue To <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
@@ -277,7 +284,7 @@ const CheckoutForm = () => {
           <div className="mb-4 ml-10">
             <div className="flex items-center mb-2">
               <label htmlFor="checkOutDate" className="w-52 text-gray-500 mr-2">
-                Checkout Date
+                Checkout Date <span className="text-red-600">*</span>
               </label>
               <input
                 type="date"

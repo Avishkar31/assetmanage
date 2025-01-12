@@ -129,6 +129,7 @@ const AddAssetForm = () => {
     nodeName: false,
     manufacturer: false,
     serialNumber: false,
+    category: false,
     status: false,
     department: false,
     issueTo: false
@@ -376,7 +377,7 @@ const AddAssetForm = () => {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <label htmlFor="nodeName" className="w-52 text-gray-500 mr-2">
-                Node Name
+                Node Name <span className="text-red-600">*</span>
               </label>
               <div className="flex flex-col w-3/5">
                 <input
@@ -402,7 +403,7 @@ const AddAssetForm = () => {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <label htmlFor="manufacturer" className="w-52 text-gray-500 mr-2">
-                Manufacturer
+                Manufacturer <span className="text-red-600">*</span>
               </label>
               <div className="flex flex-col w-3/5">
                 <select
@@ -447,7 +448,7 @@ const AddAssetForm = () => {
           {/* Serial Number */}
           <div className="mb-4 flex items-center">
             <label htmlFor="serialNumber" className="w-52 text-gray-500 mr-2">
-              Serial Number
+              Serial Number <span className="text-red-600">*</span>
             </label>
             <div className="flex flex-col w-3/5">
               <input
@@ -530,8 +531,14 @@ const AddAssetForm = () => {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <label htmlFor="category" className="w-52 text-gray-500 mr-2">
-                Category
+                Category <span className="text-red-600">*</span>
+                {errors.nodeName && (
+                  <p className="text-red-500 text-xs mt-1">
+                    Category is required.
+                  </p>
+                )}
               </label>
+
               <select
                 id="category"
                 value={formData.category}
@@ -551,7 +558,7 @@ const AddAssetForm = () => {
           <div className="mb-4">
             <div className="flex items-center mb-2">
               <label htmlFor="status" className="w-52 text-gray-500 mr-2">
-                Status
+                Status <span className="text-red-600">*</span>
               </label>
               <div className="w-3/5 relative flex flex-col">
                 <input
@@ -636,7 +643,7 @@ const AddAssetForm = () => {
             <div className="flex flex-col">
               <div className="flex items-center mb-2">
                 <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
-                  Issue To
+                  Issue To <span className="text-red-600">*</span>
                 </label>
                 <input
                   type="text"

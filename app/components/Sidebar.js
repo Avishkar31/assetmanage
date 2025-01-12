@@ -1,8 +1,13 @@
+"use client";
+
 import React, { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
+import { usePathname } from "next/navigation";
+import clsx from "clsx";
 
 const Sidebar = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
+  const pathname = usePathname(); // Get the current route
 
   const dropdownRefs = {
     accessories: useRef(null),
@@ -56,10 +61,7 @@ const Sidebar = () => {
             <div className="absolute bg-gray-900 mt-2 rounded-lg p-2 shadow-lg">
               <ul>
                 <li className="mb-2">
-                  <a
-                    href="@/components/profile"
-                    className="text-gray-400 hover:text-white"
-                  >
+                  <a href="/profile" className="text-gray-400 hover:text-white">
                     Edit your profile
                   </a>
                 </li>
@@ -77,12 +79,24 @@ const Sidebar = () => {
       <nav>
         <ul>
           <li className="my-2">
-            <a href="./" className="text-gray-400 hover:text-white">
+            <a
+              href="/stocks"
+              className={clsx("hover:text-white", {
+                "text-white font-bold": pathname === "/",
+                "text-gray-400": pathname !== "/"
+              })}
+            >
               Overview
             </a>
           </li>
           <li className="my-2">
-            <a href="./allasset" className="text-gray-400 hover:text-white">
+            <a
+              href="/allasset"
+              className={clsx("hover:text-white", {
+                "text-white font-bold": pathname === "/allasset",
+                "text-gray-400": pathname !== "/allasset"
+              })}
+            >
               All assets
             </a>
           </li>
@@ -107,22 +121,46 @@ const Sidebar = () => {
                 ref={dropdownRefs.accessories}
               >
                 <li className="my-2">
-                  <a href="/monitor" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/monitor"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/monitor",
+                      "text-gray-400": pathname !== "/monitor"
+                    })}
+                  >
                     Monitor
                   </a>
                 </li>
                 <li className="my-2">
-                  <a href="" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/mouse"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/mouse",
+                      "text-gray-400": pathname !== "/mouse"
+                    })}
+                  >
                     Mouse
                   </a>
                 </li>
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/keyboard"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/keyboard",
+                      "text-gray-400": pathname !== "/keyboard"
+                    })}
+                  >
                     Keyboard
                   </a>
                 </li>
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/iphone"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/iphone",
+                      "text-gray-400": pathname !== "/iphone"
+                    })}
+                  >
                     iPhone
                   </a>
                 </li>
@@ -130,22 +168,46 @@ const Sidebar = () => {
             )}
           </li>
           <li className="my-2">
-            <a href="#" className="text-gray-400 hover:text-white">
+            <a
+              href="/buyback"
+              className={clsx("hover:text-white", {
+                "text-white font-bold": pathname === "/buyback",
+                "text-gray-400": pathname !== "/buyback"
+              })}
+            >
               Buyback
             </a>
           </li>
           <li className="my-2">
-            <a href="#" className="text-gray-400 hover:text-white">
+            <a
+              href="/disposed"
+              className={clsx("hover:text-white", {
+                "text-white font-bold": pathname === "/disposed",
+                "text-gray-400": pathname !== "/disposed"
+              })}
+            >
               Disposed
             </a>
           </li>
           <li className="my-2">
-            <a href="#" className="text-gray-400 hover:text-white">
+            <a
+              href="/deleted"
+              className={clsx("hover:text-white", {
+                "text-white font-bold": pathname === "/deleted",
+                "text-gray-400": pathname !== "/deleted"
+              })}
+            >
               Deleted
             </a>
           </li>
           <li className="my-2">
-            <a href="#" className="text-gray-400 hover:text-white">
+            <a
+              href="/imports"
+              className={clsx("hover:text-white", {
+                "text-white font-bold": pathname === "/imports",
+                "text-gray-400": pathname !== "/imports"
+              })}
+            >
               Imports
             </a>
           </li>
@@ -170,27 +232,57 @@ const Sidebar = () => {
                 ref={dropdownRefs.settings}
               >
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/departments"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/departments",
+                      "text-gray-400": pathname !== "/departments"
+                    })}
+                  >
                     Departments
                   </a>
                 </li>
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/people"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/people",
+                      "text-gray-400": pathname !== "/people"
+                    })}
+                  >
                     People
                   </a>
                 </li>
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/models"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/models",
+                      "text-gray-400": pathname !== "/models"
+                    })}
+                  >
                     Models
                   </a>
                 </li>
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/manufacturer"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/manufacturer",
+                      "text-gray-400": pathname !== "/manufacturer"
+                    })}
+                  >
                     Manufacturer
                   </a>
                 </li>
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/categories"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/categories",
+                      "text-gray-400": pathname !== "/categories"
+                    })}
+                  >
                     Categories
                   </a>
                 </li>
@@ -218,7 +310,13 @@ const Sidebar = () => {
                 ref={dropdownRefs.requests}
               >
                 <li className="my-2">
-                  <a href="#" className="text-gray-400 hover:text-white">
+                  <a
+                    href="/contact-us"
+                    className={clsx("hover:text-white", {
+                      "text-white font-bold": pathname === "/contact-us",
+                      "text-gray-400": pathname !== "/contact-us"
+                    })}
+                  >
                     Contact Us
                   </a>
                 </li>

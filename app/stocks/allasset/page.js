@@ -8,6 +8,7 @@ export default function AllAssetsPage() {
   const [assets, setAssets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filterStatus, setFilterStatus] = useState(""); // New state for filter status
 
   useEffect(() => {
     async function fetchAssets() {
@@ -31,10 +32,13 @@ export default function AllAssetsPage() {
     fetchAssets();
   }, []);
 
+  const handleFilter = (status) => {
+    setFilterStatus(status); // Set the filter status to "Inpool" or empty
+  };
+
   if (loading) return <p>Loading assets...</p>;
   if (error) return <p className="text-red-500">Error: {error}</p>;
 
-  console.log("assets", assets);
   return (
     <div className="flex flex-col md:flex-row min-h-screen max-w-screen">
       <Sidebar />
@@ -48,10 +52,12 @@ export default function AllAssetsPage() {
           </Link>
         </header>
 
+        
+
         <div className="bg-gray-800 p-3 rounded-lg" style={{ width: "100%" }}>
-          {/* Set the table container to full width, but ensure no horizontal overflow */}
           <div className="overflow-x-auto">
-            <AssetTable assetData={assets} />
+            <AssetTable assetData={assets} filterStatus={filterStatus} />{" "}
+            {/* Pass filterStatus */}
           </div>
         </div>
       </div>
