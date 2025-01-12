@@ -9,19 +9,25 @@ import React from "react";
 import testData from "./testData"; // Assuming testData is sample data for testing
 import columnData from "./AssetTableColumn"; // AssetTableColumn to define column structure
 
-function AssetTable({ assetData }) {
+function AssetTable({ assetData, filterStatus }) {
   const [sorting, setSorting] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const columns = React.useMemo(() => columnData, []);
 
-  // Filter data based on search query
+  // Filter data based on the search query and filterStatus
   const filteredData = React.useMemo(() => {
-    return assetData.filter((item) =>
+    // If there's a filterStatus, filter the assets based on status
+    const filteredByStatus = filterStatus
+      ? assetData.filter((item) => item.status === filterStatus)
+      : assetData; // If no filterStatus, show all assets
+
+    // Further filter based on the search query
+    return filteredByStatus.filter((item) =>
       Object.values(item).some((value) =>
         value.toString().toLowerCase().includes(searchQuery.toLowerCase())
       )
     );
-  }, [searchQuery, assetData]);
+  }, [searchQuery, assetData, filterStatus]); // Re-run filtering when assetData, searchQuery or filterStatus changes
 
   const handleRowNavigations = (rowData) => {
     // Log the serial number of the row
@@ -30,6 +36,7 @@ function AssetTable({ assetData }) {
     // Redirect to the desired URL
     window.location.href = `/stocks/view?SerialNumber=${rowData.original.serialNumber}`;
   };
+
   const table = useReactTable({
     columns,
     data: filteredData,
@@ -66,7 +73,7 @@ function AssetTable({ assetData }) {
                     colSpan={header.colSpan}
                     className="px-6 py-3 text-left text-sm font-semibold uppercase tracking-wider bg-gray-800 border-b border-gray-600"
                     style={{
-                      minWidth: header.column.columnDef.minWidth || "150px", // Ensuring each column has a minimum width
+                      minWidth: header.column.columnDef.minWidth || "150px",
                       whiteSpace: "nowrap"
                     }}
                   >
@@ -109,7 +116,7 @@ function AssetTable({ assetData }) {
                       key={cell.id}
                       className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap"
                       style={{
-                        minWidth: cell.column.columnDef.minWidth || "150px", // Same as thead for consistent column sizing
+                        minWidth: cell.column.columnDef.minWidth || "150px",
                         whiteSpace: "nowrap"
                       }}
                     >
