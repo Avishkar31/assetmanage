@@ -7,6 +7,7 @@ import StackedBarChart from "components/StackedBarChart";
 import AssetTimeline from "components/AssetTimeline";
 import { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
+import withAuth from "hooks/withAuth";
 
 function Page() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
@@ -238,4 +239,4 @@ function Page() {
   );
 }
 
-export default Page;
+export default withAuth(Page);

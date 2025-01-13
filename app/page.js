@@ -2,25 +2,10 @@
 import Link from "next/link";
 import { IoMail } from "react-icons/io5";
 import { BiWorld } from "react-icons/bi";
-import dbConnect from "../lib/dbConnect";
 import { TbLogout } from "react-icons/tb";
 
-const connectDb = async () => {
-  try {
-    await dbConnect();
-    console.log("Connected to server!");
-    return true;
-  } catch (e) {
-    console.log("Failed to connect to server!", e);
-    return false;
-  }
-};
 
 export default async function Home() {
-  const isConnected = await connectDb();
-  if (!isConnected) {
-    return <p>Oops, we are sorry!!</p>;
-  }
 
   return (
     <main className="relative min-h-screen overflow-hidden">
