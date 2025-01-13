@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import { useSearchParams } from "next/navigation";
+import Sidebar from "components/Sidebar";
 
 // Reusable InputComponent
 const InputComponent = ({ id, value, onChange, readOnly }) => (
@@ -34,13 +33,17 @@ const ViewAsset = () => {
   });
 
   const [history, setHistory] = useState([]); // To store asset history
+  const [serialNumber, setSerialNumber] = useState(null);
 
-  const searchParams = useSearchParams();
-  const serialNumber = searchParams.get("SerialNumber");
+ 
+
   const [isReadOnly, setIsReadOnly] = useState(true);
 
   // Fetch asset data and history from API
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const serialNumber = urlParams.get("SerialNumber");
+    setSerialNumber(serialNumber);
     const fetchData = async () => {
       try {
         const response = await fetch(

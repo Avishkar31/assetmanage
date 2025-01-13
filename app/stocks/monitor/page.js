@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "components/Sidebar";
 
 function Page() {
   return (

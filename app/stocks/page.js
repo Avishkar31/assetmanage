@@ -1,12 +1,13 @@
 "use client";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
-import SimpleRadialBarChart from "@/components/SimpleRadialBarChart";
-import ManufacturerPieChart from "@/components/ManufacturerPieChart";
-import StackedBarChart from "@/components/StackedBarChart";
-import AssetTimeline from "@/components/AssetTimeline";
+import Sidebar from "components/Sidebar";
+import SimpleRadialBarChart from "components/SimpleRadialBarChart";
+import ManufacturerPieChart from "components/ManufacturerPieChart";
+import StackedBarChart from "components/StackedBarChart";
+import AssetTimeline from "components/AssetTimeline";
 import { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
+import withAuth from "hooks/withAuth";
 
 function Page() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
@@ -240,4 +241,4 @@ function Page() {
   );
 }
 
-export default Page;
+export default withAuth(Page);

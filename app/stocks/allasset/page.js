@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import AssetTable from "@/components/table/AssetTable";
-import Sidebar from "@/components/Sidebar";
+import AssetTable from "components/table/AssetTable";
+import Sidebar from "components/Sidebar";
 import Link from "next/link";
 
 export default function AllAssetsPage() {

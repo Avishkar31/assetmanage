@@ -1,4 +1,3 @@
-import { useRouter } from "next/router";
 import { FaEdit, FaTrash } from "react-icons/fa";
 
 const columnData = [

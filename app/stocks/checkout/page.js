@@ -1,8 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
-import Sidebar from "@/components/Sidebar";
-import { useRouter, useSearchParams } from "next/navigation";
+import Sidebar from "components/Sidebar";
+import { useRouter } from "next/navigation";
+
 
 const CheckoutForm = () => {
   const statusOptions = [
@@ -60,8 +61,9 @@ const CheckoutForm = () => {
     note: ""
   });
 
-  const searchParams = useSearchParams();
-  const serialNumber = searchParams.get("SerialNumber");
+  const [serialNumber, setSerialNumber] = useState(null);
+
+  
   const [openSection, setOpenSection] = useState("");
   const dropdownRef = useRef(null);
   const router = useRouter();
@@ -162,6 +164,11 @@ const CheckoutForm = () => {
     }
   };
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const serialNumber = urlParams.get("SerialNumber");
+    setSerialNumber(serialNumber);
+}, []);
   return (
     <div className="flex">
       <Sidebar />

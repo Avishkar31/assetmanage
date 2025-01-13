@@ -1,6 +1,6 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import Sidebar from "@/components/Sidebar";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import Sidebar from "components/Sidebar";
 import {
   IoCloseSharp,
   IoMdAdd,
@@ -8,6 +8,8 @@ import {
   IoMdArrowDropdown
 } from "react-icons/io";
 import { FiLoader } from "react-icons/fi";
+
+import { fetchAssetData, customDebounce } from "../../../utils";
 
 // const getAssetDetails =(serialnumber)=>{
 
@@ -19,82 +21,79 @@ import { FiLoader } from "react-icons/fi";
 
 // }
 
-const getAssetDetails = async (serialNumber) => {
-  try {
-    setShowLoader(true); // Start loader
-
-    // Get token from cookies or storage (you may be using a library like js-cookie or localStorage)
-    let token = getTokenFromCookies(); // Assume this function retrieves the token
-
-    // Check if the token is expired
-    if (isTokenExpired(token)) {
-      // Assume this function checks the token expiry
-      // Fetch new token using POST API
-      token = await fetchNewToken();
-      setTokenInCookies(token); // Save the new token in cookies or storage
-    }
-
-    // Use the token to fetch asset details
-    const assetDetails = await fetchAssetDetails(token, serialNumber);
-
-    // Update the form or state with asset details
-    setFormData((prevData) => ({
-      ...prevData,
-      type: assetDetails.type,
-      model: assetDetails.model
-    }));
-  } catch (error) {
-    console.error("Error fetching asset details:", error);
-    // Handle error (show error message, etc.)
-  } finally {
-    setShowLoader(false); // Stop loader
+const manufacturerOptions = [
+  {
+    label: "Default",
+    description: "Manufacturer selection is required to continue."
+  },
+  {
+    label: "HP",
+    description: "Ensure all data fields are fully populated."
+  },
+  {
+    label: "Dell",
+    description:
+      "Fetching information directly from Dell's website. Please type the serial number."
+  },
+  {
+    label: "Apple",
+    description: "Ensure all data fields are fully populated."
+  },
+  {
+    label: "Microsoft",
+    description: "Ensure all data fields are fully populated."
   }
-};
+];
 
-const fetchNewToken = async () => {
-  const response = await fetch(
-    "https://apigtwb2c.us.dell.com/auth/oauth/v2/token",
-    {
-      method: "POST",
-      body: JSON.stringify({}),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    }
-  );
-  const data = await response.json();
-  return data.token;
-};
-
-const fetchAssetDetails = async (token, serialNumber) => {
-  const response = await fetch(`https://api.dell.com/assets/${serialNumber}`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`
-    }
-  });
-  const data = await response.json();
-  return data;
-};
-
-// Example token expiration check (this can vary depending on your token structure)
-const isTokenExpired = (token) => {
-  const expiry = JSON.parse(atob(token.split(".")[1])).exp;
-  return expiry * 1000 < Date.now(); // Check if token is expired
-};
-
-const handleSerialNumberChange = (e) => {
-  setFormData({
-    ...formData,
-    serialNumber: e.target.value
-  });
-
-  // Optionally trigger the asset details fetch when the serial number changes
-  if (e.target.value.length === 7) {
-    // Check for valid serial number length (example)
-    getAssetDetails(e.target.value);
+const ramOptions = [
+  { label: "Default", description: "" },
+  {
+    label: "Inpool",
+    description: "✓  That status is deployable. This asset can be checked out.",
+    color: "text-green-500"
+  },
+  {
+    label: "New Purchase",
+    description:
+      "✗ That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "MIS Store",
+    description: "✓  That status is deployable. This asset can be checked out.",
+    color: "text-green-500"
+  },
+  {
+    label: "Buyback",
+    description:
+      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "Disposed",
+    description:
+      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "Inactive",
+    description:
+      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    color: "text-red-500"
+  },
+  {
+    label: "Deployed",
+    description: "✓  That status is deployable. This asset can be checked out.",
+    color: "text-green-500"
   }
-};
+];
+
+const conditionOptions = [
+  { label: "Excellent" },
+  { label: "Good" },
+  { label: "Fair" },
+  { label: "Bad" }
+];
 
 const AddAssetForm = () => {
   // State to manage form data
@@ -129,106 +128,17 @@ const AddAssetForm = () => {
     nodeName: false,
     manufacturer: false,
     serialNumber: false,
-    category: false,
     status: false,
     department: false,
     issueTo: false
   });
 
   const [openSection, setOpenSection] = useState("");
-  // State to manage the loading indicator for the serial number
-  const [showLoader, setShowLoader] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSerialLoader, setShowSerialLoader] = useState(false);
+  const [debouncedTimer, setDebouncedTimer] = useState(null);
 
-  const [duplicateError, setDuplicateError] = useState("");
-
-  const dropdownRef = useRef(null); // Reference to the dropdown for click detection
-
-  // Options for manufacturer dropdown
-  const manufacturerOptions = [
-    {
-      label: "Default",
-      description: "Manufacturer selection is required to continue."
-    },
-    {
-      label: "HP",
-      description: "Ensure all data fields are fully populated."
-    },
-    {
-      label: "Dell",
-      description:
-        "Fetching information directly from Dell's website. Please type the serial number."
-    },
-    {
-      label: "Apple",
-      description: "Ensure all data fields are fully populated."
-    },
-    {
-      label: "Microsoft",
-      description: "Ensure all data fields are fully populated."
-    }
-  ];
-
-  // Options for status dropdown with descriptions and colors
-  const ramOptions = [
-    { label: "Default", description: "" },
-    {
-      label: "Inpool",
-      description:
-        "✓  That status is deployable. This asset can be checked out.",
-      color: "text-green-500"
-    },
-    {
-      label: "New Purchase",
-      description:
-        "✗ That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "MIS Store",
-      description:
-        "✓  That status is deployable. This asset can be checked out.",
-      color: "text-green-500"
-    },
-    {
-      label: "Buyback",
-      description:
-        "✗  That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "Disposed",
-      description:
-        "✗  That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "Inactive",
-      description:
-        "✗  That asset status is not deployable. This asset cannot be checked out.",
-      color: "text-red-500"
-    },
-    {
-      label: "Deployed",
-      description:
-        "✓  That status is deployable. This asset can be checked out.",
-      color: "text-green-500"
-    }
-  ];
-
-  // Options for asset condition dropdown
-  const conditionOptions = [
-    { label: "Excellent" },
-    { label: "Good" },
-    { label: "Fair" },
-    { label: "Bad" }
-  ];
-
-  // Effect to automatically set default location to "Home" when status is "Deployed"
-  useEffect(() => {
-    if (formData.status === "Deployed") {
-      setFormData((prev) => ({ ...prev, defaultLocation: "Home" }));
-    }
-  }, [formData.status]);
+  const dropdownRef = useRef(null);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -251,24 +161,67 @@ const AddAssetForm = () => {
     }
   };
 
+  const fetchAssetDetails = async (serialNumber) => {
+    if (!serialNumber) {
+      setErrors((prev) => ({ ...prev, serialNumber: true }));
+      return;
+    }
+
+    setShowSerialLoader(true);
+    setIsLoading(true);
+    setErrors((prev) => ({ ...prev, api: null }));
+
+    try {
+      const assetData = await fetchAssetData(serialNumber);
+
+      setFormData((prev) => ({
+        ...prev,
+        model: assetData.productLineDescription || "",
+        expires:
+          assetData.entitlements[assetData.entitlements.length - 1]?.endDate ||
+          ""
+      }));
+    } catch (error) {
+      console.error("Error fetching asset details:", error);
+      setErrors((prev) => ({
+        ...prev,
+        api: "Failed to fetch asset details. Please try again."
+      }));
+
+      setFormData((prev) => ({
+        ...prev,
+        model: "",
+        expires: ""
+      }));
+    } finally {
+      setShowSerialLoader(false);
+      setIsLoading(false);
+    }
+  };
+
+  // Create debounced fetch function using our custom debounce
+  const debouncedFetchAssetDetails = useCallback(
+    customDebounce((value) => {
+      if (value) {
+        fetchAssetDetails(value);
+      }
+    }, 800),
+    []
+  );
+
   const handleSerialNumberChange = (e) => {
     const { id, value } = e.target;
+
     setFormData((prevData) => ({
       ...prevData,
       [id]: value
     }));
 
-    if (id === "serialNumber") {
-      setShowLoader(true);
-
-      setTimeout(() => {
-        setShowLoader(false);
-      }, 2000); // 2 seconds
-    }
-
     if (errors.serialNumber) {
       setErrors((prev) => ({ ...prev, serialNumber: false }));
     }
+
+    debouncedFetchAssetDetails(value.trim());
   };
 
   const handleSelectChange = (e) => {
@@ -291,20 +244,10 @@ const AddAssetForm = () => {
     }
   };
 
-  // Add event listener to detect clicks outside dropdown
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   const handleStatusSelect = (label) => {
     setFormData({ ...formData, status: label });
     setOpenSection(null); // Close the dropdown
   };
-
-  const [isLoading, setIsLoading] = useState(false);
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -359,7 +302,20 @@ const AddAssetForm = () => {
     }
   };
 
-  // Continue with the JSX render part...
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+
+    if (formData.status === "Deployed") {
+      setFormData((prev) => ({ ...prev, defaultLocation: "Home" }));
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+
+      if (debouncedTimer) {
+        clearTimeout(debouncedTimer);
+      }
+    };
+  }, [formData.status, debouncedTimer]);
 
   return (
     <div className="flex">
@@ -445,85 +401,80 @@ const AddAssetForm = () => {
             </div>
           </div>
 
-          {/* Serial Number */}
-          <div className="mb-4 flex items-center">
+          <div className="flex items-center">
             <label htmlFor="serialNumber" className="w-52 text-gray-500 mr-2">
-              Serial Number <span className="text-red-600">*</span>
+              Serial Number
             </label>
             <div className="flex flex-col w-3/5">
-              <input
-                type="text"
-                id="serialNumber"
-                value={formData.serialNumber}
-                onChange={handleSerialNumberChange}
-                placeholder="Enter the Serial number"
-                className={`p-3 bg-gray-900 border ${
-                  errors.serialNumber ? "border-red-500" : "border-gray-700"
-                } rounded text-sm text-gray-400`}
-              />
-              {showLoader && (
-                <span
-                  className="ml-2 p-2 bg-gray-700 text-gray-400 rounded hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                  aria-label="Loading"
-                >
-                  <FiLoader />
-                </span>
-              )}
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  id="serialNumber"
+                  value={formData.serialNumber}
+                  onChange={handleSerialNumberChange}
+                  placeholder="Enter the Serial number"
+                  className={`p-3 bg-gray-900 border ${
+                    errors.serialNumber ? "border-red-500" : "border-gray-700"
+                  } rounded text-sm text-gray-400 flex-grow`}
+                />
+                {showSerialLoader && (
+                  <span className="ml-2 p-2" aria-label="Loading">
+                    <FiLoader className="animate-spin text-gray-400" />
+                  </span>
+                )}
+              </div>
               {errors.serialNumber && (
                 <p className="text-red-500 text-xs mt-1">
                   Serial Number is required.
                 </p>
               )}
-            </div>
-          </div>
-
-          {/* Type */}
-          <div className="mb-4">
-            <div className="flex items-center mb-2">
-              <label htmlFor="type" className="w-52 text-gray-500 mr-2">
-                Type
-              </label>
-              <input
-                type="text"
-                id="type"
-                value={formData.type}
-                onChange={handleInputChange}
-                placeholder="Type"
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-              />
+              {errors.api && (
+                <p className="text-red-500 text-xs mt-1">{errors.api}</p>
+              )}
             </div>
           </div>
 
           {/* Model */}
-          <div className="mb-4">
-            <div className="flex items-center mb-2">
-              <label htmlFor="model" className="w-52 text-gray-500 mr-2">
-                Model
-              </label>
-              <input
-                type="text"
-                id="model"
-                value={formData.model}
-                onChange={handleInputChange}
-                placeholder="Enter the model number"
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-              />
+          <div className="flex items-center">
+            <label htmlFor="model" className="w-52 text-gray-500 mr-2">
+              Model
+            </label>
+            <div className="w-3/5">
+              {isLoading ? (
+                <div className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400">
+                  <FiLoader className="animate-spin" />
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  id="model"
+                  value={formData.model}
+                  readOnly
+                  className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
+                />
+              )}
             </div>
           </div>
 
           {/* Expires */}
-          <div className="mb-4">
-            <div className="flex items-center mb-2">
-              <label htmlFor="expires" className="w-52 text-gray-500 mr-2">
-                Expires
-              </label>
-              <input
-                type="date"
-                id="expires"
-                value={formData.expires}
-                onChange={handleInputChange}
-                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-              />
+          <div className="flex items-center">
+            <label htmlFor="expires" className="w-52 text-gray-500 mr-2">
+              Expires
+            </label>
+            <div className="w-3/5">
+              {isLoading ? (
+                <div className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400">
+                  <FiLoader className="animate-spin" />
+                </div>
+              ) : (
+                <input
+                  type="date"
+                  id="expires"
+                  value={formData.expires}
+                  readOnly
+                  className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
+                />
+              )}
             </div>
           </div>
 
