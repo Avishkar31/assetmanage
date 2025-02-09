@@ -8,7 +8,6 @@ const AssetSchema = new mongoose.Schema({
     required: true
   },
   manufacturer: { type: String, required: true },
-  type: { type: String, required: true },
   model: String,
   expires: Date,
   category: String,
@@ -49,7 +48,7 @@ const AssetSchema = new mongoose.Schema({
   checkOutDate: Date,
   assetHistory: [
     {
-      user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      user: { id:Number,userName:String },
       action: { type: String, enum: ["checkIn", "checkOut"] },
       date: { type: Date, default: Date.now },
       status: String
