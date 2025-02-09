@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import Sidebar from "@/components/Sidebar";
-import { useSearchParams } from "next/navigation";
+import Sidebar from "components/Sidebar";
 
 // Reusable InputComponent
 const InputComponent = ({ id, value, onChange, readOnly }) => (
@@ -34,13 +33,15 @@ const ViewAsset = () => {
   });
 
   const [history, setHistory] = useState([]); // To store asset history
+  const [serialNumber, setSerialNumber] = useState(null);
 
-  const searchParams = useSearchParams();
-  const serialNumber = searchParams.get("SerialNumber");
   const [isReadOnly, setIsReadOnly] = useState(true);
 
   // Fetch asset data and history from API
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const serialNumber = urlParams.get("SerialNumber");
+    setSerialNumber(serialNumber);
     const fetchData = async () => {
       try {
         const response = await fetch(
@@ -65,6 +66,13 @@ const ViewAsset = () => {
       ...prevState,
       [id]: value
     }));
+  };
+
+  const handleDeleteClick = () => {
+    // Show alert message
+    alert(
+      "You are not an authorized person to delete. Please connect with the admin."
+    );
   };
 
   const toggleReadOnly = () => setIsReadOnly(!isReadOnly);
@@ -188,15 +196,11 @@ const ViewAsset = () => {
             >
               Update
             </button>
+
             <button
               type="button"
               className="py-2.5 px-5 mb-2 w-80 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-            >
-              Request to allocate
-            </button>
-            <button
-              type="button"
-              className="py-2.5 px-5 mb-2 w-80 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+              onClick={handleDeleteClick}
             >
               Delete
             </button>
