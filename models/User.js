@@ -2,11 +2,6 @@ import mongoose from "mongoose";
 
 
 
-// Passward set validation for user
-
-
-
-
 const UserSchema = new mongoose.Schema({
   name: String,
   createdDate: {

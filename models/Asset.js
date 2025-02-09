@@ -8,10 +8,6 @@ const AssetSchema = new mongoose.Schema({
     required: true
   },
   manufacturer: { type: String, required: true },
-<<<<<<< HEAD
-=======
-  // type: { type: String, required: true },
->>>>>>> 82a1ac98e4ccaf54a8167844ae45932e7f295c3b
   model: String,
   expires: Date,
   category: String,
@@ -30,7 +26,7 @@ const AssetSchema = new mongoose.Schema({
     required: true
   },
   department: String,
-  issueTo: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  issueTo: { id:Number,userName:String},
   note: String,
   defaultLocation: String,
   costCenter: String,
