@@ -7,7 +7,7 @@ const validSortColumns = [
   "nodeName",
   "serialNumber",
   "manufacturer",
-  "type",
+  // "type",
   "model",
   "category",
   "status",

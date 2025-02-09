@@ -1,62 +1,69 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+"use client"; // If using Next.js App Router
+import React, { useState } from "react";
 
-export default function Signup() {
+const CreateUser = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
-
-  const router = useRouter();
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setSuccess(false);
-
-    if (!email || !password) {
-      setError("Please fill out all fields.");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
-      return;
-    }
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
-      const response = await fetch("/api/user/signup", {
+      const response = await fetch("/api/user/create", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ email, password })
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, password })
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to sign up.");
+        throw new Error(data.error || "Failed to create user.");
       }
 
-      setSuccess(true);
-      router.push("/login");
-
+      setSuccessMessage("User created successfully!");
+      setName("");
       setEmail("");
       setPassword("");
-    } catch (err) {
-      setError(err.message || "Something went wrong. Please try again.");
+    } catch (error) {
+      setErrorMessage(error.message);
     }
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Sign Up</h2>
-        {error && <p className="text-red-500 mb-4">{error}</p>}
-        {success && <p className="text-green-500 mb-4">Signup successful!</p>}
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+          Create New User
+        </h2>
+        {errorMessage && <p className="text-red-500 mb-4">{errorMessage}</p>}
+        {successMessage && (
+          <p className="text-green-500 mb-4">{successMessage}</p>
+        )}
         <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label
+              htmlFor="name"
+              className="block text-gray-700 font-medium mb-2"
+            >
+              Name
+            </label>
+            <input
+              type="text"
+              id="name"
+              className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter user's name"
+              required
+            />
+          </div>
+
           <div className="mb-4">
             <label
               htmlFor="email"
@@ -70,7 +77,7 @@ export default function Signup() {
               className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
+              placeholder="Enter user's email"
               required
             />
           </div>
@@ -88,7 +95,7 @@ export default function Signup() {
               className="w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
+              placeholder="Enter user's password"
               required
             />
           </div>
@@ -97,10 +104,12 @@ export default function Signup() {
             type="submit"
             className="w-full bg-blue-500 text-white p-2 rounded-lg hover:bg-blue-600 transition-colors"
           >
-            Sign Up
+            Create User
           </button>
         </form>
       </div>
     </div>
   );
-}
+};
+
+export default CreateUser;

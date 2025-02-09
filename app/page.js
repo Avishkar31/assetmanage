@@ -4,9 +4,7 @@ import { IoMail } from "react-icons/io5";
 import { BiWorld } from "react-icons/bi";
 import { TbLogout } from "react-icons/tb";
 
-
 export default async function Home() {
-
   return (
     <main className="relative min-h-screen overflow-hidden">
       <video
@@ -58,9 +56,9 @@ export default async function Home() {
             <button className="w-10 h-10 text-xl text-gray-800 bg-transparent border-none cursor-pointer transition-transform duration-300">
               <i className="fa-solid fa-x"></i>
             </button>
-            <span className="text-3xl">
+            {/* <span className="text-3xl">
               <TbLogout />
-            </span>
+            </span> */}
           </div>
         </div>
       </header>

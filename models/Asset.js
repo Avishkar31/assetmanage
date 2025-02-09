@@ -8,7 +8,7 @@ const AssetSchema = new mongoose.Schema({
     required: true
   },
   manufacturer: { type: String, required: true },
-  type: { type: String, required: true },
+  // type: { type: String, required: true },
   model: String,
   expires: Date,
   category: String,

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { connectDb } from "lib/dbConnect";
 
-export default  function Login() {
+export default function Login() {
   const [error, setError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,12 +25,12 @@ export default  function Login() {
       const response = await fetch("/api/user/signin", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json"
         },
         body: JSON.stringify({
           email,
-          password,
-        }),
+          password
+        })
       });
 
       const data = await response.json();
@@ -66,7 +66,9 @@ export default  function Login() {
         {error && (
           <div className="w-full text-red-600 text-sm mb-2">{error}</div>
         )}
-        <h1 className="mb-4 w-full text-2xl font-bold text-gray-700">Sign In</h1>
+        <h1 className="mb-4 w-full text-2xl font-bold text-gray-700">
+          Sign In
+        </h1>
 
         <label className="w-full text-sm text-gray-600">Email</label>
         <input

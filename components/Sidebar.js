@@ -28,6 +28,14 @@ const Sidebar = () => {
     }
   };
 
+  const handleLogout = () => {
+    // Clear token or session data
+    localStorage.removeItem("token");
+
+    // Redirect to login or home page
+    window.location.href = "/";
+  };
+
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -66,15 +74,17 @@ const Sidebar = () => {
                   </a>
                 </li>
                 <li>
-                  <a href="/login" className="text-gray-400 hover:text-white">
+                  <button
+                    onClick={handleLogout}
+                    className="text-gray-400 hover:text-white"
+                  >
                     Logout
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>
           )}
         </div>
-        <p className="text-gray-400">Administrator</p>
       </div>
       <nav>
         <ul>
@@ -91,7 +101,7 @@ const Sidebar = () => {
           </li>
           <li className="my-2">
             <a
-              href="/allasset"
+              href="/stocks/allasset"
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/allasset",
                 "text-gray-400": pathname !== "/allasset"
@@ -244,13 +254,13 @@ const Sidebar = () => {
                 </li>
                 <li className="my-2">
                   <a
-                    href="/people"
+                    href="./people"
                     className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "/people",
-                      "text-gray-400": pathname !== "/people"
+                      "text-white font-bold": pathname === "./people",
+                      "text-gray-400": pathname !== "./people"
                     })}
                   >
-                    People
+                    Create new user
                   </a>
                 </li>
                 <li className="my-2">

@@ -102,7 +102,7 @@ const AddAssetForm = () => {
     nodeName: "",
     manufacturer: "",
     serialNumber: "",
-    type: "",
+    // type: "",
     model: "",
     expires: "",
     category: "",
