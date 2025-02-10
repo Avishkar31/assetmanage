@@ -1,26 +1,24 @@
-import mongoose from "mongoose";
+// models/User.js
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
-
-
-const UserSchema = new mongoose.Schema({
-  name: String,
-  createdDate: {
-    type: Date,
-    default: Date.now
-  },
-  email: {
-    type: String,
-    unique: true,
-    required: [true, "Email is required"],
-    match: [
-      /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
-      "Email is invalid",
-    ],
-  },
-  password: {
-    type: String,
-    required: true
-  }
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  fullName: { type: String, required: true },
+  department: { type: String, required: true },
+  role: { type: String, enum: ['regular', 'admin'], default: 'regular' },
 });
 
-export default mongoose.models.User || mongoose.model("User", UserSchema);
+userSchema.pre('save', async function(next) {
+  if (this.isModified('password')) {
+    this.password = await bcrypt.hash(this.password, 10);
+  }
+  next();
+});
+
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+export default mongoose.models.User || mongoose.model('User', userSchema);
