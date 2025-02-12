@@ -51,14 +51,18 @@ export async function POST(req) {
       );
     }
 
+    console.log("password", password);
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log("hashedPassword", hashedPassword);
 
     const newUser = new User({
       outlook,
       password: hashedPassword,
       department,
-      role
+      role,
     });
+
+    console.log("newUser", newUser);
 
     await newUser.save();
     return NextResponse.json(

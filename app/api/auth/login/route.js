@@ -24,6 +24,7 @@ export async function POST(req) {
     }
 
     const user = await User.findOne({ outlook });
+    console.log("user", user);
     if (!user) {
       return NextResponse.json(
         { error: "Invalid credentials" },
@@ -31,7 +32,10 @@ export async function POST(req) {
       );
     }
 
+    console.log("password", password);
+    // const isMatch = user.password=password
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log("isMatch", isMatch);
     if (!isMatch) {
       return NextResponse.json(
         { error: "Invalid credentials" },
@@ -54,7 +58,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       token,
-      user: { id: user._id, outlook: user.outlook, role: user.role }
+      user: { id: user._id, outlook: user.outlook, role: user.role },
     });
   } catch (err) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });
