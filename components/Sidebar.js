@@ -29,15 +29,19 @@ const Sidebar = () => {
   };
 
   const handleLogout = () => {
-    // Clear token or session data
     localStorage.removeItem("token");
-
-    // Redirect to login or home page
+    localStorage.removeItem("user"); // Clear stored user data
     window.location.href = "/";
   };
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
+
+     const storedUser = localStorage.getItem("user");
+     if (storedUser) {
+       const parsedUser = JSON.parse(storedUser);
+       setUserOutlook(parsedUser.outlook); // Set user's outlook email
+     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -46,11 +50,6 @@ const Sidebar = () => {
   return (
     <div className="w-64 shrink-0 bg-gray-800 p-5">
       <div className="text-center mb-5">
-        <img
-          src="https://www.siemens.com/img/svg/logo-dark-3958fff2.svg"
-          alt="Siemens"
-          className="rounded-full w-24 h-24 mx-auto"
-        />
         <div className="relative" ref={dropdownRefs.profile}>
           <h3
             className="cursor-pointer mt-2 flex items-center"

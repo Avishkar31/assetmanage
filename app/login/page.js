@@ -1,12 +1,12 @@
 "use client";
-import { use, useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { connectDb } from "lib/dbConnect";
 
 export default function Login() {
   const [error, setError] = useState("");
-  const [email, setEmail] = useState("");
+  const [outlook, setOutlook] = useState("");
   const [password, setPassword] = useState("");
   const router = useRouter();
 
@@ -14,21 +14,21 @@ export default function Login() {
     event.preventDefault();
 
     // Basic client-side validation
-    if (!email || !password) {
-      setError("Both email and password are required.");
+    if (!outlook || !password) {
+      setError("Both outlook email and password are required.");
       return;
     }
 
     setError(""); // Reset error state before API call
 
     try {
-      const response = await fetch("/api/user/signin", {
+      const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          email,
+          outlook,
           password
         })
       });
@@ -70,14 +70,14 @@ export default function Login() {
           Sign In
         </h1>
 
-        <label className="w-full text-sm text-gray-600">Email</label>
+        <label className="w-full text-sm text-gray-600">Outlook Email</label>
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Outlook Email"
           className="w-full h-10 border border-gray-300 rounded px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          name="email"
+          value={outlook}
+          onChange={(e) => setOutlook(e.target.value)}
+          name="outlook"
         />
 
         <label className="w-full text-sm text-gray-600">Password</label>
@@ -101,7 +101,7 @@ export default function Login() {
           href="/signup"
           className="text-sm text-gray-500 mt-2 hover:text-blue-600 transition duration-150"
         >
-          Don't have an account? Sign up
+          Don't have an account? signup
         </Link>
       </form>
     </section>

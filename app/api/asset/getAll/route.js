@@ -88,9 +88,9 @@ export async function GET(req) {
       .skip(Number(offset))
       .limit(Number(limit));
 
-    if (assets.length === 0) {
-      return NextResponse.json({ error: "No assets found" }, { status: 404 });
-    }
+    // if (assets.length === 0) {
+    //   return NextResponse.json({ error: "No assets found" }, { status: 404 });
+    // }
 
     // Return paginated result
     const totalAssets = await Asset.countDocuments(searchQuery);

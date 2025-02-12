@@ -401,7 +401,7 @@ const AddAssetForm = () => {
             </div>
           </div>
 
-          <div className="flex items-center">
+          <div className="flex items-center mb-4">
             <label htmlFor="serialNumber" className="w-52 text-gray-500 mr-2">
               Serial Number
             </label>
@@ -435,11 +435,11 @@ const AddAssetForm = () => {
           </div>
 
           {/* Model */}
-          <div className="flex items-center">
+          <div className="flex items-center mb-4">
             <label htmlFor="model" className="w-52 text-gray-500 mr-2">
               Model
             </label>
-            <div className="w-3/5">
+            <div className="flex flex-col w-3/5">
               {isLoading ? (
                 <div className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400">
                   <FiLoader className="animate-spin" />
@@ -449,15 +449,15 @@ const AddAssetForm = () => {
                   type="text"
                   id="model"
                   value={formData.model}
-                  readOnly
-                  className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
+                  placeholder="Model will be auto-filled"
+                  className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400 placeholder-gray-600"
                 />
               )}
             </div>
           </div>
 
           {/* Expires */}
-          <div className="flex items-center">
+          <div className="flex items-center mb-4">
             <label htmlFor="expires" className="w-52 text-gray-500 mr-2">
               Expires
             </label>
@@ -471,7 +471,6 @@ const AddAssetForm = () => {
                   type="date"
                   id="expires"
                   value={formData.expires}
-                  readOnly
                   className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
                 />
               )}
