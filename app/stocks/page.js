@@ -11,12 +11,13 @@ import withAuth from "hooks/withAuth";
 
 function Page() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
+  const [isExtracting, setIsExtracting] = useState(false);
   const reportsRef = useRef(null);
   const [allAssetsCount, setAllAssetsCount] = useState(null);
   const [inPoolCount, setInPoolCount] = useState(null);
   const [newPurchaseCount, setNewPurchaseCount] = useState(null);
   const [inactiveCount, setInactiveCount] = useState(null);
-  const [deployedCount, setDeployedCount] = useState(null); // Consistent naming
+  const [deployedCount, setDeployedCount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -27,6 +28,30 @@ function Page() {
   const handleClickOutside = (ref, setter) => (event) => {
     if (ref.current && !ref.current.contains(event.target)) {
       setter(false);
+    }
+  };
+
+  const handleExtractData = async (type) => {
+    setIsExtracting(true);
+    setIsReportsOpen(false);
+    
+    try {
+      const response = await fetch(`/api/asset/extract${type}`);
+      if (!response.ok) throw new Error('Failed to extract data');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${type.toLowerCase()}_assets.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -50,7 +75,6 @@ function Page() {
     };
   }, [isReportsOpen]);
 
-  // Fetching data
   useEffect(() => {
     async function fetchAssetData() {
       try {
@@ -59,11 +83,11 @@ function Page() {
           throw new Error("Failed to fetch asset data");
         }
         const data = await response.json();
-        setAllAssetsCount(data.allAssetsCount); // Set the count dynamically
+        setAllAssetsCount(data.allAssetsCount);
         setInPoolCount(data.inPoolCount);
         setNewPurchaseCount(data.newPurchaseCount);
         setInactiveCount(data.inactiveCount);
-        setDeployedCount(data.deployedCount); // Set deployed count dynamically
+        setDeployedCount(data.deployedCount);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -72,31 +96,32 @@ function Page() {
     }
 
     fetchAssetData();
-  }, []); // Empty dependency array ensures this only runs once when the component mounts
+  }, []);
 
-  // Loading & Error Handling
   if (loading) {
-    return <p>Loading...</p>; // Display loading while fetching
+    return <p>Loading...</p>;
   }
 
   if (error) {
-    return <p>Error: {error}</p>; // Display error message if fetching fails
+    return <p>Error: {error}</p>;
   }
 
-  // Calculating percentages based on the total number of assets
-  // Calculate total active assets as the sum of inPoolCount and deployedCount
-  const totalActiveAssets = inPoolCount + deployedCount;
+  if (isExtracting) {
+    return (
+      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-gray-800 p-8 rounded-lg text-white text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-teal-500 mx-auto mb-4"></div>
+          <p className="text-lg">Extracting data, please wait...</p>
+        </div>
+      </div>
+    );
+  }
 
-  // Calculate percentages relative to totalActiveAssets
+  const totalActiveAssets = inPoolCount + deployedCount;
   const inPoolPercentage = ((inPoolCount / totalActiveAssets) * 100).toFixed(2);
-  const newPurchasePercentage = (
-    (newPurchaseCount / totalActiveAssets) *
-    100
-  ).toFixed(2);
-  const deployedPercentage = (
-    (deployedCount / totalActiveAssets) *
-    100
-  ).toFixed(2);
+  const newPurchasePercentage = ((newPurchaseCount / totalActiveAssets) * 100).toFixed(2);
+  const deployedPercentage = ((deployedCount / totalActiveAssets) * 100).toFixed(2);
+
   return (
     <main>
       <div className="flex h-screen bg-gray-900 text-white">
@@ -123,36 +148,57 @@ function Page() {
                   </>
                 )}
               </div>
-              <div className="relative">
+              <div className="relative" ref={reportsRef}>
                 <button
                   className="bg-teal-500 text-white px-4 py-2 rounded flex items-center"
                   onClick={() => toggleDropdown(setIsReportsOpen)}
                 >
                   Reports
                   <span className="ml-2">
-                    {isReportsOpen ? (
-                      <IoMdArrowDropup />
-                    ) : (
-                      <IoMdArrowDropdown />
-                    )}
+                    {isReportsOpen ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
                   </span>
                 </button>
                 {isReportsOpen && (
-                  <ul className="absolute bg-gray-900 rounded-lg p-2 mt-2  left-0 w-56 top-full flex flex-col">
+                  <ul className="absolute bg-gray-900 rounded-lg p-2 mt-2 right-1 w-56 top-full flex flex-col">
                     <li className="my-2">
-                      <a href="#" className="text-gray-400 hover:text-white">
+                      <button 
+                        onClick={() => handleExtractData('AllAsset')}
+                        className="w-full text-left text-gray-400 hover:text-white"
+                      >
                         Extract All Asset
-                      </a>
+                      </button>
                     </li>
                     <li className="my-2">
-                      <a href="#" className="text-gray-400 hover:text-white">
+                      <button 
+                        onClick={() => handleExtractData('Inpool')}
+                        className="w-full text-left text-gray-400 hover:text-white"
+                      >
                         Extract Inpool
-                      </a>
+                      </button>
                     </li>
                     <li className="my-2">
-                      <a href="#" className="text-gray-400 hover:text-white">
-                        Extract Inactive
-                      </a>
+                      <button 
+                        onClick={() => handleExtractData('NewPurchase')}
+                        className="w-full text-left text-gray-400 hover:text-white"
+                      >
+                        Extract New Purchase
+                      </button>
+                    </li>
+                    <li className="my-2">
+                      <button 
+                        onClick={() => handleExtractData('Deployed')}
+                        className="w-full text-left text-gray-400 hover:text-white"
+                      >
+                        Extract Deployed
+                      </button>
+                    </li>
+                    <li className="my-2">
+                      <button 
+                        onClick={() => handleExtractData('TodaysAllocation')}
+                        className="w-full text-left text-gray-400 hover:text-white"
+                      >
+                        Today's Hardware Allocation
+                      </button>
                     </li>
                   </ul>
                 )}
@@ -171,7 +217,6 @@ function Page() {
             </Link>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
               <h3 className="text-lg text-green-500">Inpool</h3>
-              {/* Render the inPoolCount dynamically */}
               <p className="text-2xl">
                 {inPoolCount !== null ? inPoolCount.toLocaleString() : "N/A"}
               </p>
@@ -179,7 +224,6 @@ function Page() {
             </div>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
               <h3 className="text-lg text-yellow-500">New purchase</h3>
-              {/* Dynamically display the new purchase count */}
               <p className="text-2xl">
                 {newPurchaseCount !== null ? newPurchaseCount : "N/A"}
               </p>
@@ -194,7 +238,6 @@ function Page() {
             </div>
             <div className="bg-gray-800 p-5 rounded-lg text-center">
               <h3 className="text-lg text-purple-500">Deployed</h3>
-              {/* Dynamically display the deployed count */}
               <p className="text-2xl">
                 {deployedCount !== null ? deployedCount : "N/A"}
               </p>

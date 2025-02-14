@@ -10,22 +10,9 @@ export default async function handler(req, res) {
   switch (method) {
     case "GET":
       try {
-        if (req.query.nextTag) {
-          // Handle request for the next asset tag number
-          const lastAsset = await Asset.findOne(
-            {},
-            {},
-            { sort: { assetTag: -1 } }
-          );
-          const nextTag = lastAsset
-            ? (parseInt(lastAsset.assetTag, 10) + 1).toString()
-            : "1";
-          res.status(200).json({ success: true, nextTag });
-        } else {
-          // Handle request for fetching all assets
-          const assets = await Asset.find({});
-          res.status(200).json({ success: true, data: assets });
-        }
+        // Handle request for fetching all assets
+        const assets = await Asset.find({});
+        res.status(200).json({ success: true, data: assets });
       } catch (error) {
         console.error("Error fetching assets:", error); // Improved logging
         res
@@ -35,12 +22,21 @@ export default async function handler(req, res) {
       break;
     case "POST":
       try {
-        // Validate required fields (you can customize this based on your schema)
-        const { assetTag, nodeName } = req.body;
-        if (!assetTag || !nodeName) {
+        // Validate required fields according to the schema
+        const { serialNumber, nodeName } = req.body;
+        if (!serialNumber || !nodeName) {
           return res.status(400).json({
             success: false,
-            error: "Asset tag and node name are required."
+            error: "Serial number and node name are required."
+          });
+        }
+
+        // Check if asset with the same serial number already exists
+        const existingAsset = await Asset.findOne({ serialNumber });
+        if (existingAsset) {
+          return res.status(400).json({
+            success: false,
+            error: "Asset with this serial number already exists."
           });
         }
 

@@ -7,11 +7,13 @@ import clsx from "clsx";
 
 const Sidebar = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
-  const pathname = usePathname(); // Get the current route
+  const [userEmail, setUserEmail] = useState("");
+  const [showImportDialog, setShowImportDialog] = useState(false);
+  const pathname = usePathname();
 
   const dropdownRefs = {
     accessories: useRef(null),
-    requests: useRef(null),
+    requests: useRef(null), 
     settings: useRef(null),
     profile: useRef(null)
   };
@@ -21,27 +23,66 @@ const Sidebar = () => {
   };
 
   const handleClickOutside = (event) => {
-    for (const ref of Object.values(dropdownRefs)) {
-      if (ref.current && !ref.current.contains(event.target)) {
-        setOpenDropdown(null);
-      }
+    if (
+      openDropdown &&
+      dropdownRefs[openDropdown] &&
+      !dropdownRefs[openDropdown].current.contains(event.target)
+    ) {
+      setOpenDropdown(null);
     }
   };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("user"); // Clear stored user data
+    localStorage.removeItem("user");
     window.location.href = "/";
+  };
+
+  const handleImportClick = (e) => {
+    e.preventDefault();
+    setShowImportDialog(true);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // TODO: Add file validation and processing logic
+      alert(
+        "Please verify your data before importing. Incorrect data may affect the database."
+      );
+      // Process file upload
+    }
   };
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
 
-     const storedUser = localStorage.getItem("user");
-     if (storedUser) {
-       const parsedUser = JSON.parse(storedUser);
-       setUserOutlook(parsedUser.outlook); // Set user's outlook email
-     }
+    // Get user data from localStorage on mount
+    const getUserData = () => {
+      try {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          const user = JSON.parse(storedUser);
+          // Check for both outlook and email fields
+          const email = userSchema.siemensId || user.email;
+          if (email) {
+            setUserEmail(email);
+          } else {
+            console.warn("No email found in user data");
+            setUserEmail("No Email Found");
+          }
+        } else {
+          console.warn("No user data found in localStorage");
+          setUserEmail("No Email Found");
+        }
+      } catch (error) {
+        console.error("Error getting user data:", error);
+        setUserEmail("Error Loading Email");
+      }
+    };
+
+    getUserData();
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -52,10 +93,12 @@ const Sidebar = () => {
       <div className="text-center mb-5">
         <div className="relative" ref={dropdownRefs.profile}>
           <h3
-            className="cursor-pointer mt-2 flex items-center"
+            className="cursor-pointer mt-2 flex items-center justify-center"
             onClick={() => toggleDropdown("profile")}
           >
-            Gadkar Avishkar
+            <span className="text-gray-300">
+              {userEmail}
+            </span>
             <span className="ml-1">
               {openDropdown === "profile" ? (
                 <IoMdArrowDropup />
@@ -142,24 +185,13 @@ const Sidebar = () => {
                 </li>
                 <li className="my-2">
                   <a
-                    href="/mouse"
+                    href="/stocks/addKeyMice"
                     className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "/mouse",
-                      "text-gray-400": pathname !== "/mouse"
+                      "text-white font-bold": pathname === "/addKeyMice",
+                      "text-gray-400": pathname !== "/addKeyMice"
                     })}
                   >
-                    Mouse
-                  </a>
-                </li>
-                <li className="my-2">
-                  <a
-                    href="/keyboard"
-                    className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "/keyboard",
-                      "text-gray-400": pathname !== "/keyboard"
-                    })}
-                  >
-                    Keyboard
+                    Mouse / Keyboard
                   </a>
                 </li>
                 <li className="my-2">
@@ -211,7 +243,8 @@ const Sidebar = () => {
           </li>
           <li className="my-2">
             <a
-              href="/imports"
+              href="#"
+              onClick={handleImportClick}
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/imports",
                 "text-gray-400": pathname !== "/imports"
@@ -334,6 +367,35 @@ const Sidebar = () => {
           </li>
         </ul>
       </nav>
+
+      {showImportDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-96">
+            <h2 className="text-xl text-white mb-4">Import Data</h2>
+            <p className="text-gray-300 mb-4">
+              Please verify your data before importing. Incorrect data may
+              affect the database.
+            </p>
+            <input
+              type="file"
+              onChange={handleFileUpload}
+              className="mb-4 text-gray-300"
+              accept=".csv,.xlsx,.xls"
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={() => setShowImportDialog(false)}
+                className="bg-gray-600 text-white px-4 py-2 rounded mr-2 hover:bg-gray-700"
+              >
+                Cancel
+              </button>
+              <button className="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

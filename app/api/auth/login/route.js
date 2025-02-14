@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import User from "models/User";
 import jwt from "jsonwebtoken";
 import dbConnect from "lib/dbConnect";
-import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
@@ -15,15 +14,15 @@ export async function POST(req) {
       return NextResponse.json({ error: "Invalid JSON data" }, { status: 400 });
     }
 
-    const { outlook, password } = body;
-    if (!outlook || !password) {
+    const { siemensId, password } = body;
+    if (!siemensId || !password) {
       return NextResponse.json(
-        { error: "Outlook email and password are required" },
+        { error: "Siemens ID and password are required" },
         { status: 400 }
       );
     }
 
-    const user = await User.findOne({ outlook });
+    const user = await User.findOne({ siemensId });
     if (!user) {
       return NextResponse.json(
         { error: "Invalid credentials" },
@@ -31,8 +30,8 @@ export async function POST(req) {
       );
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
+    // Directly compare the password as per the schema
+    if (!user.comparePassword(password)) {
       return NextResponse.json(
         { error: "Invalid credentials" },
         { status: 401 }
@@ -54,7 +53,7 @@ export async function POST(req) {
 
     return NextResponse.json({
       token,
-      user: { id: user._id, outlook: user.outlook, role: user.role }
+      user: { id: user._id, siemensId: user.siemensId, role: user.role }
     });
   } catch (err) {
     return NextResponse.json({ error: "Server error" }, { status: 500 });

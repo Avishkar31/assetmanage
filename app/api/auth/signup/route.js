@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import User from "models/User";
 import dbConnect from "lib/dbConnect";
-import bcrypt from "bcryptjs";
 
 export async function POST(req) {
   try {
@@ -15,14 +14,14 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+       
+    let { siemensId, password, department, role = "regular" } = body;
 
-    let { outlook, password, department, role = "regular" } = body;
-
-    outlook = outlook?.trim().toLowerCase();
+    siemensId = siemensId?.trim().toLowerCase();
     department = department?.trim();
     role = role?.trim();
 
-    if (!outlook || !password || !department || !role) {
+    if (!siemensId || !password || !department || !role) {
       return NextResponse.json(
         { error: "All fields are required." },
         { status: 400 }
@@ -43,19 +42,17 @@ export async function POST(req) {
       );
     }
 
-    const existingUser = await User.findOne({ outlook });
+    const existingUser = await User.findOne({ siemensId });
     if (existingUser) {
       return NextResponse.json(
-        { error: "Outlook already exists." },
+        { error: "Siemens ID already exists." },
         { status: 400 }
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = new User({
-      outlook,
-      password: hashedPassword,
+      siemensId,
+      password,
       department,
       role
     });

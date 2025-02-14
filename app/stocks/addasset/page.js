@@ -98,11 +98,9 @@ const conditionOptions = [
 const AddAssetForm = () => {
   // State to manage form data
   const [formData, setFormData] = useState({
-    assetTag: "",
     nodeName: "",
     manufacturer: "",
     serialNumber: "",
-    // type: "",
     model: "",
     expires: "",
     category: "",
@@ -161,68 +159,68 @@ const AddAssetForm = () => {
     }
   };
 
-  const fetchAssetDetails = async (serialNumber) => {
-    if (!serialNumber) {
-      setErrors((prev) => ({ ...prev, serialNumber: true }));
-      return;
-    }
+  // const fetchAssetDetails = async (serialNumber) => {
+  //   if (!serialNumber) {
+  //     setErrors((prev) => ({ ...prev, serialNumber: true }));
+  //     return;
+  //   }
 
-    setShowSerialLoader(true);
-    setIsLoading(true);
-    setErrors((prev) => ({ ...prev, api: null }));
+  //   setShowSerialLoader(true);
+  //   setIsLoading(true);
+  //   setErrors((prev) => ({ ...prev, api: null }));
 
-    try {
-      const assetData = await fetchAssetData(serialNumber);
+  //   try {
+  //     const assetData = await fetchAssetData(serialNumber);
 
-      setFormData((prev) => ({
-        ...prev,
-        model: assetData.productLineDescription || "",
-        expires:
-          assetData.entitlements[assetData.entitlements.length - 1]?.endDate ||
-          ""
-      }));
-    } catch (error) {
-      console.error("Error fetching asset details:", error);
-      setErrors((prev) => ({
-        ...prev,
-        api: "Failed to fetch asset details. Please try again."
-      }));
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       model: assetData.productLineDescription || "",
+  //       expires:
+  //         assetData.entitlements[assetData.entitlements.length - 1]?.endDate ||
+  //         ""
+  //     }));
+  //   } catch (error) {
+  //     console.error("Error fetching asset details:", error);
+  //     setErrors((prev) => ({
+  //       ...prev,
+  //       api: "Failed to fetch asset details. Please try again."
+  //     }));
 
-      setFormData((prev) => ({
-        ...prev,
-        model: "",
-        expires: ""
-      }));
-    } finally {
-      setShowSerialLoader(false);
-      setIsLoading(false);
-    }
-  };
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       model: "",
+  //       expires: ""
+  //     }));
+  //   } finally {
+  //     setShowSerialLoader(false);
+  //     setIsLoading(false);
+  //   }
+  // };
 
   // Create debounced fetch function using our custom debounce
-  const debouncedFetchAssetDetails = useCallback(
-    customDebounce((value) => {
-      if (value) {
-        fetchAssetDetails(value);
-      }
-    }, 800),
-    []
-  );
+  // const debouncedFetchAssetDetails = useCallback(
+  //   customDebounce((value) => {
+  //     if (value) {
+  //       fetchAssetDetails(value);
+  //     }
+  //   }, 800),
+  //   []
+  // );
 
-  const handleSerialNumberChange = (e) => {
-    const { id, value } = e.target;
+  // const handleSerialNumberChange = (e) => {
+  //   const { id, value } = e.target;
 
-    setFormData((prevData) => ({
-      ...prevData,
-      [id]: value
-    }));
+  //   setFormData((prevData) => ({
+  //     ...prevData,
+  //     [id]: value
+  //   }));
 
-    if (errors.serialNumber) {
-      setErrors((prev) => ({ ...prev, serialNumber: false }));
-    }
+  //   if (errors.serialNumber) {
+  //     setErrors((prev) => ({ ...prev, serialNumber: false }));
+  //   }
 
-    debouncedFetchAssetDetails(value.trim());
-  };
+  //   debouncedFetchAssetDetails(value.trim());
+  // };
 
   const handleSelectChange = (e) => {
     const { id, value } = e.target;
@@ -411,7 +409,7 @@ const AddAssetForm = () => {
                   type="text"
                   id="serialNumber"
                   value={formData.serialNumber}
-                  onChange={handleSerialNumberChange}
+                  // onChange={handleSerialNumberChange}
                   placeholder="Enter the Serial number"
                   className={`p-3 bg-gray-900 border ${
                     errors.serialNumber ? "border-red-500" : "border-gray-700"
@@ -439,7 +437,7 @@ const AddAssetForm = () => {
             <label htmlFor="model" className="w-52 text-gray-500 mr-2">
               Model
             </label>
-            <div className="flex flex-col w-3/5">
+            <div className="w-3/5">
               {isLoading ? (
                 <div className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400">
                   <FiLoader className="animate-spin" />
@@ -449,6 +447,7 @@ const AddAssetForm = () => {
                   type="text"
                   id="model"
                   value={formData.model}
+                  onChange={handleInputChange}
                   placeholder="Model will be auto-filled"
                   className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400 placeholder-gray-600"
                 />
@@ -462,18 +461,13 @@ const AddAssetForm = () => {
               Expires
             </label>
             <div className="w-3/5">
-              {isLoading ? (
-                <div className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400">
-                  <FiLoader className="animate-spin" />
-                </div>
-              ) : (
-                <input
-                  type="date"
-                  id="expires"
-                  value={formData.expires}
-                  className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-                />
-              )}
+              <input
+                type="date"
+                id="expires"
+                value={formData.expires}
+                onChange={handleInputChange}
+                className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
+              />
             </div>
           </div>
 

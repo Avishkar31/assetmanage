@@ -6,11 +6,9 @@ export async function POST(req) {
   try {
     const data = await req.json();
     const {
-      assetTag,
       nodeName,
       serialNumber,
       manufacturer,
-      // type,
       model,
       expires,
       category,
@@ -29,7 +27,7 @@ export async function POST(req) {
       disposedDate,
       poNumber,
       order,
-      purchaseDate,
+      purchaseDate
     } = data;
 
     // Check if asset with the same serial number already exists
@@ -46,7 +44,7 @@ export async function POST(req) {
     if (issueTo?.fullName && issueTo?.department) {
       user = new User({
         fullName: issueTo?.fullName?.toLowerCase(),
-        department: issueTo?.department,
+        department: issueTo?.department
       });
       await user.save(); // Save the user in the database
     }
@@ -66,7 +64,6 @@ export async function POST(req) {
 
     // Create the new asset
     const newAsset = new Asset({
-      assetTag,
       nodeName,
       serialNumber,
       manufacturer,
@@ -91,15 +88,15 @@ export async function POST(req) {
       order,
       purchaseDate,
       checkOutDate, // Set checkOutDate if applicable
-      checkInDate,  // Set checkInDate if applicable
+      checkInDate, // Set checkInDate if applicable
       assetHistory: [
         {
           user: user?._id || null,
           action, // "checkIn" or "checkOut"
           date: new Date(), // Log current date for this action
-          status,
-        },
-      ],
+          status
+        }
+      ]
     });
 
     // Save the new asset

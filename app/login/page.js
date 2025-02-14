@@ -6,16 +6,17 @@ import { connectDb } from "lib/dbConnect";
 
 export default function Login() {
   const [error, setError] = useState("");
-  const [outlook, setOutlook] = useState("");
+  const [siemensId, setSiemensId] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     // Basic client-side validation
-    if (!outlook || !password) {
-      setError("Both outlook email and password are required.");
+    if (!siemensId || !password) {
+      setError("Both Siemens ID and password are required.");
       return;
     }
 
@@ -28,7 +29,7 @@ export default function Login() {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          outlook,
+          siemensId,
           password
         })
       });
@@ -70,38 +71,47 @@ export default function Login() {
           Sign In
         </h1>
 
-        <label className="w-full text-sm text-gray-600">Outlook Email</label>
+        <label className="w-full text-sm text-gray-600">Siemens ID</label>
         <input
-          type="email"
-          placeholder="Outlook Email"
+          type="text"
+          placeholder="Siemens ID"
           className="w-full h-10 border border-gray-300 rounded px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={outlook}
-          onChange={(e) => setOutlook(e.target.value)}
-          name="outlook"
+          value={siemensId}
+          onChange={(e) => setSiemensId(e.target.value)}
+          name="siemensId"
         />
 
         <label className="w-full text-sm text-gray-600">Password</label>
-        <input
-          type="password"
-          placeholder="Password"
-          className="w-full h-10 border border-gray-300 rounded px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          name="password"
-        />
+        <div className="w-full relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            className="w-full h-10 border border-gray-300 rounded px-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            name="password"
+          />
+          <button
+            type="button"
+            className="absolute right-2 top-2 text-sm text-gray-500"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         <button
           type="submit"
           className="w-full h-10 bg-blue-500 text-white rounded hover:bg-blue-600 transition duration-200"
         >
           Sign In
-        </button>
+        </button> 
 
         <Link
-          href="/signup"
+          href="/signup"  
           className="text-sm text-gray-500 mt-2 hover:text-blue-600 transition duration-150"
         >
-          Don't have an account? signup
+            Please contact your administrator for access  
         </Link>
       </form>
     </section>
