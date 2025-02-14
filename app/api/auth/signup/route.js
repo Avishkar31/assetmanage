@@ -54,8 +54,10 @@ export async function POST(req) {
       siemensId,
       password,
       department,
-      role
+      role,
     });
+
+    console.log("newUser", newUser);
 
     await newUser.save();
     return NextResponse.json(
