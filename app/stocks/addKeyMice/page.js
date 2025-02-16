@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-
+import Sidebar from "@/components/Sidebar";
 export default function CounterPage() {
   const [keyboardCount, setKeyboardCount] = useState(0);
   const [mouseCount, setMouseCount] = useState(0);
@@ -38,10 +38,10 @@ export default function CounterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-800 p-4">
       <h1 className="text-2xl font-bold mb-6">Keyboard & Mouse Counter</h1>
 
-      <div className="grid grid-cols-2 gap-6 bg-white p-6 rounded-xl shadow-md">
+      <div className="grid grid-cols-2 gap-6 bg-gray-700 p-6 rounded-xl shadow-md">
         <div className="flex flex-col items-center">
           <h2 className="text-xl font-semibold">Keyboards</h2>
           <div className="flex flex-col items-center">
@@ -50,7 +50,7 @@ export default function CounterPage() {
           </div>
           <div className="flex gap-2">
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+              className="bg-green-400 text-white px-4 py-2 rounded-lg"
               onClick={() => setKeyboardCount(keyboardCount + 1)}
             >
               +
@@ -72,7 +72,7 @@ export default function CounterPage() {
           </div>
           <div className="flex gap-2">
             <button
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+              className="bg-green-400 text-white px-4 py-2 rounded-lg"
               onClick={() => setMouseCount(mouseCount + 1)}
             >
               +
@@ -90,7 +90,7 @@ export default function CounterPage() {
       <div className="flex mt-6">
         <button
           onClick={handleSubmit}
-          className="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 mr-4"
+          className="bg-teal-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 mr-4"
         >
           Submit
         </button>

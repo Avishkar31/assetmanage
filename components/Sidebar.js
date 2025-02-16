@@ -13,7 +13,7 @@ const Sidebar = () => {
 
   const dropdownRefs = {
     accessories: useRef(null),
-    requests: useRef(null), 
+    requests: useRef(null),
     settings: useRef(null),
     profile: useRef(null)
   };
@@ -96,9 +96,7 @@ const Sidebar = () => {
             className="cursor-pointer mt-2 flex items-center justify-center"
             onClick={() => toggleDropdown("profile")}
           >
-            <span className="text-gray-300">
-              {userEmail}
-            </span>
+            <span className="text-gray-300">{userEmail}</span>
             <span className="ml-1">
               {openDropdown === "profile" ? (
                 <IoMdArrowDropup />
@@ -174,7 +172,7 @@ const Sidebar = () => {
               >
                 <li className="my-2">
                   <a
-                    href="/monitor"
+                    href="/stocks/monitor"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/monitor",
                       "text-gray-400": pathname !== "/monitor"
@@ -196,7 +194,7 @@ const Sidebar = () => {
                 </li>
                 <li className="my-2">
                   <a
-                    href="/iphone"
+                    href="/stocks/iphone"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/iphone",
                       "text-gray-400": pathname !== "/iphone"
@@ -275,57 +273,36 @@ const Sidebar = () => {
               >
                 <li className="my-2">
                   <a
-                    href="/departments"
+                    href="/teams"
                     className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "/departments",
-                      "text-gray-400": pathname !== "/departments"
+                      "text-white font-bold": pathname === "/teams",
+                      "text-gray-400": pathname !== "/teams"
                     })}
                   >
-                    Departments
+                    Teams
                   </a>
                 </li>
                 <li className="my-2">
                   <a
-                    href="./people"
+                    href="./signup"
                     className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "./people",
-                      "text-gray-400": pathname !== "./people"
+                      "text-white font-bold": pathname === "./signup",
+                      "text-gray-400": pathname !== "./signup"
                     })}
                   >
                     Create new user
                   </a>
                 </li>
+
                 <li className="my-2">
                   <a
-                    href="/models"
-                    className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "/models",
-                      "text-gray-400": pathname !== "/models"
-                    })}
-                  >
-                    Models
-                  </a>
-                </li>
-                <li className="my-2">
-                  <a
-                    href="/manufacturer"
+                    href="/stocks/manufacturers"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/manufacturer",
                       "text-gray-400": pathname !== "/manufacturer"
                     })}
                   >
-                    Manufacturer
-                  </a>
-                </li>
-                <li className="my-2">
-                  <a
-                    href="/categories"
-                    className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "/categories",
-                      "text-gray-400": pathname !== "/categories"
-                    })}
-                  >
-                    Categories
+                    Manufacturers
                   </a>
                 </li>
               </ul>
@@ -353,7 +330,7 @@ const Sidebar = () => {
               >
                 <li className="my-2">
                   <a
-                    href="/contact-us"
+                    href="mailto:avishkar.gadkar.ext@siemens.com"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/contact-us",
                       "text-gray-400": pathname !== "/contact-us"

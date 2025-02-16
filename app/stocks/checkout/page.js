@@ -4,7 +4,6 @@ import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import Sidebar from "components/Sidebar";
 import { useRouter } from "next/navigation";
 
-
 const CheckoutForm = () => {
   const statusOptions = [
     { label: "Default", description: "" },
@@ -38,12 +37,7 @@ const CheckoutForm = () => {
         "✗  This asset cannot be checked out.  Please change the status accordingly.",
       color: "text-red-500"
     },
-    {
-      label: "Inactive",
-      description:
-        "✗  This asset cannot be checked out. Please change the status accordingly.",
-      color: "text-red-500"
-    },
+
     {
       label: "Deployed",
       description:
@@ -63,7 +57,6 @@ const CheckoutForm = () => {
 
   const [serialNumber, setSerialNumber] = useState(null);
 
-  
   const [openSection, setOpenSection] = useState("");
   const dropdownRef = useRef(null);
   const router = useRouter();
@@ -168,7 +161,7 @@ const CheckoutForm = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const serialNumber = urlParams.get("SerialNumber");
     setSerialNumber(serialNumber);
-}, []);
+  }, []);
   return (
     <div className="flex">
       <Sidebar />
@@ -326,6 +319,13 @@ const CheckoutForm = () => {
             onClick={handleCheckOut}
           >
             Checkout
+          </button>
+          <button
+            href="/app/hardware/printSheet"
+            type="button"
+            className="p-2 px-5 ml-4 bg-teal-600 text-white rounded hover:bg-teal-700"
+          >
+            Print Hardware
           </button>
         </div>
       </div>

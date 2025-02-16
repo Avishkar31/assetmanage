@@ -26,41 +26,7 @@ export default async function Home() {
             className="w-24 md:w-30 h-6"
           />
         </div>
-        <div className="flex items-center space-x-4 md:space-x-8">
-          <div className="hidden md:flex items-center">
-            <span className="text-3xl">
-              <BiWorld />
-            </span>
-            <span className="ml-1">India</span>
-          </div>
-          <button
-            onClick={() =>
-              (window.location.href = "mailto:avishkar.gadkar.ext@siemens.com")
-            }
-            className="flex items-center space-x-1"
-          >
-            <span className="text-3xl">
-              <IoMail />
-            </span>
-            <span>Contact</span>
-          </button>
-          <div className="flex items-center relative">
-            <input
-              type="text"
-              className="hidden md:block h-10 px-4 rounded-lg bg-black text-white outline-none transition-width duration-300 border border-red-100"
-              placeholder="Search..."
-            />
-            <button className="w-10 h-10 text-xl text-gray-800 bg-transparent border-none cursor-pointer transition-transform duration-300">
-              <i className="fa-solid fa-magnifying-glass"></i>
-            </button>
-            <button className="w-10 h-10 text-xl text-gray-800 bg-transparent border-none cursor-pointer transition-transform duration-300">
-              <i className="fa-solid fa-x"></i>
-            </button>
-            {/* <span className="text-3xl">
-              <TbLogout />
-            </span> */}
-          </div>
-        </div>
+       
       </header>
 
       {/* Navigation Section */}
