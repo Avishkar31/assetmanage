@@ -1,9 +1,9 @@
-// import dbConnect from "../../../lib/dbConnect";
-// import Team from "../../models/Teams";
+import dbConnect from "../../../lib/dbConnect";
+import Team from "../../../models/Teams";
 
 export async function GET(req) {
   try {
-    await dbConnect();
+    await dbConnect();    
     const teams = await Team.find({});
     return Response.json({ success: true, data: teams });
   } catch (error) {

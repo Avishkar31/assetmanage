@@ -18,8 +18,10 @@ function Page() {
   const [newPurchaseCount, setNewPurchaseCount] = useState(null);
   const [inactiveCount, setInactiveCount] = useState(null);
   const [deployedCount, setDeployedCount] = useState(null);
+  const [todaysDeployedCount, setTodaysDeployedCount] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
 
   const toggleDropdown = (setter) => {
     setter((prev) => !prev);
@@ -78,16 +80,33 @@ function Page() {
   useEffect(() => {
     async function fetchAssetData() {
       try {
-        const response = await fetch("/api/asset/getAnalytics");
+        const url = selectedStatus 
+          ? `/api/asset/getAnalytics?status=${selectedStatus}`
+          : "/api/asset/getAnalytics";
+          
+        const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Failed to fetch asset data");
         }
         const data = await response.json();
-        setAllAssetsCount(data.allAssetsCount);
-        setInPoolCount(data.inPoolCount);
-        setNewPurchaseCount(data.newPurchaseCount);
-        setInactiveCount(data.inactiveCount);
-        setDeployedCount(data.deployedCount);
+        
+        // Only update counts based on selected status
+        if (!selectedStatus) {
+          setAllAssetsCount(data.allAssetsCount);
+          setInPoolCount(data.inPoolCount);
+          setNewPurchaseCount(data.newPurchaseCount);
+          setInactiveCount(data.inactiveCount);
+          setDeployedCount(data.deployedCount);
+          setTodaysDeployedCount(data.todaysDeployedCount);
+        } else {
+          // Reset all counts to 0 except selected status
+          setAllAssetsCount(0);
+          setInPoolCount(selectedStatus === 'inpool' ? data.inPoolCount : 0);
+          setNewPurchaseCount(selectedStatus === 'newpurchase' ? data.newPurchaseCount : 0);
+          setInactiveCount(0);
+          setDeployedCount(selectedStatus === 'deployed' ? data.deployedCount : 0);
+          setTodaysDeployedCount(selectedStatus === 'deployed' && data.todaysDeployedCount);
+        }
       } catch (err) {
         setError(err.message);
       } finally {
@@ -96,7 +115,7 @@ function Page() {
     }
 
     fetchAssetData();
-  }, []);
+  }, [selectedStatus]);
 
   if (loading) {
     return <p>Loading...</p>;
@@ -206,7 +225,7 @@ function Page() {
             </div>
           </header>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
-            <Link href="./stocks/allasset" passHref>
+            <Link href="./stocks/allasset" passHref onClick={() => setSelectedStatus(null)}>
               <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
                 <h3 className="text-lg">All assets</h3>
                 <p className="text-2xl">
@@ -215,20 +234,24 @@ function Page() {
                 <span className="text-teal-500">+12%</span>
               </div>
             </Link>
-            <div className="bg-gray-800 p-5 rounded-lg text-center">
-              <h3 className="text-lg text-green-500">Inpool</h3>
-              <p className="text-2xl">
-                {inPoolCount !== null ? inPoolCount.toLocaleString() : "N/A"}
-              </p>
-              <span className="text-teal-500">{inPoolPercentage}%</span>
-            </div>
-            <div className="bg-gray-800 p-5 rounded-lg text-center">
-              <h3 className="text-lg text-yellow-500">New purchase</h3>
-              <p className="text-2xl">
-                {newPurchaseCount !== null ? newPurchaseCount : "N/A"}
-              </p>
-              <span className="text-teal-500">{newPurchasePercentage}%</span>
-            </div>
+            <Link href="./stocks/allasset?status=inpool" passHref onClick={() => setSelectedStatus('inpool')}>
+              <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
+                <h3 className="text-lg text-green-500 hover:text-green-400">Inpool</h3>
+                <p className="text-2xl">
+                  {inPoolCount !== null ? inPoolCount.toLocaleString() : "N/A"}
+                </p>
+                <span className="text-teal-500">{inPoolPercentage}%</span>
+              </div>
+            </Link>
+            <Link href="./stocks/allasset?status=newpurchase" passHref onClick={() => setSelectedStatus('newpurchase')}>
+              <div className="bg-gray-800 p-5 rounded-lg text-center cursor-pointer hover:text-white">
+                <h3 className="text-lg text-yellow-500">New purchase</h3>
+                <p className="text-2xl">
+                  {newPurchaseCount !== null ? newPurchaseCount : "N/A"}
+                </p>
+                <span className="text-teal-500">{newPurchasePercentage}%</span>
+              </div>
+            </Link>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
             <div className="bg-gray-800 p-3 rounded-lg text-center">
@@ -236,20 +259,26 @@ function Page() {
               <p className="text-2xl">5</p>
               <span className="text-teal-500">Since last month</span>
             </div>
-            <div className="bg-gray-800 p-5 rounded-lg text-center">
-              <h3 className="text-lg text-purple-500">Deployed</h3>
-              <p className="text-2xl">
-                {deployedCount !== null ? deployedCount : "N/A"}
-              </p>
-              <span className="text-teal-500">{deployedPercentage}%</span>
-            </div>
-            <div className="bg-gray-800 p-3 rounded-lg text-center">
-              <h3 className="text-lg text-white-500">
-                Today's Hardware Allocation
-              </h3>
-              <p className="text-2xl">5</p>
-              <span className="text-teal-500">Last 24 hours</span>
-            </div>
+            <Link href="./stocks/allasset?status=deployed" passHref onClick={() => setSelectedStatus('deployed')}>
+              <div className="bg-gray-800 p-5 rounded-lg text-center cursor-pointer hover:text-white">
+                <h3 className="text-lg text-purple-500">Deployed</h3>
+                <p className="text-2xl">
+                  {deployedCount !== null ? deployedCount : "N/A"}
+                </p>
+                <span className="text-teal-500">{deployedPercentage}%</span>
+              </div>
+            </Link>
+            <Link href="./stocks/allasset?status=deployed&date=today" passHref onClick={() => setSelectedStatus('deployed')}>
+              <div className="bg-gray-800 p-3 rounded-lg text-center cursor-pointer hover:text-white">
+                <h3 className="text-lg text-white-500">
+                  Today's Hardware Allocation
+                </h3>
+                <p className="text-2xl">
+                  {todaysDeployedCount !== null ? todaysDeployedCount : "N/A"}
+                </p>
+                <span className="text-teal-500">Last 24 hours</span>
+              </div>
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">

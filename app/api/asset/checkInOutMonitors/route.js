@@ -15,7 +15,7 @@ export async function GET(request) {
       );
     }
 
-    const monitors = await Monitor.find({ team });
+    const monitors = await Monitor.find({ prRequester: team });
     return NextResponse.json(monitors);
   } catch (error) {
     console.error("Error fetching monitors:", error);
@@ -30,11 +30,20 @@ export async function POST(request) {
   try {
     await dbConnect();
     const body = await request.json();
-    const { model, serialNumber, poNumber, team } = body;
+    const { 
+      prRequester,
+      manufacturer,
+      model,
+      prNumber,
+      poNumber,
+      serialNumber,
+      status,
+      username
+    } = body;
 
-    if (!serialNumber || !team) {
+    if (!serialNumber || !prRequester) {
       return NextResponse.json(
-        { error: "Serial number and team are required." },
+        { error: "Serial number and PR Requester are required." },
         { status: 400 }
       );
     }
@@ -48,11 +57,15 @@ export async function POST(request) {
     }
 
     const monitor = await Monitor.create({
+      prRequester,
+      manufacturer,
       model,
-      serialNumber,
+      prNumber,
       poNumber,
-      team,
-      status: "active"
+      serialNumber,
+      status,
+      username,
+      assetHistory: []
     });
 
     return NextResponse.json(monitor, { status: 201 });

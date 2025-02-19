@@ -45,11 +45,15 @@ export async function POST(req) {
       );
     }
 
+    console.log("user", user);
+
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
+
+    console.log("token", token);
 
     return NextResponse.json({
       token,

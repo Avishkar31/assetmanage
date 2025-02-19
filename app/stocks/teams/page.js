@@ -69,7 +69,15 @@ export default function TeamManagement() {
 
   return (
     <div className="p-6 bg-gray-900 text-white min-h-screen">
-      <h1 className="text-2xl mb-4">Team Management</h1>
+      <div className="flex justify-between items-center mt-2">
+        <h1 className="text-2xl mb-4">Team Management</h1>
+        <button
+          onClick={() => (window.location.href = "/stocks")}
+          className="bg-teal-600 p-2 rounded mb-6"  
+        >
+          Stocks Page
+        </button>
+      </div>
       <form onSubmit={handleSubmit} className="bg-gray-800 p-4 rounded mb-4">
         <div className="mb-2">
           <label>Name:</label>
@@ -93,7 +101,7 @@ export default function TeamManagement() {
           />
         </div>
         <div className="mb-2">
-          <label>Department:</label>
+          <label>Team:</label>
           <input
             type="text"
             name="department"

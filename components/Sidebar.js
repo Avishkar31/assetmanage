@@ -58,15 +58,28 @@ const Sidebar = () => {
     document.addEventListener("mousedown", handleClickOutside);
 
     // Get user data from localStorage on mount
-    const getUserData = () => {
+    const getUserData = async () => {
       try {
-        const storedUser = localStorage.getItem("user");
+        const token = localStorage.getItem("token");
+        console.log("token", token);
+        const response = await fetch("http://localhost:3000/api/users/get", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+          }
+        });
+        const storedUser = await response.json();
+        console.log("storedUser", storedUser);
+
+        // localStorage.getItem("user");
         if (storedUser) {
-          const user = JSON.parse(storedUser);
           // Check for both outlook and email fields
-          const email = userSchema.siemensId || user.email;
+          const email = storedUser.siemensId;
           if (email) {
-            setUserEmail(email);
+            // Extract username before @ symbol
+            const username = email.split("@")[0];
+            setUserEmail(username);
           } else {
             console.warn("No email found in user data");
             setUserEmail("No Email Found");
@@ -92,11 +105,11 @@ const Sidebar = () => {
     <div className="w-64 shrink-0 bg-gray-800 p-5">
       <div className="text-center mb-5">
         <div className="relative" ref={dropdownRefs.profile}>
-          <h3
+          <h2
             className="cursor-pointer mt-2 flex items-center justify-center"
             onClick={() => toggleDropdown("profile")}
           >
-            <span className="text-gray-300">{userEmail}</span>
+            <span className="text-gray-500" style={{ fontSize: '1.5em' }}>👤 {userEmail}</span>
             <span className="ml-1">
               {openDropdown === "profile" ? (
                 <IoMdArrowDropup />
@@ -104,16 +117,19 @@ const Sidebar = () => {
                 <IoMdArrowDropdown />
               )}
             </span>
-          </h3>
+          </h2>
           {openDropdown === "profile" && (
             <div className="absolute bg-gray-900 mt-2 rounded-lg p-2 shadow-lg">
               <ul>
-                <li className="mb-2">
-                  <a href="/profile" className="text-gray-400 hover:text-white">
+                {/* <li className="mb-2">
+                  <a
+                    href="/profile "
+                    className="text-gray-400 hover:text-white"
+                  >
                     Edit your profile
                   </a>
-                </li>
-                <li>
+                </li> */}
+                <li className="mb-2 p-1 w-20">
                   <button
                     onClick={handleLogout}
                     className="text-gray-400 hover:text-white"
@@ -192,7 +208,7 @@ const Sidebar = () => {
                     Mouse / Keyboard
                   </a>
                 </li>
-                <li className="my-2">
+                {/* <li className="my-2">
                   <a
                     href="/stocks/iphone"
                     className={clsx("hover:text-white", {
@@ -202,13 +218,13 @@ const Sidebar = () => {
                   >
                     iPhone
                   </a>
-                </li>
+                </li> */}
               </ul>
             )}
           </li>
           <li className="my-2">
             <a
-              href="/buyback"
+              href="/stocks/allasset?status=buyback"
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/buyback",
                 "text-gray-400": pathname !== "/buyback"
@@ -219,7 +235,7 @@ const Sidebar = () => {
           </li>
           <li className="my-2">
             <a
-              href="/disposed"
+              href="/stocks/allasset?status=disposed"
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/disposed",
                 "text-gray-400": pathname !== "/disposed"
@@ -228,17 +244,7 @@ const Sidebar = () => {
               Disposed
             </a>
           </li>
-          <li className="my-2">
-            <a
-              href="/deleted"
-              className={clsx("hover:text-white", {
-                "text-white font-bold": pathname === "/deleted",
-                "text-gray-400": pathname !== "/deleted"
-              })}
-            >
-              Deleted
-            </a>
-          </li>
+
           <li className="my-2">
             <a
               href="#"
@@ -273,7 +279,7 @@ const Sidebar = () => {
               >
                 <li className="my-2">
                   <a
-                    href="/teams"
+                    href="/stocks/teams"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/teams",
                       "text-gray-400": pathname !== "/teams"

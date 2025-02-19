@@ -15,7 +15,7 @@ export async function PUT(req, { params }) {
     const { id } = params;
     const data = await req.json();
     const updatedUser = await User.findByIdAndUpdate(id, data, {
-      new: true,
+      new: true
     }).select("-password");
     return NextResponse.json(updatedUser);
   } catch (err) {

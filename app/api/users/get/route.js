@@ -1,18 +1,17 @@
+import dbConnect from "lib/dbConnect";
 import { NextResponse } from "next/server";
-import User from "models/User";
+import { verifyToken } from "utils/auth";
 
 // Get all Users (Admin only)
 
 export async function GET(req) {
   try {
+    console.log("before dbConnect");
     await dbConnect();
-    const admin = await verifyToken(req);
-    if (!admin || admin.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const users = await User.find({}, "-password");
-    return NextResponse.json(users);
+    console.log("after dbConnect");
+    const user = await verifyToken(req);
+    console.log("user", user);
+    return NextResponse.json(user);
   } catch (err) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

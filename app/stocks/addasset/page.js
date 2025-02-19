@@ -401,7 +401,7 @@ const AddAssetForm = () => {
 
           <div className="flex items-center mb-4">
             <label htmlFor="serialNumber" className="w-52 text-gray-500 mr-2">
-              Serial Number
+              Serial Number <span className="text-red-600">*</span>
             </label>
             <div className="flex flex-col w-3/5">
               <div className="flex items-center">
@@ -409,7 +409,7 @@ const AddAssetForm = () => {
                   type="text"
                   id="serialNumber"
                   value={formData.serialNumber}
-                  // onChange={handleSerialNumberChange}
+                  onChange={handleInputChange}
                   placeholder="Enter the Serial number"
                   className={`p-3 bg-gray-900 border ${
                     errors.serialNumber ? "border-red-500" : "border-gray-700"
@@ -448,7 +448,7 @@ const AddAssetForm = () => {
                   id="model"
                   value={formData.model}
                   onChange={handleInputChange}
-                  placeholder="Model will be auto-filled"
+                  placeholder="Enter the Model"
                   className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400 placeholder-gray-600"
                 />
               )}

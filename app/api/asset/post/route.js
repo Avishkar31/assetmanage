@@ -8,6 +8,7 @@ export async function POST(req) {
     const {
       nodeName,
       serialNumber,
+      assetTag,
       manufacturer,
       model,
       expires,
@@ -40,14 +41,14 @@ export async function POST(req) {
     }
 
     // If issueTo contains user details, create a new user
-    let user;
-    if (issueTo?.fullName && issueTo?.department) {
-      user = new User({
-        fullName: issueTo?.fullName?.toLowerCase(),
-        department: issueTo?.department
-      });
-      await user.save(); // Save the user in the database
-    }
+    // let user;
+    // if (issueTo?.fullName && issueTo?.department) {
+    //   user = new User({
+    //     fullName: issueTo?.fullName?.toLowerCase(),
+    //     department: issueTo?.department
+    //   });
+    //   await user.save(); // Save the user in the database
+    // }
 
     // Determine checkIn/checkOut logic based on status
     let checkOutDate = null;
@@ -66,6 +67,7 @@ export async function POST(req) {
     const newAsset = new Asset({
       nodeName,
       serialNumber,
+      assetTag,
       manufacturer,
       // type,
       model,
@@ -73,7 +75,7 @@ export async function POST(req) {
       category,
       status,
       department,
-      issueTo: user?._id || null, // Assign user ID if user is created
+      issueTo, // Assign user ID if user is created
       note,
       defaultLocation,
       costCenter,

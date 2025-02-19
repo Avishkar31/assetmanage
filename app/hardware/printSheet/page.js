@@ -1,50 +1,51 @@
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from 'next/navigation';
 
 const PrintSheet = () => {
-  const cpuRef = useRef();
-  const lcdMonitorRef = useRef();
-  const dockingStationRef = useRef();
-  const keyboardRef = useRef();
-  const mouseRef = useRef();
-  const powerAdaptorLaptopRef = useRef();
-  const powerAdaptopDockingStationRef = useRef();
-  const laptopBagRef = useRef();
-  const modularBatteryRef = useRef();
-  const laptopLockRef = useRef();
-  const hddRef = useRef();
-  const headphoneRef = useRef();
-  const cardReaderRef = useRef();
-  const printerRef = useRef();
-  const mobileRef = useRef();
-
+  const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
     issuedTo: "",
     deskLocation: "",
     type: "",
     model: "",
     nodeName: "",
-    serialNumber: "",
+    serialNumber: "", 
     allocation: "",
     period: "",
     accessories: {
       CPU: false,
-      'LCD Monitor': false,
-      'Docking Station': false,
-      'Keyboard': false,
-      'Mouse': false,
-      'Power Adapter (Laptop)': false,
-      'Power Adaptor (Docking station)': false,
-      'Laptop Bag': false,
-      'Modular Battery': false,
-      'Laptop Lock': false,
-      'Internal HDD/ External HDD': false,
-      'Headphone': false,
-      'Cardreader': false,
-      'Printer': false,
-      'Mobile': false
+      "LCD Monitor": false,
+      "Docking Station": false,
+      Keyboard: false,
+      Mouse: false,
+      "Power Adapter (Laptop)": false,
+      "Power Adaptor (Docking station)": false,
+      "Laptop Bag": false,
+      "Modular Battery": false,
+      "Laptop Lock": false,
+      "Internal HDD/ External HDD": false,
+      Headphone: false,
+      Cardreader: false,
+      Printer: false,
+      Mobile: false
     }
   });
+
+  useEffect(() => {
+    const issuedTo = searchParams.get('issuedTo');
+    const model = searchParams.get('model');
+    const nodeName = searchParams.get('nodeName');
+    const serialNumber = searchParams.get('serialNumber');
+
+    setFormData(prev => ({
+      ...prev,
+      issuedTo: issuedTo || "",
+      model: model || "",
+      nodeName: nodeName || "",
+      serialNumber: serialNumber || ""
+    }));
+  }, [searchParams]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -66,59 +67,82 @@ const PrintSheet = () => {
 
   const handlePrintAndSave = async () => {
     try {
-      // Save the data
-    //   const response = await fetch('/api/hardware/save', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(formData)
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error('Failed to save data');
-    //   }
-
-      // Print the page
       window.print();
-      
     } catch (error) {
-      console.error('Error saving data:', error);
-      alert('Failed to save data. Please try again.');
+      console.error("Error printing:", error);
+      alert("Failed to print. Please try again.");
     }
   };
 
   return (
-    <div>
-      <div className="w-[21cm] min-h-[29.7cm] mx-auto bg-white p-8 text-black print:shadow-none">
+    <div className="p-4">
+      <div className="w-[21cm] h-[29.7cm] mx-auto bg-white p-6 text-black print:shadow-none">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold">Hardware Allocation Sheet</h1>
-          <p className="text-sm mt-2">Date:</p>
+          <h1 className="text-2xl font-bold font-mono mb-3">SIEMENS</h1>
+          <div className="text-sm text-right">
+            <div className="mb-1">
+              <span className="font-semibold">Issue Date:</span>
+              <input
+                type="date"
+                name="issueDate"
+                value={formData.issueDate}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 px-1 text-sm bg-transparent w-32 ml-1"
+              />
+            </div>
+            <div className="mb-1">
+              <span className="font-semibold">PO No:</span>
+              <input
+                type="text"
+                name="poNumber"
+                value={formData.poNumber}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 px-1 text-sm bg-transparent w-28 ml-1"
+              />
+            </div>
+            <div>
+              <span className="font-semibold">Order No:</span>
+              <input
+                type="text"
+                name="orderNumber"
+                value={formData.orderNumber}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 px-1 text-sm bg-transparent w-28 ml-1"
+              />
+            </div>
+          </div>
+          <h2 className="text-lg font-semibold text-center my-2 underline">
+            Hardware Allocation & Receipt Form
+          </h2>
         </div>
 
         {/* User Info Section */}
-        <div className="mb-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
+        <div className="text-sm mb-6">
+          <div className="flex gap-12">
+            <div className="flex-1">
               <div className="mb-2">
-                <label className="font-semibold">Issued To:</label>
+                <label className="font-semibold">Issue To:</label>
                 <input
                   type="text"
                   name="issuedTo"
                   value={formData.issuedTo}
                   onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
+                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
+                  readOnly
                 />
               </div>
-              <div className="mb-2">
-                <label className="font-semibold">Desk Location:</label>
+              <div className="mb-3 flex items-center">
+                <div className="flex items-center">
+                  <label className="font-semibold mr-2">Desk</label>
+                  <label className="font-semibold">Location:</label>
+                </div>
                 <input
                   type="text"
                   name="deskLocation"
                   value={formData.deskLocation}
                   onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
+                  className="ml-2 border-b border-gray-500 px-1 text-sm bg-transparent w-1/2"
                 />
               </div>
               <div className="mb-2">
@@ -128,11 +152,22 @@ const PrintSheet = () => {
                   name="type"
                   value={formData.type}
                   onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
+                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
+                />
+              </div>
+              <div className="mb-2">
+                <label className="font-semibold">Allocation:</label>
+                <input
+                  type="text"
+                  name="allocation"
+                  value={formData.allocation}
+                  onChange={handleInputChange}
+                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent"
+                  placeholder="Permanent / Temporary"
                 />
               </div>
             </div>
-            <div>
+            <div className="flex-1">
               <div className="mb-2">
                 <label className="font-semibold">Model:</label>
                 <input
@@ -140,7 +175,8 @@ const PrintSheet = () => {
                   name="model"
                   value={formData.model}
                   onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
+                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
+                  readOnly
                 />
               </div>
               <div className="mb-2">
@@ -150,114 +186,100 @@ const PrintSheet = () => {
                   name="nodeName"
                   value={formData.nodeName}
                   onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
+                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
+                  readOnly
                 />
               </div>
-              <div className="mb-2">
-                <label className="font-semibold">Serial Number:</label>
+              <div className="mb-2 flex items-center">
+                <div className="flex items-center">
+                  <label className="font-semibold mr-2">Serial</label>
+                  <label className="font-semibold">Number:</label>
+                </div>
                 <input
                   type="text"
                   name="serialNumber"
                   value={formData.serialNumber}
                   onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
+                  className="ml-2 border-b border-gray-500 px-1 text-sm bg-transparent w-1/2"
+                  readOnly
                 />
               </div>
-            </div>
-          </div>
-          <div className="mt-2 flex justify-between">
-            <div className="mb-2">
-              <label className="font-semibold">Allocation:</label>
-              <input
-                type="text"
-                name="allocation"
-                value={formData.allocation}
-                onChange={handleInputChange}
-                className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
-              />
-            </div>
-            <div className="mb-2">
-              <label className="font-semibold">Period:</label>
-              <input
-                type="text"
-                name="period"
-                value={formData.period}
-                onChange={handleInputChange}
-                className="ml-2 border-b border-gray-500 px-2 text-sm bg-transparent"
-              />
+              <div className="mb-2">
+                <label className="font-semibold">Period:</label>
+                <input
+                  type="text"
+                  name="period"
+                  value={formData.period}
+                  onChange={handleInputChange}
+                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent"
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Accessories Section */}
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-4">Accessories</h2>
-          <div className="grid grid-cols-2 gap-4">
-            {Object.entries(formData.accessories).map(([accessory, checked]) => (
-              <div key={accessory} className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={checked === "1"}
-                  onChange={() => handleCheckboxChange(accessory)}
-                  className="mr-2 appearance-none h-4 w-4 border border-gray-300 rounded bg-transparent checked:bg-black checked:border-transparent focus:outline-none"
-                  ref={
-                    accessory === 'CPU' ? cpuRef :
-                    accessory === 'LCD Monitor' ? lcdMonitorRef :
-                    accessory === 'Docking Station' ? dockingStationRef :
-                    accessory === 'Keyboard' ? keyboardRef :
-                    accessory === 'Mouse' ? mouseRef :
-                    accessory === 'Power Adapter (Laptop)' ? powerAdaptorLaptopRef :
-                    accessory === 'Power Adaptor (Docking station)' ? powerAdaptopDockingStationRef :
-                    accessory === 'Laptop Bag' ? laptopBagRef :
-                    accessory === 'Modular Battery' ? modularBatteryRef :
-                    accessory === 'Laptop Lock' ? laptopLockRef :
-                    accessory === 'Internal HDD/ External HDD' ? hddRef :
-                    accessory === 'Headphone' ? headphoneRef :
-                    accessory === 'Cardreader' ? cardReaderRef :
-                    accessory === 'Printer' ? printerRef :
-                    accessory === 'Mobile' ? mobileRef : null
-                  }
-                />
-                <span>{accessory}</span>
-              </div>
-            ))}
-          </div>
+        {/* Hardware Items Table */}
+        <div>
+          <h2 className="font-semibold mb-2">Accessories:</h2>
+          <table className="w-full border-collapse border border-gray-400 text-sm mb-4 mx-1">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-400 p-1">Item</th>
+                <th className="border border-gray-400 p-1">QTY</th>
+                <th className="border border-gray-400 p-1">Issued</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(formData.accessories).map(([item, checked]) => (
+                <tr key={item}>
+                  <td className="border border-gray-400 p-1">{item}</td>
+                  <td className="border border-gray-400 p-1 text-center">{checked === "1" ? "01" : "00"}</td>
+                  <td className="border border-gray-400 p-1 text-center">
+                    <input
+                      type="checkbox"
+                      checked={checked === "1"}
+                      onChange={() => handleCheckboxChange(item)}
+                      className="h-3 w-3"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
         {/* Signatures Section */}
-        <div className="mt-12">
-          <div className="flex justify-between">
-            <div className="text-center">
-              <div className="border-t border-black w-48 mt-16"></div>
-              <p className="text-sm">Employee Signature</p>
-            </div>
-            <div className="text-center">
-              <div className="border-t border-black w-48 mt-16"></div>
-              <p className="text-sm">IT Department Signature</p>
+        <div className="text-sm space-y-3">
+          <div className="flex justify-between mb-8">
+            <p className="mb-1">
+              <strong>Name & Sign of Issuing Person:</strong> ___________
+            </p>
+            <p className="mb-1">
+              <strong>Name & Sign of Carrying Person:</strong> ___________
+            </p>
+          </div>
+
+          <div>
+            <p className="mb-6">
+              I hereby confirm that I have received the above-mentioned items.
+            </p>
+            <div className="flex justify-between">
+              <p className="mb-1">
+                <strong>System Status:</strong> Connected / Not Connected
+              </p>
+              <p>
+                <strong>Name & Sign of Receiving Person:</strong> ___________
+              </p>
             </div>
           </div>
-        </div>
-
-        {/* Terms & Conditions */}
-        <div className="mt-8 text-xs">
-          <p className="font-semibold mb-2">Terms & Conditions:</p>
-          <ol className="list-decimal ml-4">
-            <li>All equipment remains the property of the company</li>
-            <li>
-              User is responsible for the proper care and handling of the
-              equipment
-            </li>
-            <li>Any damage or loss must be reported immediately</li>
-            <li>Equipment must be returned upon termination of employment</li>
-          </ol>
         </div>
       </div>
 
       {/* Print & Save Button - Hidden during printing */}
-      <div className="flex justify-center mt-4 print:hidden">
+      <div className="flex justify-center mt-3 print:hidden">
         <button
           onClick={handlePrintAndSave}
-          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
+          className="bg-teal-500 text-white px-5 py-2 rounded hover:bg-teal-600 transition-colors text-sm"
         >
           Print & Save
         </button>

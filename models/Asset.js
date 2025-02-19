@@ -10,7 +10,7 @@ const assetSchema = new mongoose.Schema({
   category: String,
   status: {
     type: String,
-    enum: ["Deployed", "Inpool", "Inactive"],
+    enum: ["Inpool", "New Purchase", "MIS Store", "Buyback", "Disposed", "Inactive", "Deployed"],
     required: true
   },
   department: String,
