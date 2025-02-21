@@ -16,17 +16,6 @@ const ManufacturerSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active"
-    },
-    supportContact: {
-      email: {
-        type: String,
-        trim: true
-      }
-    }
   },
   {
     timestamps: true
@@ -36,6 +25,18 @@ const ManufacturerSchema = new mongoose.Schema(
 // Add index for better query performance
 ManufacturerSchema.index({ name: 1 });
 
+// Check for errors in the schema definition
+ManufacturerSchema.post('save', function(error, doc, next) {
+  if (error) {
+    if (error.name === 'MongoError' && error.code === 11000) {
+      next(new Error('Manufacturer name must be unique.'));
+    } else {
+      next(error);
+    }
+  } else {
+    next();
+  }
+});
+
 export default mongoose.models.Manufacturer || 
   mongoose.model("Manufacturer", ManufacturerSchema);
-

@@ -62,7 +62,7 @@ const Sidebar = () => {
       try {
         const token = localStorage.getItem("token");
         console.log("token", token);
-        const response = await fetch("http://localhost:3000/api/users/get", {
+        const response = await fetch("http://localhost:4000/api/users/get", {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
@@ -109,7 +109,9 @@ const Sidebar = () => {
             className="cursor-pointer mt-2 flex items-center justify-center"
             onClick={() => toggleDropdown("profile")}
           >
-            <span className="text-gray-500" style={{ fontSize: '1.5em' }}>👤 {userEmail}</span>
+            <span className="text-gray-500" style={{ fontSize: "1.5em" }}>
+              👤 {userEmail}
+            </span>
             <span className="ml-1">
               {openDropdown === "profile" ? (
                 <IoMdArrowDropup />

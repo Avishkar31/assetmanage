@@ -4,8 +4,8 @@ import Manufacturer from "@/models/Manufacturers";
 
 export async function GET() {
   try {
-    await dbconnect();
-    const manufacturers = await Manufacturer.find({});
+    await connectDB();
+    const manufacturers = await Manufacturer.find().sort({ name: 1 });
     return NextResponse.json({ success: true, data: manufacturers });
   } catch (error) {
     return NextResponse.json(
@@ -17,9 +17,21 @@ export async function GET() {
 
 export async function POST(request) {
   try {
-    await dbconnect();
-    const data = await request.json();
-    const manufacturer = await Manufacturer.create(data);
+    await connectDB();
+    const { name, description = "", website = "" } = await request.json();
+
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: "Name is required" },
+        { status: 400 }
+      );
+    }
+
+    const manufacturer = await Manufacturer.create({
+      name,
+      description,
+      website
+    });
     return NextResponse.json({ success: true, data: manufacturer });
   } catch (error) {
     return NextResponse.json(
@@ -31,14 +43,21 @@ export async function POST(request) {
 
 export async function PUT(request) {
   try {
-    await dbconnect();
+    await connectDB();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    const data = await request.json();
+    const { name, description = "", website = "" } = await request.json();
+
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: "Name is required" },
+        { status: 400 }
+      );
+    }
 
     const manufacturer = await Manufacturer.findByIdAndUpdate(
       id,
-      data,
+      { name, description, website },
       { new: true, runValidators: true }
     );
 
@@ -60,12 +79,11 @@ export async function PUT(request) {
 
 export async function DELETE(request) {
   try {
-        await dbconnect();
+    await connectDB();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
     const manufacturer = await Manufacturer.findByIdAndDelete(id);
-
     if (!manufacturer) {
       return NextResponse.json(
         { success: false, error: "Manufacturer not found" },
