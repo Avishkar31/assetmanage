@@ -13,7 +13,7 @@ const validSortColumns = [
   "status",
   "department",
   "assetOwner",
-  "condition"
+  "condition",
 ];
 
 const validOrder = ["asc", "desc"];
@@ -25,7 +25,7 @@ const validStatuses = [
   "Buyback",
   "Disposed",
   "Inactive",
-  "Deployed"
+  "Deployed",
 ];
 
 export async function GET(req) {
@@ -68,22 +68,16 @@ export async function GET(req) {
       ...(search
         ? {
             $or: validSortColumns.map((col) => ({
-              [col]: { $regex: search, $options: "i" } // case-insensitive search
-            }))
+              [col]: { $regex: search, $options: "i" }, // case-insensitive search
+            })),
           }
         : {}),
-      ...(status ? { status } : {}) // Add status to query if provided
+      ...(status ? { status } : {}), // Add status to query if provided
     };
 
     // Fetch assets with sorting, searching, status filtering, and pagination
     const assets = await Asset.find(searchQuery)
-      .populate('issueTo', 'name')
-      .populate({
-        path: 'assetHistory.user', 
-        model: User,
-        select: 'name',
-        options: { skipInvalidIds: true } // Ensures invalid references are skipped
-      })
+      .populate("issueTo", "name")
       .sort({ [sort]: order === "asc" ? 1 : -1 })
       .skip(Number(offset))
       .limit(Number(limit));
@@ -100,7 +94,7 @@ export async function GET(req) {
         data: assets,
         total: totalAssets,
         currentPage: Math.floor(offset / limit) + 1,
-        totalPages: Math.ceil(totalAssets / limit)
+        totalPages: Math.ceil(totalAssets / limit),
       },
       { status: 200 }
     );

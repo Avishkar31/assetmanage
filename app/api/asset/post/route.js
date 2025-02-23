@@ -1,9 +1,12 @@
+// app/api/asset/route.js
+import dbConnect from "@/lib/dbConnect";
+import Asset from "@/models/Asset";
 import { NextResponse } from "next/server";
-import Asset from "../../../../models/Asset";
-import User from "../../../../models/User";
 
 export async function POST(req) {
   try {
+    await dbConnect();
+
     const data = await req.json();
     const {
       nodeName,
@@ -28,10 +31,11 @@ export async function POST(req) {
       disposedDate,
       poNumber,
       order,
-      purchaseDate
+      purchaseDate,
+      user,
     } = data;
 
-    // Check if asset with the same serial number already exists
+    // Check if asset exists
     const existingAsset = await Asset.findOne({ serialNumber });
     if (existingAsset) {
       return NextResponse.json(
@@ -40,42 +44,31 @@ export async function POST(req) {
       );
     }
 
-    // If issueTo contains user details, create a new user
-    // let user;
-    // if (issueTo?.fullName && issueTo?.department) {
-    //   user = new User({
-    //     fullName: issueTo?.fullName?.toLowerCase(),
-    //     department: issueTo?.department
-    //   });
-    //   await user.save(); // Save the user in the database
-    // }
-
-    // Determine checkIn/checkOut logic based on status
+    // Determine checkIn/checkOut logic
     let checkOutDate = null;
     let checkInDate = null;
     let action = null;
 
     if (status === "Deployed") {
-      checkOutDate = new Date(); // Set checkOut date to current date
+      checkOutDate = new Date();
       action = "checkOut";
     } else if (["Inpool", "Inactive"].includes(status)) {
-      checkInDate = new Date(); // Set checkIn date to current date
+      checkInDate = new Date();
       action = "checkIn";
     }
 
-    // Create the new asset
+    // Create new asset
     const newAsset = new Asset({
       nodeName,
       serialNumber,
       assetTag,
       manufacturer,
-      // type,
       model,
       expires,
       category,
       status,
       department,
-      issueTo, // Assign user ID if user is created
+      issueTo,
       note,
       defaultLocation,
       costCenter,
@@ -89,24 +82,25 @@ export async function POST(req) {
       poNumber,
       order,
       purchaseDate,
-      checkOutDate, // Set checkOutDate if applicable
-      checkInDate, // Set checkInDate if applicable
+      checkOutDate,
+      checkInDate,
       assetHistory: [
         {
-          user: user?._id || null,
-          action, // "checkIn" or "checkOut"
-          date: new Date(), // Log current date for this action
-          status
-        }
-      ]
+          user: user.siemensId,
+          action,
+          date: new Date(),
+          status,
+        },
+      ],
     });
 
-    // Save the new asset
     const savedAsset = await newAsset.save();
-
     return NextResponse.json(savedAsset, { status: 201 });
   } catch (err) {
-    console.log(err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    console.log("API Error:", err);
+    return NextResponse.json(
+      { error: "Internal Server Error", details: err.message },
+      { status: 500 }
+    );
   }
 }

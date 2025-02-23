@@ -11,13 +11,9 @@ export async function GET(req) {
   try {
     console.log("serialNumber", serialNumber);
     const existingAsset = await Asset.findOne({
-      serialNumber: String(serialNumber)
-    }).populate({
-      path: 'assetHistory.user', 
-      model: User,
-      select: 'name',
-      options: { skipInvalidIds: true } // Ensures invalid references are skipped
+      serialNumber: String(serialNumber),
     });
+
     if (!existingAsset) {
       return NextResponse.json({ error: "asset not found" }, { status: 404 });
     }
