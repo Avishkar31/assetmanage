@@ -2,6 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "paths": {
+      "@/*": ["./*"], // Add this line to map @ to the root directory
       "@/components/*": ["components/*"],
       "@/layout/*": ["components/layout/*"],
       "@/common/*": ["components/common/*"]

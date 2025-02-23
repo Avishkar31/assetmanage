@@ -10,6 +10,7 @@ const Sidebar = () => {
   const [userEmail, setUserEmail] = useState("");
   const [showImportDialog, setShowImportDialog] = useState(false);
   const pathname = usePathname();
+  const [file, setFile] = useState(null);
 
   const dropdownRefs = {
     accessories: useRef(null),
@@ -43,14 +44,35 @@ const Sidebar = () => {
     setShowImportDialog(true);
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // TODO: Add file validation and processing logic
-      alert(
-        "Please verify your data before importing. Incorrect data may affect the database."
-      );
-      // Process file upload
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
+
+  const handleFileUpload = async () => {
+    if (!file) {
+      alert("Please select a file before importing.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await fetch("http://localhost:4000/api/import", {
+        method: "POST",
+        body: formData
+      });
+
+      if (response.ok) {
+        alert("File uploaded successfully!");
+        setShowImportDialog(false);
+        setFile(null);
+      } else {
+        alert("Failed to upload file. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Error uploading file.");
     }
   };
 
@@ -251,10 +273,7 @@ const Sidebar = () => {
             <a
               href="#"
               onClick={handleImportClick}
-              className={clsx("hover:text-white", {
-                "text-white font-bold": pathname === "/imports",
-                "text-gray-400": pathname !== "/imports"
-              })}
+              className="text-gray-400 hover:text-white"
             >
               Imports
             </a>
@@ -363,7 +382,7 @@ const Sidebar = () => {
             </p>
             <input
               type="file"
-              onChange={handleFileUpload}
+              onChange={handleFileChange}
               className="mb-4 text-gray-300"
               accept=".csv,.xlsx,.xls"
             />
@@ -374,7 +393,10 @@ const Sidebar = () => {
               >
                 Cancel
               </button>
-              <button className="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600">
+              <button
+                onClick={handleFileUpload}
+                className="bg-teal-500 text-white px-4 py-2 rounded hover:bg-teal-600"
+              >
                 Import
               </button>
             </div>

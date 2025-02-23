@@ -16,7 +16,7 @@ export default function ManufacturerManagement() {
 
   const fetchManufacturers = async () => {
     try {
-      const response = await fetch("/api/manufacturers");
+      const response = await fetch("/api/manufacturers");  
       const data = await response.json();
       if (data.success) setManufacturers(data.data);
     } catch (error) {
@@ -30,7 +30,7 @@ export default function ManufacturerManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const method = editingManufacturer ? "PUT" : "POST";
+    const method = editingManufacturer ? "PUT" : "POST";    
     const url = editingManufacturer
       ? `/api/manufacturers?id=${editingManufacturer._id}`
       : "/api/manufacturers";
