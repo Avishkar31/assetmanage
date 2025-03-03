@@ -1,16 +1,19 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams } from "next/navigation";
 
 const PrintSheet = () => {
   const searchParams = useSearchParams();
   const [formData, setFormData] = useState({
-    issuedTo: "",
+    poNumber: "",
+    orderNumber: "",
+    issueTo: "",
     deskLocation: "",
+    category: "",
     type: "",
     model: "",
     nodeName: "",
-    serialNumber: "", 
+    serialNumber: "",
     allocation: "",
     period: "",
     accessories: {
@@ -33,17 +36,26 @@ const PrintSheet = () => {
   });
 
   useEffect(() => {
-    const issuedTo = searchParams.get('issuedTo');
-    const model = searchParams.get('model');
-    const nodeName = searchParams.get('nodeName');
-    const serialNumber = searchParams.get('serialNumber');
+    const fields = [
+      "poNumber",
+      "orderNumber",
+      "issueTo",
+      "deskLocation",
+      "category",
+      "type",
+      "model",
+      "nodeName",
+      "serialNumber"
+    ];
 
-    setFormData(prev => ({
+    const updatedData = fields.reduce((acc, field) => {
+      acc[field] = searchParams.get(field) || "";
+      return acc;
+    }, {});
+
+    setFormData((prev) => ({
       ...prev,
-      issuedTo: issuedTo || "",
-      model: model || "",
-      nodeName: nodeName || "",
-      serialNumber: serialNumber || ""
+      ...updatedData
     }));
   }, [searchParams]);
 
@@ -67,7 +79,20 @@ const PrintSheet = () => {
 
   const handlePrintAndSave = async () => {
     try {
-      window.print();
+      console.table("formadagta", formData);
+      const response = await fetch("/api/savePrintData", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+
+      if (response.ok) {
+        window.print();
+      } else {
+        throw new Error("Failed to save data");
+      }
     } catch (error) {
       console.error("Error printing:", error);
       alert("Failed to print. Please try again.");
@@ -80,147 +105,40 @@ const PrintSheet = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold font-mono mb-3">SIEMENS</h1>
-          <div className="text-sm text-right">
-            <div className="mb-1">
-              <span className="font-semibold">Issue Date:</span>
-              <input
-                type="date"
-                name="issueDate"
-                value={formData.issueDate}
-                onChange={handleInputChange}
-                className="border-b border-gray-500 px-1 text-sm bg-transparent w-32 ml-1"
-              />
-            </div>
-            <div className="mb-1">
-              <span className="font-semibold">PO No:</span>
-              <input
-                type="text"
-                name="poNumber"
-                value={formData.poNumber}
-                onChange={handleInputChange}
-                className="border-b border-gray-500 px-1 text-sm bg-transparent w-28 ml-1"
-              />
-            </div>
-            <div>
-              <span className="font-semibold">Order No:</span>
-              <input
-                type="text"
-                name="orderNumber"
-                value={formData.orderNumber}
-                onChange={handleInputChange}
-                className="border-b border-gray-500 px-1 text-sm bg-transparent w-28 ml-1"
-              />
-            </div>
-          </div>
-          <h2 className="text-lg font-semibold text-center my-2 underline">
+          <h2 className="text-lg font-semibold my-2 underline">
             Hardware Allocation & Receipt Form
           </h2>
         </div>
 
         {/* User Info Section */}
         <div className="text-sm mb-6">
-          <div className="flex gap-12">
-            <div className="flex-1">
-              <div className="mb-2">
-                <label className="font-semibold">Issue To:</label>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              "Issue To",
+              "Desk Location",
+              "Category",
+              "Model",
+              "Node Name",
+              "Serial Number"
+            ].map((label) => (
+              <div key={label} className="flex items-center mb-2">
+                <span className="font-semibold w-32">{label}:</span>
                 <input
                   type="text"
-                  name="issuedTo"
-                  value={formData.issuedTo}
+                  name={label.toLowerCase().replace(" ", "")}
+                  value={formData[label.toLowerCase().replace(" ", "")]}
                   onChange={handleInputChange}
-                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
+                  className="border-b border-gray-500 px-1 text-sm bg-transparent w-full ml-1"
                   readOnly
                 />
               </div>
-              <div className="mb-3 flex items-center">
-                <div className="flex items-center">
-                  <label className="font-semibold mr-2">Desk</label>
-                  <label className="font-semibold">Location:</label>
-                </div>
-                <input
-                  type="text"
-                  name="deskLocation"
-                  value={formData.deskLocation}
-                  onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-1 text-sm bg-transparent w-1/2"
-                />
-              </div>
-              <div className="mb-2">
-                <label className="font-semibold">Type:</label>
-                <input
-                  type="text"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInputChange}
-                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
-                />
-              </div>
-              <div className="mb-2">
-                <label className="font-semibold">Allocation:</label>
-                <input
-                  type="text"
-                  name="allocation"
-                  value={formData.allocation}
-                  onChange={handleInputChange}
-                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent"
-                  placeholder="Permanent / Temporary"
-                />
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="mb-2">
-                <label className="font-semibold">Model:</label>
-                <input
-                  type="text"
-                  name="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
-                  readOnly
-                />
-              </div>
-              <div className="mb-2">
-                <label className="font-semibold">Node Name:</label>
-                <input
-                  type="text"
-                  name="nodeName"
-                  value={formData.nodeName}
-                  onChange={handleInputChange}
-                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent w-3/4"
-                  readOnly
-                />
-              </div>
-              <div className="mb-2 flex items-center">
-                <div className="flex items-center">
-                  <label className="font-semibold mr-2">Serial</label>
-                  <label className="font-semibold">Number:</label>
-                </div>
-                <input
-                  type="text"
-                  name="serialNumber"
-                  value={formData.serialNumber}
-                  onChange={handleInputChange}
-                  className="ml-2 border-b border-gray-500 px-1 text-sm bg-transparent w-1/2"
-                  readOnly
-                />
-              </div>
-              <div className="mb-2">
-                <label className="font-semibold">Period:</label>
-                <input
-                  type="text"
-                  name="period"
-                  value={formData.period}
-                  onChange={handleInputChange}
-                  className="ml-1 border-b border-gray-500 px-1 text-sm bg-transparent"
-                />
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
         {/* Hardware Items Table */}
         <div>
-          <h2 className="font-semibold mb-2">Accessories:</h2>
+          <h2 className="font-semibold mb-5">Accessories:</h2>
           <table className="w-full border-collapse border border-gray-400 text-sm mb-4 mx-1">
             <thead>
               <tr className="bg-gray-100">
@@ -233,7 +151,9 @@ const PrintSheet = () => {
               {Object.entries(formData.accessories).map(([item, checked]) => (
                 <tr key={item}>
                   <td className="border border-gray-400 p-1">{item}</td>
-                  <td className="border border-gray-400 p-1 text-center">{checked === "1" ? "01" : "00"}</td>
+                  <td className="border border-gray-400 p-1 text-center">
+                    {checked === "1" ? "01" : "00"}
+                  </td>
                   <td className="border border-gray-400 p-1 text-center">
                     <input
                       type="checkbox"
@@ -249,39 +169,58 @@ const PrintSheet = () => {
         </div>
 
         {/* Signatures Section */}
-        <div className="text-sm space-y-3">
-          <div className="flex justify-between mb-8">
-            <p className="mb-1">
+        <div className="text-sm space-y-3 ">
+          <div className="flex justify-between mb-10">
+            <p>
               <strong>Name & Sign of Issuing Person:</strong> ___________
             </p>
-            <p className="mb-1">
+            <p>
               <strong>Name & Sign of Carrying Person:</strong> ___________
             </p>
           </div>
+        </div>
 
-          <div>
-            <p className="mb-6">
-              I hereby confirm that I have received the above-mentioned items.
+        <div className="text-sm space-y-3 mb-20">
+          <p>
+            <strong>
+              I hereby confirm that I have received the above - mentioned items.
+            </strong>
+          </p>
+          <p>
+            <strong>System Status: Connected / Not Connected </strong>
+          </p>
+        </div>
+
+        <div className="text-sm space-y-3">
+          <div className="flex justify-between mt-20">
+            <p>
+              <strong>Name & Sign of receiving Person:</strong>
             </p>
-            <div className="flex justify-between">
-              <p className="mb-1">
-                <strong>System Status:</strong> Connected / Not Connected
-              </p>
-              <p>
-                <strong>Name & Sign of Receiving Person:</strong> ___________
-              </p>
-            </div>
           </div>
         </div>
       </div>
 
-      {/* Print & Save Button - Hidden during printing */}
+      {/* Print & Save Button */}
       <div className="flex justify-center mt-3 print:hidden">
         <button
           onClick={handlePrintAndSave}
           className="bg-teal-500 text-white px-5 py-2 rounded hover:bg-teal-600 transition-colors text-sm"
         >
           Print & Save
+        </button>
+
+        <button
+          onClick={() => {
+            const accessoriesQuery = Object.entries(formData.accessories)
+              .map(([key, value]) => `${key}=${value}`)
+              .join("&");
+
+            alert("Print successful!");
+            window.location.href = `/hardware/assetView?serialNumber=${formData.serialNumber}&${accessoriesQuery}`;
+          }}
+          className="bg-blue-500 text-white px-5 py-2 rounded hover:bg-blue-600 transition-colors text-sm ml-3"
+        >
+          View Asset
         </button>
       </div>
     </div>

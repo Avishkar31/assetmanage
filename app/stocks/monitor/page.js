@@ -45,7 +45,9 @@ function Page() {
 
   const fetchMonitors = async () => {
     try {
-      const response = await fetch(`/api/monitors?team=${selectedTeam}`);
+      const response = await fetch(
+        `/api/asset/CheckInOutMonitors?team=${selectedTeam}`
+      );
       const data = await response.json();
       if (data.success) {
         setMonitors(data.data); // Ensure correct data structure
@@ -71,7 +73,7 @@ function Page() {
     }
 
     try {
-      const response = await fetch("/api/monitors", {
+      const response = await fetch("/api/asset/checkInOutMonitors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, team: selectedTeam })
@@ -118,12 +120,28 @@ function Page() {
     <main className="flex h-screen bg-gray-900 text-white">
       <Sidebar />
       <div className="flex-1 p-5">
-        <h1 className="text-2xl">Monitor Management</h1>
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl">Monitor Management</h1>
+          <div className="flex gap-2">
+            <button
+              className="bg-teal-600 p-2 rounded"
+              onClick={() => alert("Import functionality to be implemented")}
+            >
+              Import Monitors
+            </button>
+            <button
+              className="bg-teal-600 p-2 rounded"
+              onClick={() => alert("Import functionality to be implemented")}
+            >
+              Export Monitors List
+            </button>
+          </div>
+        </div>
 
         <section className="bg-gray-800 p-4 rounded mt-4">
           <h2 className="text-xl mb-2">Select Team</h2>
           <div className="grid grid-cols-3 gap-4">
-            {teams.map((team) => (
+            {/* {teams?.map((team) => (
               <button
                 key={team._id}
                 onClick={() => handleTeamSelect(team)}
@@ -133,7 +151,7 @@ function Page() {
               >
                 {team.name}
               </button>
-            ))}
+            ))} */}
           </div>
         </section>
 

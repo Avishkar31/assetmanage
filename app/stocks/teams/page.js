@@ -73,7 +73,7 @@ export default function TeamManagement() {
         <h1 className="text-2xl mb-4">Team Management</h1>
         <button
           onClick={() => (window.location.href = "/stocks")}
-          className="bg-teal-600 p-2 rounded mb-6"  
+          className="bg-teal-600 p-2 rounded mb-6"
         >
           Stocks Page
         </button>
@@ -118,7 +118,7 @@ export default function TeamManagement() {
 
       <h2 className="text-xl mb-2">Team List</h2>
       <ul>
-        {teams.map((team) => (
+        {teams?.map((team) => (
           <li
             key={team._id}
             className="flex justify-between bg-gray-800 p-3 rounded mb-2"

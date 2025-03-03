@@ -1,15 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "components/Sidebar";
-import {
-  IoCloseSharp,
-  IoMdAdd,
-  IoMdArrowDropup,
-  IoMdArrowDropdown,
-} from "react-icons/io";
+import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { FiLoader } from "react-icons/fi";
 
-import { fetchAssetData, customDebounce } from "../../../utils";
 import getUserData from "@/utils/getUser";
 
 // const getAssetDetails =(serialnumber)=>{
@@ -22,28 +16,45 @@ import getUserData from "@/utils/getUser";
 
 // }
 
+const fetchDepartments = async () => {
+  try {
+    const response = await fetch("/api/teams");
+    if (!response.ok) {
+      throw new Error("Failed to fetch teams");
+    }
+    const data = await response.json();
+    if (data.success) {
+      // Set the 'name' field as department options
+      setTeams(data.data.map((team) => team.name));
+    }
+    // Adjust based on your API response
+  } catch (error) {
+    console.error("Error fetching teams:", error);
+  }
+};
+
 const manufacturerOptions = [
   {
     label: "Default",
-    description: "Manufacturer selection is required to continue.",
+    description: "Manufacturer selection is required to continue."
   },
   {
     label: "HP",
-    description: "Ensure all data fields are fully populated.",
+    description: "Ensure all data fields are fully populated."
   },
   {
     label: "Dell",
     description:
-      "Fetching information directly from Dell's website. Please type the serial number.",
+      "Fetching information directly from Dell's website. Please type the serial number."
   },
   {
     label: "Apple",
-    description: "Ensure all data fields are fully populated.",
+    description: "Ensure all data fields are fully populated."
   },
   {
     label: "Microsoft",
-    description: "Ensure all data fields are fully populated.",
-  },
+    description: "Ensure all data fields are fully populated."
+  }
 ];
 
 const ramOptions = [
@@ -51,49 +62,49 @@ const ramOptions = [
   {
     label: "Inpool",
     description: "✓  That status is deployable. This asset can be checked out.",
-    color: "text-green-500",
+    color: "text-green-500"
   },
   {
     label: "New Purchase",
     description:
       "✗ That asset status is not deployable. This asset cannot be checked out.",
-    color: "text-red-500",
+    color: "text-red-500"
   },
   {
     label: "MIS Store",
     description: "✓  That status is deployable. This asset can be checked out.",
-    color: "text-green-500",
+    color: "text-green-500"
   },
   {
     label: "Buyback",
     description:
       "✗  That asset status is not deployable. This asset cannot be checked out.",
-    color: "text-red-500",
+    color: "text-red-500"
   },
   {
     label: "Disposed",
     description:
       "✗  That asset status is not deployable. This asset cannot be checked out.",
-    color: "text-red-500",
+    color: "text-red-500"
   },
   {
     label: "Inactive",
     description:
       "✗  That asset status is not deployable. This asset cannot be checked out.",
-    color: "text-red-500",
+    color: "text-red-500"
   },
   {
     label: "Deployed",
     description: "✓  That status is deployable. This asset can be checked out.",
-    color: "text-green-500",
-  },
+    color: "text-green-500"
+  }
 ];
 
 const conditionOptions = [
   { label: "Excellent" },
   { label: "Good" },
   { label: "Fair" },
-  { label: "Bad" },
+  { label: "Bad" }
 ];
 
 const AddAssetForm = () => {
@@ -120,7 +131,7 @@ const AddAssetForm = () => {
     disposedDate: "",
     poNumber: "",
     order: "",
-    purchaseDate: "", // Date of purchase
+    purchaseDate: "" // Date of purchase
   });
 
   const [errors, setErrors] = useState({
@@ -129,7 +140,7 @@ const AddAssetForm = () => {
     serialNumber: false,
     status: false,
     department: false,
-    issueTo: false,
+    issueTo: false
   });
 
   const [openSection, setOpenSection] = useState("");
@@ -152,7 +163,7 @@ const AddAssetForm = () => {
           ? "desktop"
           : id === "type" && value.toLowerCase() === "monitor"
           ? "monitor"
-          : prevData.category,
+          : prevData.category
     }));
 
     if (errors[id]) {
@@ -227,7 +238,7 @@ const AddAssetForm = () => {
     const { id, value } = e.target;
     setFormData((prevData) => ({
       ...prevData,
-      [id]: value,
+      [id]: value
     }));
   };
 
@@ -256,7 +267,7 @@ const AddAssetForm = () => {
       "serialNumber",
       "status",
       "department",
-      "issueTo",
+      "issueTo"
     ];
 
     const newErrors = {};
@@ -280,7 +291,7 @@ const AddAssetForm = () => {
 
       const formDataUpdate = {
         user: await getUserData(),
-        ...formDataFinal,
+        ...formDataFinal
       };
 
       console.log("formData", formDataUpdate);
@@ -288,7 +299,7 @@ const AddAssetForm = () => {
       const response = await fetch("/api/asset/post", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formDataUpdate),
+        body: JSON.stringify(formDataUpdate)
       });
 
       if (!response.ok) {
@@ -571,16 +582,24 @@ const AddAssetForm = () => {
                 <label htmlFor="department" className="w-52 text-gray-500 mr-2">
                   Department
                 </label>
-                <input
-                  type="text"
+                <select
                   id="department"
                   value={formData.department}
-                  onChange={handleInputChange}
-                  placeholder="Enter the department"
+                  onChange={handleSelectChange}
                   className={`w-3/5 p-3 bg-gray-900 border ${
                     errors.department ? "border-red-500" : "border-gray-700"
                   } rounded text-sm text-gray-400`}
-                />
+                >
+                  <option value="">Select Department</option>
+                  <option key={"lcs"} value={"LCS"}>
+                    LCS
+                  </option>
+                  {/* {teams?.map((dept, index) => (
+                    <option key={index} value={dept}>
+                      {dept}
+                    </option>
+                  ))} */}
+                </select>
               </div>
               {errors.department && (
                 <p className="text-red-500 text-xs mt-1">
@@ -745,7 +764,7 @@ const AddAssetForm = () => {
                         onClick={() => {
                           setFormData({
                             ...formData,
-                            condition: option.label,
+                            condition: option.label
                           });
                           toggleSection("condition"); // Close dropdown after selection
                         }}

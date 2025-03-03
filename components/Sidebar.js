@@ -16,7 +16,7 @@ const Sidebar = () => {
     accessories: useRef(null),
     requests: useRef(null),
     settings: useRef(null),
-    profile: useRef(null),
+    profile: useRef(null)
   };
 
   const toggleDropdown = (dropdownName) => {
@@ -60,7 +60,7 @@ const Sidebar = () => {
     try {
       const response = await fetch("/api/import", {
         method: "POST",
-        body: formData,
+        body: formData
       });
 
       if (response.ok) {
@@ -92,8 +92,8 @@ const Sidebar = () => {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+            Authorization: `Bearer ${token}`
+          }
         });
         const storedUser = await response.json();
         console.log("storedUser", storedUser);
@@ -177,7 +177,7 @@ const Sidebar = () => {
               href="/stocks"
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/",
-                "text-gray-400": pathname !== "/",
+                "text-gray-400": pathname !== "/"
               })}
             >
               Overview
@@ -188,7 +188,7 @@ const Sidebar = () => {
               href="/stocks/allasset"
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/allasset",
-                "text-gray-400": pathname !== "/allasset",
+                "text-gray-400": pathname !== "/allasset"
               })}
             >
               All assets
@@ -219,7 +219,7 @@ const Sidebar = () => {
                     href="/stocks/monitor"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/monitor",
-                      "text-gray-400": pathname !== "/monitor",
+                      "text-gray-400": pathname !== "/monitor"
                     })}
                   >
                     Monitor
@@ -230,7 +230,7 @@ const Sidebar = () => {
                     href="/stocks/addKeyMice"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/addKeyMice",
-                      "text-gray-400": pathname !== "/addKeyMice",
+                      "text-gray-400": pathname !== "/addKeyMice"
                     })}
                   >
                     Mouse / Keyboard
@@ -255,7 +255,7 @@ const Sidebar = () => {
               href="/stocks/allasset?status=buyback"
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/buyback",
-                "text-gray-400": pathname !== "/buyback",
+                "text-gray-400": pathname !== "/buyback"
               })}
             >
               Buyback
@@ -266,7 +266,7 @@ const Sidebar = () => {
               href="/stocks/allasset?status=disposed"
               className={clsx("hover:text-white", {
                 "text-white font-bold": pathname === "/disposed",
-                "text-gray-400": pathname !== "/disposed",
+                "text-gray-400": pathname !== "/disposed"
               })}
             >
               Disposed
@@ -307,7 +307,7 @@ const Sidebar = () => {
                     href="/stocks/teams"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/teams",
-                      "text-gray-400": pathname !== "/teams",
+                      "text-gray-400": pathname !== "/teams"
                     })}
                   >
                     Teams
@@ -318,7 +318,7 @@ const Sidebar = () => {
                     href="./signup"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "./signup",
-                      "text-gray-400": pathname !== "./signup",
+                      "text-gray-400": pathname !== "./signup"
                     })}
                   >
                     Create new user
@@ -327,10 +327,10 @@ const Sidebar = () => {
 
                 <li className="my-2">
                   <a
-                    href="/stocks/manufacturers"
+                    href="/stocks/Manufacturer"
                     className={clsx("hover:text-white", {
-                      "text-white font-bold": pathname === "/manufacturer",
-                      "text-gray-400": pathname !== "/manufacturer",
+                      "text-white font-bold": pathname === "/Manufacturer",
+                      "text-gray-400": pathname !== "/Manufacturer"
                     })}
                   >
                     Manufacturers
@@ -364,7 +364,7 @@ const Sidebar = () => {
                     href="mailto:avishkar.gadkar.ext@siemens.com"
                     className={clsx("hover:text-white", {
                       "text-white font-bold": pathname === "/contact-us",
-                      "text-gray-400": pathname !== "/contact-us",
+                      "text-gray-400": pathname !== "/contact-us"
                     })}
                   >
                     Contact Us

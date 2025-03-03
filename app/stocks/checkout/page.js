@@ -73,6 +73,8 @@ const CheckoutForm = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!serialNumber) return; // Ensure serialNumber is not null before fetching
+
       try {
         const response = await fetch(
           `/api/asset/get?serialNumber=${serialNumber}`
@@ -140,6 +142,8 @@ const CheckoutForm = () => {
       checkOutDate: formData.checkOutDate
     };
 
+    console.log("Checkout data:", ddata);
+
     try {
       const response = await fetch("/api/asset/checkAsset", {
         method: "POST",
@@ -148,11 +152,14 @@ const CheckoutForm = () => {
       });
       if (response.ok) {
         alert("Asset CheckOut successfully");
-        router.push("/stocks/allasset"); // Redirect to All Assets page
+        // router.push("/stocks/allasset"); // Redirect to All Assets page
       } else {
+        const errorData = await response.json();
+        console.error("Failed to check out asset:", errorData);
         alert("Failed to check out asset!");
       }
     } catch (error) {
+      console.error("Error during checkout:", error);
       alert(`Error: ${error.message}`);
     }
   };
@@ -162,6 +169,7 @@ const CheckoutForm = () => {
     const serialNumber = urlParams.get("SerialNumber");
     setSerialNumber(serialNumber);
   }, []);
+
   return (
     <div className="flex">
       <Sidebar />
@@ -321,9 +329,17 @@ const CheckoutForm = () => {
             Checkout
           </button>
           <button
-            href="/app/hardware/printSheet"
             type="button"
             className="p-2 px-5 ml-4 bg-teal-600 text-white rounded hover:bg-teal-700"
+            onClick={() => {
+              const queryParams = new URLSearchParams({
+                nodeName: formData.nodeName,
+                serialNumber: new URLSearchParams(window.location.search).get(
+                  "SerialNumber"
+                )
+              }).toString();
+              window.location.href = `/hardware/printSheet?${queryParams}`;
+            }}
           >
             Print Hardware
           </button>

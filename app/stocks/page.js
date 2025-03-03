@@ -36,14 +36,14 @@ function Page() {
   const handleExtractData = async (type) => {
     setIsExtracting(true);
     setIsReportsOpen(false);
-    
+
     try {
       const response = await fetch(`/api/asset/extract${type}`);
-      if (!response.ok) throw new Error('Failed to extract data');
-      
+      if (!response.ok) throw new Error("Failed to extract data");
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${type.toLowerCase()}_assets.csv`;
       document.body.appendChild(a);
@@ -80,16 +80,16 @@ function Page() {
   useEffect(() => {
     async function fetchAssetData() {
       try {
-        const url = selectedStatus 
+        const url = selectedStatus
           ? `/api/asset/getAnalytics?status=${selectedStatus}`
           : "/api/asset/getAnalytics";
-          
+
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error("Failed to fetch asset data");
         }
         const data = await response.json();
-        
+
         // Only update counts based on selected status
         if (!selectedStatus) {
           setAllAssetsCount(data.allAssetsCount);
@@ -101,11 +101,17 @@ function Page() {
         } else {
           // Reset all counts to 0 except selected status
           setAllAssetsCount(0);
-          setInPoolCount(selectedStatus === 'inpool' ? data.inPoolCount : 0);
-          setNewPurchaseCount(selectedStatus === 'newpurchase' ? data.newPurchaseCount : 0);
+          setInPoolCount(selectedStatus === "inpool" ? data.inPoolCount : 0);
+          setNewPurchaseCount(
+            selectedStatus === "newpurchase" ? data.newPurchaseCount : 0
+          );
           setInactiveCount(0);
-          setDeployedCount(selectedStatus === 'deployed' ? data.deployedCount : 0);
-          setTodaysDeployedCount(selectedStatus === 'deployed' && data.todaysDeployedCount);
+          setDeployedCount(
+            selectedStatus === "deployed" ? data.deployedCount : 0
+          );
+          setTodaysDeployedCount(
+            selectedStatus === "deployed" && data.todaysDeployedCount
+          );
         }
       } catch (err) {
         setError(err.message);
@@ -138,8 +144,14 @@ function Page() {
 
   const totalActiveAssets = inPoolCount + deployedCount;
   const inPoolPercentage = ((inPoolCount / totalActiveAssets) * 100).toFixed(2);
-  const newPurchasePercentage = ((newPurchaseCount / totalActiveAssets) * 100).toFixed(2);
-  const deployedPercentage = ((deployedCount / totalActiveAssets) * 100).toFixed(2);
+  const newPurchasePercentage = (
+    (newPurchaseCount / totalActiveAssets) *
+    100
+  ).toFixed(2);
+  const deployedPercentage = (
+    (deployedCount / totalActiveAssets) *
+    100
+  ).toFixed(2);
 
   return (
     <main>
@@ -174,46 +186,50 @@ function Page() {
                 >
                   Reports
                   <span className="ml-2">
-                    {isReportsOpen ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
+                    {isReportsOpen ? (
+                      <IoMdArrowDropup />
+                    ) : (
+                      <IoMdArrowDropdown />
+                    )}
                   </span>
                 </button>
                 {isReportsOpen && (
                   <ul className="absolute bg-gray-900 rounded-lg p-2 mt-2 right-1 w-56 top-full flex flex-col">
                     <li className="my-2">
-                      <button 
-                        onClick={() => handleExtractData('AllAsset')}
+                      <button
+                        onClick={() => handleExtractData("AllAsset")}
                         className="w-full text-left text-gray-400 hover:text-white"
                       >
                         Extract All Asset
                       </button>
                     </li>
                     <li className="my-2">
-                      <button 
-                        onClick={() => handleExtractData('Inpool')}
+                      <button
+                        onClick={() => handleExtractData("Inpool")}
                         className="w-full text-left text-gray-400 hover:text-white"
                       >
                         Extract Inpool
                       </button>
                     </li>
                     <li className="my-2">
-                      <button 
-                        onClick={() => handleExtractData('NewPurchase')}
+                      <button
+                        onClick={() => handleExtractData("NewPurchase")}
                         className="w-full text-left text-gray-400 hover:text-white"
                       >
                         Extract New Purchase
                       </button>
                     </li>
                     <li className="my-2">
-                      <button 
-                        onClick={() => handleExtractData('Deployed')}
+                      <button
+                        onClick={() => handleExtractData("Deployed")}
                         className="w-full text-left text-gray-400 hover:text-white"
                       >
                         Extract Deployed
                       </button>
                     </li>
                     <li className="my-2">
-                      <button 
-                        onClick={() => handleExtractData('TodaysAllocation')}
+                      <button
+                        onClick={() => handleExtractData("TodaysAllocation")}
                         className="w-full text-left text-gray-400 hover:text-white"
                       >
                         Today's Hardware Allocation
@@ -225,7 +241,11 @@ function Page() {
             </div>
           </header>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
-            <Link href="./stocks/allasset" passHref onClick={() => setSelectedStatus(null)}>
+            <Link
+              href="./stocks/allasset"
+              passHref
+              onClick={() => setSelectedStatus(null)}
+            >
               <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
                 <h3 className="text-lg">All assets</h3>
                 <p className="text-2xl">
@@ -234,16 +254,26 @@ function Page() {
                 <span className="text-teal-500">+12%</span>
               </div>
             </Link>
-            <Link href="./stocks/allasset?status=inpool" passHref onClick={() => setSelectedStatus('inpool')}>
+            <Link
+              href="./stocks/allasset?status=inpool"
+              passHref
+              onClick={() => setSelectedStatus("inpool")}
+            >
               <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
-                <h3 className="text-lg text-green-500 hover:text-green-400">Inpool</h3>
+                <h3 className="text-lg text-green-500 hover:text-green-400">
+                  Inpool
+                </h3>
                 <p className="text-2xl">
                   {inPoolCount !== null ? inPoolCount.toLocaleString() : "N/A"}
                 </p>
                 <span className="text-teal-500">{inPoolPercentage}%</span>
               </div>
             </Link>
-            <Link href="./stocks/allasset?status=newpurchase" passHref onClick={() => setSelectedStatus('newpurchase')}>
+            <Link
+              href="./stocks/allasset?status=newpurchase"
+              passHref
+              onClick={() => setSelectedStatus("newpurchase")}
+            >
               <div className="bg-gray-800 p-5 rounded-lg text-center cursor-pointer hover:text-white">
                 <h3 className="text-lg text-yellow-500">New purchase</h3>
                 <p className="text-2xl">
@@ -253,14 +283,13 @@ function Page() {
               </div>
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
-            <div className="bg-gray-800 p-3 rounded-lg text-center">
-              <h3 className="text-lg text-white-500">Recent Killdisk</h3>
-              <p className="text-2xl">5</p>
-              <span className="text-teal-500">Since last month</span>
-            </div>
-            <Link href="./stocks/allasset?status=deployed" passHref onClick={() => setSelectedStatus('deployed')}>
-              <div className="bg-gray-800 p-5 rounded-lg text-center cursor-pointer hover:text-white">
+          <div className="flex justify-center gap-3 mt-5">
+            <Link
+              href="./stocks/allasset?status=deployed"
+              passHref
+              onClick={() => setSelectedStatus("deployed")}
+            >
+              <div className="bg-gray-800 p-5 rounded-lg text-center cursor-pointer hover:text-white w-64">
                 <h3 className="text-lg text-purple-500">Deployed</h3>
                 <p className="text-2xl">
                   {deployedCount !== null ? deployedCount : "N/A"}
@@ -268,8 +297,12 @@ function Page() {
                 <span className="text-teal-500">{deployedPercentage}%</span>
               </div>
             </Link>
-            <Link href="./stocks/allasset?status=deployed&date=today" passHref onClick={() => setSelectedStatus('deployed')}>
-              <div className="bg-gray-800 p-3 rounded-lg text-center cursor-pointer hover:text-white">
+            <Link
+              href="./stocks/allasset?status=deployed&date=today"
+              passHref
+              onClick={() => setSelectedStatus("deployed")}
+            >
+              <div className="bg-gray-800 p-3 rounded-lg text-center cursor-pointer hover:text-white w-64">
                 <h3 className="text-lg text-white-500">
                   Today's Hardware Allocation
                 </h3>
@@ -283,15 +316,9 @@ function Page() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
             <div className="bg-gray-800 p-5 rounded-lg">
-              <h2 className="text-lg mb-3">Assets Timeline</h2>
-              <div>
-                <AssetTimeline />
-              </div>
-            </div>
-            <div className="bg-gray-800 p-5 rounded-lg">
-              <h2 className="text-lg mb-3">Category wise Assets</h2>
-              <div>
-                <StackedBarChart />
+              <h2 className="text-lg mb-3">Manufacturer Wise</h2>
+              <div className="w-full max-w-2xl">
+                <ManufacturerPieChart />
               </div>
             </div>
             <div className="bg-gray-800 p-5 rounded-lg">
@@ -300,10 +327,10 @@ function Page() {
                 <SimpleRadialBarChart />
               </div>
             </div>
-            <div className="bg-gray-800 p-5 rounded-lg">
-              <h2 className="text-lg mb-3">Manufacturer Wise</h2>
+            <div className="bg-gray-800 p-5 rounded-lg col-span-full flex flex-col items-center">
+              <h2 className="text-lg mb-3">Category wise Assets</h2>
               <div>
-                <ManufacturerPieChart />
+                <StackedBarChart />
               </div>
             </div>
           </div>

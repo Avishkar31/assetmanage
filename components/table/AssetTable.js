@@ -6,40 +6,41 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import React from "react";
-import columnData from "./AssetTableColumn"; // AssetTableColumn to define column structure
+import columnData from "./AssetTableColumn";
 
 function AssetTable({ assetData, filterStatus }) {
   const [sorting, setSorting] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 12; // Number of items to display per page
+  const itemsPerPage = 12;
   const columns = React.useMemo(() => columnData, []);
 
-  // Filter data based on the search query and filterStatus
   const filteredData = React.useMemo(() => {
-    // If there's a filterStatus, filter the assets based on status
     const filteredByStatus = filterStatus
       ? assetData.filter((item) => item.status === filterStatus)
-      : assetData; // If no filterStatus, show all assets
+      : assetData;
 
-    // Further filter based on the search query
     return filteredByStatus.filter((item) =>
       Object.keys(item).some((key) => 
         item[key]?.toString().toLowerCase().includes(searchQuery.toLowerCase())
       )
     );
-  }, [searchQuery, assetData, filterStatus]); // Re-run filtering when assetData, searchQuery or filterStatus changes
+  }, [searchQuery, assetData, filterStatus]);
 
-  // Calculate the current items to display based on the current page
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
   const handleRowNavigations = (rowData) => {
-    // Log the serial number of the row
-    console.log("Navigating to:", rowData.original.serialNumber);
+    const currentIndex = filteredData.findIndex(
+      (item) => item.serialNumber === rowData.original.serialNumber
+    );
+    
+    // Calculate next page if current item is last in page
+    if ((currentIndex + 1) % itemsPerPage === 0) {
+      setCurrentPage(Math.floor(currentIndex / itemsPerPage) + 2);
+    }
 
-    // Redirect to the desired URL
     window.location.href = `/stocks/view?SerialNumber=${rowData.original.serialNumber}`;
   };
 
@@ -58,7 +59,6 @@ function AssetTable({ assetData, filterStatus }) {
 
   return (
     <div className="p-4 bg-gray-900 rounded-lg shadow-md">
-      {/* Search Input */}
       <div className="mb-6 " style={{ width: "40%" }}>
         <input
           type="text"
@@ -69,7 +69,6 @@ function AssetTable({ assetData, filterStatus }) {
         />
       </div>
 
-      {/* Table container with horizontal scrolling */}
       <div className="w-full overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-800 table-auto">
           <thead className="bg-gray-700 text-gray-300">
@@ -110,36 +109,33 @@ function AssetTable({ assetData, filterStatus }) {
             ))}
           </thead>
           <tbody className="divide-y divide-gray-800">
-            {table
-              .getRowModel()
-              .rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="hover:bg-gray-700 transition duration-300"
-                  onClick={() => handleRowNavigations(row)}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <td
-                      key={cell.id}
-                      className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap"
-                      style={{
-                        minWidth: cell.column.columnDef.minWidth || "150px",
-                        whiteSpace: "nowrap"
-                      }}
-                    >
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </td>
-                  ))}
-                </tr>
-              ))}
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className="hover:bg-gray-700 transition duration-300"
+                onClick={() => handleRowNavigations(row)}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td
+                    key={cell.id}
+                    className="px-6 py-4 text-sm text-gray-300 whitespace-nowrap"
+                    style={{
+                      minWidth: cell.column.columnDef.minWidth || "150px",
+                      whiteSpace: "nowrap"
+                    }}
+                  >
+                    {flexRender(
+                      cell.column.columnDef.cell,
+                      cell.getContext()
+                    )}
+                  </td>
+                ))}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
-      {/* Pagination */}
       <nav
         className="flex items-center gap-x-1 mt-4 justify-center"
         aria-label="Pagination"

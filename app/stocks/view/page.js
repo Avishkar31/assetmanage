@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import Sidebar from "components/Sidebar";
+import AssetHistoryShow from "@/components/AssetHistoryShow";
 
 // Reusable InputComponent
 const InputComponent = ({ id, value, onChange, readOnly }) => (
@@ -29,15 +30,16 @@ const ViewAsset = () => {
     note: "",
     storeLocation: "",
     poNumber: "",
-    order: ""
+    order: "",
+    accessories: []
   });
 
-  const [history, setHistory] = useState([]); // To store asset history
+  const [history, setHistory] = useState([]);
   const [serialNumber, setSerialNumber] = useState(null);
-
   const [isReadOnly, setIsReadOnly] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
+  const [assetHistory, setAssetHistory] = useState([]);
 
-  // Fetch asset data and history from API
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const serialNumber = urlParams.get("SerialNumber");
@@ -48,8 +50,16 @@ const ViewAsset = () => {
           `/api/asset/get?serialNumber=${serialNumber}`
         );
         const data = await response.json();
-        setFormData(data); // Assuming the asset details are returned as 'asset'
-        setHistory(data.assetHistory); // Assuming history is returned as 'history'
+        setFormData(data);
+        setHistory(data.assetHistory);
+        // Extract and set accessories from the latest history entry
+        if (data.assetHistory && data.assetHistory.length > 0) {
+          const latestEntry = data.assetHistory[data.assetHistory.length - 1];
+          setFormData((prev) => ({
+            ...prev,
+            accessories: latestEntry.accessories || []
+          }));
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
@@ -69,7 +79,6 @@ const ViewAsset = () => {
   };
 
   const handleDeleteClick = () => {
-    // Show alert message
     alert(
       "You are not an authorized person to delete. Please connect with the admin."
     );
@@ -77,12 +86,28 @@ const ViewAsset = () => {
 
   const toggleReadOnly = () => setIsReadOnly(!isReadOnly);
 
+  const handleHistoryClick = async () => {
+    try {
+      const response = await fetch(
+        `/api/asset/history?assetId=${serialNumber}`
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const historyData = await response.json();
+      setAssetHistory(historyData);
+      setShowHistory(true);
+    } catch (error) {
+      console.error("Error fetching asset history:", error);
+      alert("Error fetching history. Please try again later.");
+    }
+  };
+
   const handleCheckoutToggle = () => {
     const targetUrl =
       formData.status === "Deployed"
         ? `/stocks/checkin?SerialNumber=${serialNumber}`
         : `/stocks/checkout?SerialNumber=${serialNumber}`;
-
     window.location.href = targetUrl;
   };
 
@@ -114,7 +139,6 @@ const ViewAsset = () => {
               <h3 className="text-lg sticky">View Asset</h3>
             </header>
             <div className="space-y-4">
-              {/* Render asset details */}
               {[
                 ["Status", "status"],
                 ["Node Name", "nodeName"],
@@ -153,32 +177,13 @@ const ViewAsset = () => {
                     value={formData.note}
                     onChange={handleInputChange}
                     readOnly={isReadOnly}
-                    className="bg-gray-800 text-white  border-gray-600 rounded-lg p-2 ouline"
+                    className="bg-gray-800 text-white  border-gray-600 rounded-lg p-2 outline-none"
                   />
                 </span>
               </div>
 
               {/* History Section */}
-              <div className="mt-6">
-                <h3 className="text-lg text-gray-400">Asset History:</h3>
-                {history.length > 0 ? (
-                  history.map((entry, index) => (
-                    <div key={index} className="bg-gray-700 p-3 rounded mb-2">
-                      <div>
-                        {entry.previousUser ? `${entry.previousUser} ` : "N/A "}
-                        changed status
-                        <strong> {entry.status} </strong>
-                        {entry.checkOutTime
-                          ? ` on ${new Date(entry.date).toLocaleString()} to`
-                          : ` on ${new Date(entry.date).toLocaleString()} to`}
-                        <strong> {entry.issueTo} </strong>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <p>No history available for this asset.</p>
-                )}
-              </div>
+              <AssetHistoryShow history={history} />
             </div>
           </div>
           <div className="flex-1 flex flex-col space-y-2">
@@ -204,6 +209,46 @@ const ViewAsset = () => {
             >
               Delete
             </button>
+
+            <div className="border p-4 rounded-lg dark:bg-gray-800 dark:border-gray-600">
+              <h3 className="text-lg font-medium mb-2 dark:text-white">
+                Accessories
+              </h3>
+              {assetHistory.length === 0 ? (
+                <p className="dark:text-gray-400">
+                  No Accessories available for this asset.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {assetHistory.map((entry, index) => (
+                    <li
+                      key={index}
+                      className="border p-2 rounded dark:bg-gray-700 dark:border-gray-500"
+                    >
+                      <p className="dark:text-white">
+                        Allocated to: {entry.user} (or however your API returns
+                        the person's name)
+                      </p>
+                      <p className="dark:text-gray-400">
+                        Date: {new Date(entry.date).toLocaleDateString()}{" "}
+                        (adjust date formatting)
+                      </p>{" "}
+                      {/* Format the date */}
+                      <p className="dark:text-gray-400">Accessories:</p>
+                      <ul className="list-disc pl-5 dark:text-gray-400">
+                        {Object.entries(entry.accessories).map(
+                          ([accessory, value]) => (
+                            <li key={accessory}>
+                              {accessory}: {value ? "Yes" : "No"}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -10,7 +10,15 @@ const assetSchema = new mongoose.Schema({
   category: String,
   status: {
     type: String,
-    enum: ["Inpool", "New Purchase", "MIS Store", "Buyback", "Disposed", "Inactive", "Deployed"],
+    enum: [
+      "Inpool",
+      "New Purchase",
+      "MIS Store",
+      "Buyback",
+      "Disposed",
+      "Inactive",
+      "Deployed"
+    ],
     required: true
   },
   department: String,
@@ -37,7 +45,8 @@ const assetSchema = new mongoose.Schema({
       date: { type: Date, default: Date.now },
       status: String
     }
-  ]
+  ],
+  accessories: String
 });
 
 export default mongoose.models.Asset || mongoose.model("Asset", assetSchema);

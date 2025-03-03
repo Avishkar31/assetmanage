@@ -1,102 +1,111 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/dbConnect";
-import Monitor from "@/models/Monitor";
+import dbConnect from "../../../../lib/dbConnect";
+// import dbConnect from "../../../../lib/dbConnect";
+import Monitor from "../../../../models/Monitor";
+// import Monitor from "../../../../models/Monitor";
 
-export async function GET(request) {
+// GET request to fetch monitors by team
+export async function GET(req) {
   try {
     await dbConnect();
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
     const team = searchParams.get("team");
 
-    if (!team) {
-      return NextResponse.json(
-        { error: "Team is required." },
-        { status: 400 }
-      );
-    }
+    const query = team ? { team } : {};
+    const monitors = await Monitor.find(query);
 
-    const monitors = await Monitor.find({ prRequester: team });
-    return NextResponse.json(monitors);
+    return NextResponse.json({ success: true, data: monitors });
   } catch (error) {
     console.error("Error fetching monitors:", error);
     return NextResponse.json(
-      { error: "Failed to fetch monitors." },
+      { success: false, error: "Failed to fetch monitors." },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request) {
+// POST request to create a new monitor
+export async function POST(req) {
   try {
     await dbConnect();
-    const body = await request.json();
-    const { 
-      prRequester,
-      manufacturer,
-      model,
-      prNumber,
-      poNumber,
-      serialNumber,
-      status,
-      username
-    } = body;
+    const data = await req.json();
 
-    if (!serialNumber || !prRequester) {
+    const monitor = await Monitor.create(data);
+    return NextResponse.json({ success: true, data: monitor }, { status: 201 });
+  } catch (error) {
+    console.error("Error adding monitor:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to add monitor." },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT request to update an existing monitor
+export async function PUT(req) {
+  try {
+    await dbConnect();
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const data = await req.json();
+
+    if (!id) {
       return NextResponse.json(
-        { error: "Serial number and PR Requester are required." },
+        { success: false, error: "Monitor ID is required." },
         { status: 400 }
       );
     }
 
-    const existingMonitor = await Monitor.findOne({ serialNumber });
-    if (existingMonitor) {
-      return NextResponse.json(
-        { error: "Monitor with this serial number already exists." },
-        { status: 400 }
-      );
-    }
-
-    const monitor = await Monitor.create({
-      prRequester,
-      manufacturer,
-      model,
-      prNumber,
-      poNumber,
-      serialNumber,
-      status,
-      username,
-      assetHistory: []
+    const updatedMonitor = await Monitor.findByIdAndUpdate(id, data, {
+      new: true,
+      runValidators: true
     });
 
-    return NextResponse.json(monitor, { status: 201 });
+    if (!updatedMonitor) {
+      return NextResponse.json(
+        { success: false, error: "Monitor not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, data: updatedMonitor });
   } catch (error) {
-    console.error("Error creating monitor:", error);
+    console.error("Error updating monitor:", error);
     return NextResponse.json(
-      { error: "Failed to create monitor." },
+      { success: false, error: "Failed to update monitor." },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(request) {
+// DELETE request to delete a monitor
+export async function DELETE(req) {
   try {
     await dbConnect();
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
 
     if (!id) {
       return NextResponse.json(
-        { error: "Monitor ID is required." },
+        { success: false, error: "Monitor ID is required." },
         { status: 400 }
       );
     }
 
-    await Monitor.findByIdAndDelete(id);
-    return NextResponse.json({ message: "Monitor deleted." });
+    const deletedMonitor = await Monitor.findByIdAndDelete(id);
+
+    if (!deletedMonitor) {
+      return NextResponse.json(
+        { success: false, error: "Monitor not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: "Monitor deleted." });
   } catch (error) {
     console.error("Error deleting monitor:", error);
     return NextResponse.json(
-      { error: "Failed to delete monitor." },
+      { success: false, error: "Failed to delete monitor." },
       { status: 500 }
     );
   }

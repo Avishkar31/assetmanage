@@ -14,7 +14,9 @@ export async function verifyToken(req) {
     const token = authHeader.split(" ")[1];
 
     // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, "your-secret-key-here", {
+      algorithms: ["HS256"]
+    });
     console.log("decoded", decoded);
 
     // Get user from database
