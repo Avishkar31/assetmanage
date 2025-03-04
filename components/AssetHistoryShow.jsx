@@ -27,19 +27,25 @@ const AssetHistoryItem = ({ entry }) => {
   const capitalizedName =
     displayName.charAt(0).toUpperCase() + displayName.slice(1);
 
-  // Get appropriate action description
-  const getActionDescription = (action, status) => {
+  // Get appropriate action description with issueTo when available
+  const getActionDescription = (action, status, issueTo) => {
+    const recipient = issueTo ? ` to ${issueTo}` : "";
+
     switch (action) {
       case "checkIn":
-        return `checked in asset (${status})`;
+        return `checked in asset (${status})${recipient}`;
       case "checkOut":
-        return `checked out asset`;
+        return `checked out asset${recipient}`;
       default:
-        return `changed status to ${status}`;
+        return `changed status to ${status}${recipient}`;
     }
   };
 
-  const actionDescription = getActionDescription(entry.action, entry.status);
+  const actionDescription = getActionDescription(
+    entry.action,
+    entry.status,
+    entry.issueTo
+  );
 
   return (
     <div className="bg-gray-800 rounded-lg p-4 mb-3 border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow duration-200">
@@ -66,11 +72,10 @@ const AssetHistoryItem = ({ entry }) => {
 
           <p className="mt-2 text-gray-300">{actionDescription}</p>
 
-          {entry.previousIssueTo && entry.issueTo && (
+          {entry.previousIssueTo && (
             <div className="mt-1 text-sm text-gray-400">
-              From{" "}
-              <span className="text-gray-300">{entry.previousIssueTo}</span> to{" "}
-              <span className="text-gray-300">{entry.issueTo}</span>
+              Previous recipient:{" "}
+              <span className="text-gray-300">{entry.previousIssueTo}</span>
             </div>
           )}
         </div>
@@ -80,7 +85,6 @@ const AssetHistoryItem = ({ entry }) => {
 };
 
 const AssetHistoryShow = ({ history }) => {
-  console.log("his", history);
   return (
     <div className="mt-6">
       <div className="flex items-center mb-4">
