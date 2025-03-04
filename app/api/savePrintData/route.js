@@ -27,8 +27,8 @@ export async function PUT(request) {
       {
         $set: {
           ...rest,
-          accessories: accessoriesString
-        }
+          accessories: accessoriesString,
+        },
       },
       { new: true }
     );

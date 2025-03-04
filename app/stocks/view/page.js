@@ -31,14 +31,13 @@ const ViewAsset = () => {
     storeLocation: "",
     poNumber: "",
     order: "",
-    accessories: []
+    accessories: [],
   });
 
   const [history, setHistory] = useState([]);
   const [serialNumber, setSerialNumber] = useState(null);
   const [isReadOnly, setIsReadOnly] = useState(true);
-  const [showHistory, setShowHistory] = useState(false);
-  const [assetHistory, setAssetHistory] = useState([]);
+  const [accessories, setAccessories] = useState({});
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -52,12 +51,23 @@ const ViewAsset = () => {
         const data = await response.json();
         setFormData(data);
         setHistory(data.assetHistory);
+
+        // Parse accessories string into object
+        const accessoriesObj = data.accessories
+          .split(", ")
+          .reduce((acc, item) => {
+            const [key, value] = item.split(":");
+            acc[key] = parseInt(value);
+            return acc;
+          }, {});
+        setAccessories(accessoriesObj);
+
         // Extract and set accessories from the latest history entry
         if (data.assetHistory && data.assetHistory.length > 0) {
           const latestEntry = data.assetHistory[data.assetHistory.length - 1];
           setFormData((prev) => ({
             ...prev,
-            accessories: latestEntry.accessories || []
+            accessories: latestEntry.accessories || [],
           }));
         }
       } catch (error) {
@@ -74,7 +84,7 @@ const ViewAsset = () => {
     const { id, value } = e.target;
     setFormData((prevState) => ({
       ...prevState,
-      [id]: value
+      [id]: value,
     }));
   };
 
@@ -86,23 +96,6 @@ const ViewAsset = () => {
 
   const toggleReadOnly = () => setIsReadOnly(!isReadOnly);
 
-  const handleHistoryClick = async () => {
-    try {
-      const response = await fetch(
-        `/api/asset/history?assetId=${serialNumber}`
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const historyData = await response.json();
-      setAssetHistory(historyData);
-      setShowHistory(true);
-    } catch (error) {
-      console.error("Error fetching asset history:", error);
-      alert("Error fetching history. Please try again later.");
-    }
-  };
-
   const handleCheckoutToggle = () => {
     const targetUrl =
       formData.status === "Deployed"
@@ -110,6 +103,8 @@ const ViewAsset = () => {
         : `/stocks/checkout?SerialNumber=${serialNumber}`;
     window.location.href = targetUrl;
   };
+
+  console.log("formData", formData.accessories);
 
   return (
     <div className="flex h-screen bg-gray-900 text-white">
@@ -154,7 +149,7 @@ const ViewAsset = () => {
                 ["Asset Condition", "condition"],
                 ["MIS Store Location", "storeLocation"],
                 ["PO Number", "poNumber"],
-                ["Order", "order"]
+                ["Order", "order"],
               ].map(([label, id]) => (
                 <div key={id} className="flex justify-between">
                   <span className="text-gray-400">{label}:</span>
@@ -214,38 +209,25 @@ const ViewAsset = () => {
               <h3 className="text-lg font-medium mb-2 dark:text-white">
                 Accessories
               </h3>
-              {assetHistory.length === 0 ? (
+              {Object.keys(accessories).length === 0 ? (
                 <p className="dark:text-gray-400">
                   No Accessories available for this asset.
                 </p>
               ) : (
                 <ul className="space-y-2">
-                  {assetHistory.map((entry, index) => (
-                    <li
-                      key={index}
-                      className="border p-2 rounded dark:bg-gray-700 dark:border-gray-500"
-                    >
-                      <p className="dark:text-white">
-                        Allocated to: {entry.user} (or however your API returns
-                        the person's name)
-                      </p>
-                      <p className="dark:text-gray-400">
-                        Date: {new Date(entry.date).toLocaleDateString()}{" "}
-                        (adjust date formatting)
-                      </p>{" "}
-                      {/* Format the date */}
-                      <p className="dark:text-gray-400">Accessories:</p>
-                      <ul className="list-disc pl-5 dark:text-gray-400">
-                        {Object.entries(entry.accessories).map(
-                          ([accessory, value]) => (
-                            <li key={accessory}>
-                              {accessory}: {value ? "Yes" : "No"}
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </li>
-                  ))}
+                  {Object.entries(accessories).map(
+                    ([accessory, quantity], index) => (
+                      <li
+                        key={index}
+                        className="border p-2 rounded dark:bg-gray-700 dark:border-gray-500"
+                      >
+                        <p className="dark:text-white">{accessory}</p>
+                        <p className="dark:text-gray-400">
+                          Quantity: {quantity}
+                        </p>
+                      </li>
+                    )
+                  )}
                 </ul>
               )}
             </div>
