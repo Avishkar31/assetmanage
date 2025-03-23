@@ -8,6 +8,7 @@ import AssetTimeline from "components/AssetTimeline";
 import { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import withAuth from "hooks/withAuth";
+import { exportAssets } from "utils/assetExport"; // Import the export utility
 
 function Page() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
@@ -38,18 +39,52 @@ function Page() {
     setIsReportsOpen(false);
 
     try {
-      const response = await fetch(`/api/asset/extract${type}`);
-      if (!response.ok) throw new Error("Failed to extract data");
+      // Option 1: Use your existing exportAssets utility
+      await exportAssets(type);
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${type.toLowerCase()}_assets.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
+      // Option 2: Or implement the download logic directly here
+      /*
+    // Add query parameters based on the type selected
+    let apiUrl = "/api/extract";
+
+    // Map the UI type to the corresponding status parameter
+    if (type !== "AllAsset") {
+      const statusMapping = {
+        Inpool: "inpool",
+        NewPurchase: "new purchase",
+        Deployed: "deployed",
+        TodaysAllocation: "today"
+      };
+
+      // For TodaysAllocation, use a date parameter instead of status
+      if (type === "TodaysAllocation") {
+        const today = new Date();
+        const formattedDate = `${today
+          .getDate()
+          .toString()
+          .padStart(2, "0")}-${(today.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}-${today.getFullYear()}`;
+        apiUrl = `${apiUrl}?checkOutDate=${formattedDate}`;
+      } else {
+        // For other types, use the status parameter
+        apiUrl = `${apiUrl}?status=${statusMapping[type]}`;
+      }
+    }
+
+    const response = await fetch(apiUrl);
+    if (!response.ok) throw new Error("Failed to extract data");
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${type.toLowerCase()}_assets.csv`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+    */
     } catch (err) {
       setError(err.message);
     } finally {
@@ -131,17 +166,6 @@ function Page() {
     return <p>Error: {error}</p>;
   }
 
-  if (isExtracting) {
-    return (
-      <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-        <div className="bg-gray-800 p-8 rounded-lg text-white text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-teal-500 mx-auto mb-4"></div>
-          <p className="text-lg">Extracting data, please wait...</p>
-        </div>
-      </div>
-    );
-  }
-
   const totalActiveAssets = inPoolCount + deployedCount;
   const inPoolPercentage = ((inPoolCount / totalActiveAssets) * 100).toFixed(2);
   const newPurchasePercentage = (
@@ -155,6 +179,14 @@ function Page() {
 
   return (
     <main>
+      {isExtracting && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-8 rounded-lg text-white text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-teal-500 mx-auto mb-4"></div>
+            <p className="text-lg">Extracting data, please wait...</p>
+          </div>
+        </div>
+      )}
       <div className="flex h-screen bg-gray-900 text-white">
         <Sidebar />
         <div className="flex-1 p-5 overflow-y-auto">
