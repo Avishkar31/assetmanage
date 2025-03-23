@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Sidebar from "components/Sidebar";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
-import { FiLoader } from "react-icons/fi";
 
 import getUserData from "@/utils/getUser";
 
@@ -457,20 +456,16 @@ const AddAssetForm = () => {
               Model
             </label>
             <div className="w-3/5">
-              {isLoading ? (
-                <div className="p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400">
-                  <FiLoader className="animate-spin" />
-                </div>
-              ) : (
-                <input
-                  type="text"
-                  id="model"
-                  value={formData.model}
-                  onChange={handleInputChange}
-                  placeholder="Enter the Model"
-                  className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400 placeholder-gray-600"
-                />
-              )}
+              <input
+                type="text"
+                id="model"
+                value={formData.model} // Ensure the input always has a value
+                onChange={(e) =>
+                  setFormData({ ...formData, model: e.target.value })
+                }
+                placeholder="Enter the Model"
+                className="w-full p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400 placeholder-gray-600"
+              />
             </div>
           </div>
 
@@ -935,7 +930,7 @@ const AddAssetForm = () => {
                     id="order"
                     value={formData.order}
                     onChange={handleInputChange}
-                    placeholder="Enter Order"
+                    placeholder="Enter Order Number"
                     className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
                   />
                 </div>
@@ -948,6 +943,7 @@ const AddAssetForm = () => {
                     id="purchase"
                     value={formData.purchase}
                     onChange={handleInputChange}
+                    placeholder="Enter Purchase Number"
                     className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
                   />
                 </div>

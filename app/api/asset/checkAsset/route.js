@@ -20,6 +20,7 @@ export async function POST(req) {
     } = data;
 
     if (!serialNumber || !nodeName) {
+      console.error("Missing serial number or node name");
       return NextResponse.json(
         { error: "Serial number and node name are required." },
         { status: 400 }
@@ -27,6 +28,7 @@ export async function POST(req) {
     }
 
     if (!checkType) {
+      console.error("Missing check type");
       return NextResponse.json(
         { error: "Check type is required (checkin or checkout)." },
         { status: 400 }
@@ -35,6 +37,7 @@ export async function POST(req) {
 
     const existingAsset = await Asset.findOne({ serialNumber, nodeName });
     if (!existingAsset) {
+      console.error("Asset not found");
       return NextResponse.json(
         { error: "Asset with this serial number or node name does not exist." },
         { status: 400 }
@@ -67,6 +70,7 @@ export async function POST(req) {
 
     if (checkType === "checkout") {
       if (!issueTo) {
+        console.error("Missing issueTo for checkout");
         return NextResponse.json(
           { error: "IssueTo is required for checkout." },
           { status: 400 }
@@ -94,6 +98,7 @@ export async function POST(req) {
         status: existingAsset.status
       });
     } else {
+      console.error("Invalid check type");
       return NextResponse.json(
         { error: "Invalid check type. It must be 'checkin' or 'checkout'." },
         { status: 400 }
