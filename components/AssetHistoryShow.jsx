@@ -2,67 +2,63 @@ import React from "react";
 import { Calendar, Clock, UserCircle, Activity } from "lucide-react";
 
 const AssetHistoryItem = ({ entry }) => {
-  // Format date nicely
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
-      year: "numeric"
+      year: "numeric",
     });
   };
 
-  // Format time separately
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString("en-US", {
       hour: "numeric",
       minute: "2-digit",
-      hour12: true
+      hour12: true,
     });
   };
 
-  // Extract username from email
-  const displayName = entry.user ? entry.user.split("@")[0] : "N/A";
-  const capitalizedName =
-    displayName.charAt(0).toUpperCase() + displayName.slice(1);
+      
+       const displayName = entry.updatedBy 
+           ? entry.updatedBy.split("@")[0] 
+           : "N/A";
 
-  // Get appropriate action description with issueTo when available
-  const getActionDescription = (action, status, issueTo) => {
-    const recipient = issueTo ? ` to ${issueTo}` : "";
+  const capitalizedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
 
+  const getActionDescription = (entry) => {   
+    const recipient =entry.user;
+    const action = entry.action;
+    
     switch (action) {
       case "checkIn":
-        return `checked in asset (${status})${recipient}`;
+        return `Checked in asset ${recipient}`;
       case "checkOut":
-        return `checked out asset${recipient}`;
+        return `Checked out asset ${recipient}`;
       default:
-        return `changed status to ${status}${recipient}`;
+        return `Changed status to ${entry.status}`;
     }
   };
 
   const actionDescription = getActionDescription(
-    entry.action,
-    entry.status,
-    entry.issueTo
+    entry
   );
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 mb-3 border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow duration-200">
+    <div className="bg-gray-800 rounded-lg p-4 mb-3 border-l-4 border-blue-500 shadow-md hover:shadow-lg transition-shadow duration-200 text-sm md:text-base">
       <div className="flex items-start">
         <div className="bg-blue-600 p-2 rounded-full mr-3">
           <Activity size={20} className="text-white" />
         </div>
 
         <div className="flex-1">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start flex-wrap">
             <div className="flex items-center">
               <UserCircle size={18} className="text-blue-400 mr-1" />
-              <span className="font-medium text-blue-300">
-                {capitalizedName}
-              </span>
+              <span className="font-medium text-blue-300">{capitalizedName}</span>
             </div>
-            <div className="text-xs text-gray-400 flex items-center">
+            <div className="text-xs text-gray-400 flex items-center flex-wrap">
               <Calendar size={14} className="mr-1" />
               <span>{formatDate(entry.date)}</span>
               <Clock size={14} className="ml-2 mr-1" />
@@ -74,8 +70,7 @@ const AssetHistoryItem = ({ entry }) => {
 
           {entry.previousIssueTo && (
             <div className="mt-1 text-sm text-gray-400">
-              Previous recipient:{" "}
-              <span className="text-gray-300">{entry.previousIssueTo}</span>
+              Previous recipient: <span className="text-gray-300">{entry.previousIssueTo}</span>
             </div>
           )}
         </div>
@@ -94,18 +89,16 @@ const AssetHistoryShow = ({ history }) => {
         </div>
       </div>
 
-      {history.length > 0 ? (
-        <div className="space-y-1">
-          {history.map((entry, index) => (
-            <AssetHistoryItem key={index} entry={entry} />
-          ))}
-        </div>
-      ) : (
-        <div className="bg-gray-800 rounded-lg p-6 text-center">
-          <Activity size={32} className="text-gray-500 mx-auto mb-2" />
-          <p className="text-gray-400">No history available for this asset.</p>
-        </div>
-      )}
+      <div className="max-h-[400px] overflow-y-auto space-y-1 bg-gray-900 p-4 rounded-lg shadow-md">
+        {history.length > 0 ? (
+          history.map((entry, index) => <AssetHistoryItem key={index} entry={entry} />)
+        ) : (
+          <div className="text-center p-6">
+            <Activity size={32} className="text-gray-500 mx-auto mb-2" />
+            <p className="text-gray-400">No history available for this asset.</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

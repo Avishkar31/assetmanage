@@ -53,9 +53,9 @@ export default async function Home() {
               VendorLog
             </a>
           </li>
-          <li className="cursor-pointer">
+          {/* <li className="cursor-pointer">
             <Link href="/hardware">Hardware Allocation</Link>
-          </li>
+          </li> */}
           <li className="cursor-pointer">
             <Link href="/stocks">Stocks</Link>
           </li>

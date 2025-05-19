@@ -129,6 +129,8 @@ const CheckoutForm = () => {
       alert("Please select a checkout date.");
       return;
     }
+    const storedUserData = JSON.parse(localStorage.getItem('user'));
+    console.log("Stored User Data:", storedUserData);
 
     const ddata = {
       model: formData.model,
@@ -139,13 +141,14 @@ const CheckoutForm = () => {
       note: formData.note,
       checkType: "checkout",
       serialNumber: serialNumber,
-      checkOutDate: formData.checkOutDate
+      checkOutDate: formData.checkOutDate,
+      assetUser: storedUserData.siemensId, // Assuming userId is the ID of the user checking out the asset
     };
 
     console.log("Checkout data:", ddata);
 
     try {
-      const response = await fetch("/api/asset/checkAsset", {
+      const response = await fetch("/api/asset/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ddata)

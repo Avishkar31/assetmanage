@@ -6,6 +6,21 @@ const PrintSheet = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  
+  // Format current date with day name, date, and time
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const options = { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'numeric', 
+      day: 'numeric',
+      hour: '2-digit', 
+      minute: '2-digit'
+    };
+    return now.toLocaleDateString('en-US', options);
+  };
+  
   const [formData, setFormData] = useState({
     poNumber: "",
     orderNumber: "",
@@ -18,7 +33,7 @@ const PrintSheet = () => {
     serialNumber: "",
     allocation: "",
     period: "",
-    issueDate: new Date().toLocaleDateString(),
+    issueDate: getCurrentDateTime(),
     accessories: {
       CPU: false,
       "LCD Monitor": false,
@@ -40,17 +55,12 @@ const PrintSheet = () => {
 
   useEffect(() => {
     if (!searchParams) return;
-
+    
+    // Load main form fields
     const fields = [
-      "poNumber",
-      "orderNumber",
-      "issueTo",
-      "deskLocation",
-      "category",
-      "type",
-      "model",
-      "nodeName",
-      "serialNumber"
+      "poNumber", "orderNumber", "issueTo", "deskLocation", 
+      "category", "type", "model", "nodeName", "serialNumber", 
+      "allocation", "period"
     ];
 
     const updatedData = {};
@@ -59,19 +69,20 @@ const PrintSheet = () => {
       if (value) updatedData[field] = value;
     });
 
-    const accessoriesFromParams = {};
+    // Load accessories
+    const updatedAccessories = { ...formData.accessories };
     Object.keys(formData.accessories).forEach((acc) => {
-      const value = searchParams.get(acc);
-      if (value) accessoriesFromParams[acc] = value === "1";
+      const paramName = encodeURIComponent(acc).replace(/%20/g, '+');
+      const value = searchParams.get(paramName) || searchParams.get(acc);
+      if (value === "1" || value === "true") {
+        updatedAccessories[acc] = true;
+      }
     });
 
     setFormData((prev) => ({
       ...prev,
       ...updatedData,
-      accessories: {
-        ...prev.accessories,
-        ...accessoriesFromParams
-      }
+      accessories: updatedAccessories
     }));
 
     setLoading(false);
@@ -79,18 +90,15 @@ const PrintSheet = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleCheckboxChange = (accessory) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       accessories: {
         ...prev.accessories,
-        [accessory]: !prev.accessories[accessory] ? "1" : ""
+        [accessory]: !prev.accessories[accessory]
       }
     }));
   };
@@ -99,29 +107,26 @@ const PrintSheet = () => {
     try {
       setLoading(true);
 
+      // Convert boolean accessories to "1" for API
+      const accessoriesForAPI = {};
+      Object.entries(formData.accessories).forEach(([key, value]) => {
+        if (value === true) accessoriesForAPI[key] = "1";
+      });
+
       const dataToSave = {
         ...formData,
-        serialNumber: formData.serialNumber,
-        accessories: Object.fromEntries(
-          Object.entries(formData.accessories).filter(
-            ([_, value]) => value === "1"
-          )
-        )
+        accessories: accessoriesForAPI
       };
 
       const response = await fetch("/api/savePrintData", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(dataToSave),
         signal: AbortSignal.timeout(5000)
       });
 
       if (response.ok) {
-        setTimeout(() => {
-          window.print();
-        }, 500);
+        setTimeout(() => window.print(), 500);
       } else {
         throw new Error("Failed to save data");
       }
@@ -135,174 +140,193 @@ const PrintSheet = () => {
 
   const handleViewAsset = () => {
     const serialNumber = formData.serialNumber;
-
     if (!serialNumber) {
       alert("Serial number is required to view asset");
       return;
     }
 
-    const baseUrl = `/stocks/view?SerialNumber=${encodeURIComponent(
-      serialNumber
-    )}`;
+    const baseUrl = `/stocks/view?SerialNumber=${encodeURIComponent(serialNumber)}`;
+    
     const accessoriesQuery = Object.entries(formData.accessories)
-      .filter(([_, value]) => value === "1")
+      .filter(([_, value]) => value === true)
       .map(([key]) => `${encodeURIComponent(key)}=1`)
       .join("&");
 
-    const finalUrl = accessoriesQuery
-      ? `<span class="math-inline">\{baseUrl\}&</span>{accessoriesQuery}`
-      : baseUrl;
-
+    const finalUrl = accessoriesQuery ? `${baseUrl}&${accessoriesQuery}` : baseUrl;
     router.push(finalUrl);
   };
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        Loading asset information...
+        <div className="animate-pulse text-gray-600">Loading asset information...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
-      <div className="w-[21cm] mx-auto bg-white p-4 text-black print:shadow-none border border-gray-300">
-        <div className="text-right mb-2">
-          <h1 className="text-xl font-bold font-mono mb-1 text-center">
-            SIEMENS
-          </h1>
-          <div className="flex items-center mb-0.5 justify-end text-xs">
-            <span className="font-semibold w-24">Issue Date:</span>
-            <input
-              type="text"
-              name="issueDate"
-              value={formData.issueDate}
-              onChange={handleInputChange}
-              className="border-b border-gray-500 px-1 bg-transparent w-24 ml-1"
-              readOnly
-            />
-          </div>
-          <div className="flex items-center mb-0.5 justify-end text-xs">
-            <span className="font-semibold w-24">PO No:</span>
-            <input
-              type="text"
-              name="poNumber"
-              value={formData.poNumber}
-              onChange={handleInputChange}
-              className="border-b border-gray-500 px-1 bg-transparent w-24 ml-1"
-              readOnly
-            />
-          </div>
-          <div className="flex items-center mb-0.5 justify-end text-xs">
-            <span className="font-semibold w-24">Order No:</span>
-            <input
-              type="text"
-              name="orderNumber"
-              value={formData.orderNumber}
-              onChange={handleInputChange}
-              className="border-b border-gray-500 px-1 bg-transparent w-24 ml-1"
-              readOnly
-            />
-          </div>
-          <h2 className="text-base font-semibold my-1 underline text-center">
-            Hardware Allocation & Receipt Form
-          </h2>
+    <div className="p-4 bg-gray-100 min-h-screen">
+      <div className="w-[21cm] h-[29.7cm] mx-auto bg-white shadow-md text-black print:shadow-none border border-gray-300">
+        {/* Asset management header */}
+        <div className="flex justify-between px-4 py-2 border-b border-gray-300 text-xs">
+          <div>{formData.issueDate}</div>
+          <div>Asset management</div>
         </div>
-
-        <div className="text-xs mb-2">
-          <div className="grid grid-cols-2 gap-1">
-            {[
-              { label: "Issue To", key: "issueTo" },
-              { label: "Desk Location", key: "deskLocation" },
-              { label: "Category", key: "category" },
-              { label: "Model", key: "model" },
-              { label: "Node Name", key: "nodeName" },
-              { label: "Serial Number", key: "serialNumber" }
-            ].map(({ label, key }) => (
-              <div key={key} className="flex items-center mb-0.5">
-                <span className="font-semibold w-24">{label}:</span>
+        
+        {/* Main content */}
+        <div className="p-4 h-full">
+          {/* SIEMENS header */}
+          <div className="text-center mb-4">
+            <h1 className="text-xl font-bold">SIEMENS</h1>
+          </div>
+          
+          {/* Header information */}
+          <div className="flex justify-end mb-2 text-xs">
+            <div className="w-1/2">
+              <div className="flex mb-2">
+                <span className="w-16">Issue Date:</span>
                 <input
                   type="text"
-                  name={key}
-                  value={formData[key] || ""}
+                  name="issueDate"
+                  value={formData.issueDate}
                   onChange={handleInputChange}
-                  className="border-b border-gray-500 px-1 bg-transparent w-full ml-1"
-                  readOnly
+                  className="border-b border-gray-500 flex-grow bg-transparent"
                 />
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-
-        <div>
-          <h2 className="font-semibold mb-2 text-xs">Accessories:</h2>
-          <table className="w-full border-collapse border border-gray-400 text-xs mb-2 mx-1">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="border border-gray-400 p-0.5">Item</th>
-                <th className="border border-gray-400 p-0.5">QTY</th>
-                <th className="border border-gray-400 p-0.5">Issued</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(formData.accessories).map(([item, checked]) => (
-                <tr key={item}>
-                  <td className="border border-gray-400 p-0.5">{item}</td>
-                  <td className="border border-gray-400 p-0.5 text-center">
-                    {checked === "1" ? "01" : "00"}
-                  </td>
-                  <td className="border border-gray-400 p-0.5 text-center">
-                    <input
-                      type="checkbox"
-                      checked={checked === "1"}
-                      onChange={() => handleCheckboxChange(item)}
-                      className="h-3 w-3"
-                    />
-                  </td>
+          
+          {/* Form title */}
+          <h2 className="text-center font-bold my-4 underline">Hardware Allocation & Receipt Form</h2>
+          
+          {/* Form fields - positioned as in the image */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs mb-4">
+            <div className="flex">
+              <span className="w-16">Issue To:</span>
+              <input
+                type="text"
+                name="issueTo"
+                value={formData.issueTo}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 flex-grow bg-transparent"
+              />
+            </div>
+            
+        
+            <div className="flex">
+              <span className="w-24">Type:</span>
+              <input
+                type="text"
+                name="type"
+                value={formData.type}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 flex-grow bg-transparent"
+              />
+            </div>
+            <div className="flex">
+              <span className="w-16">Model:</span>
+              <input
+                type="text"
+                name="model"
+                value={formData.model}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 flex-grow bg-transparent"
+              />
+            </div>
+            <div className="flex">
+              <span className="w-24">Node Name:</span>
+              <input
+                type="text"
+                name="nodeName"
+                value={formData.nodeName}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 flex-grow bg-transparent"
+              />
+            </div>
+            <div className="flex">
+              <span className="w-16">Serial Number:</span>
+              <input
+                type="text"
+                name="serialNumber"
+                value={formData.serialNumber}
+                onChange={handleInputChange}
+                className="border-b border-gray-500 flex-grow bg-transparent"
+              />
+            </div>
+            
+          </div>
+          
+          {/* Accessories section */}
+          <div className="mt-6 mb-4">
+            <h3 className="font-bold text-xs mb-2">Accessories:</h3>
+            <table className="w-full border-collapse border border-gray-400 text-xs">
+              <thead>
+                <tr className="bg-gray-100">
+                  <th className="border border-gray-400 p-1 text-left">Item</th>
+                  <th className="border border-gray-400 p-1 text-center w-16">QTY</th>
+                  <th className="border border-gray-400 p-1 text-center w-16">Issued</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="text-xs space-y-1">
-          <div className="flex justify-between mb-3">
-            <p>
-              <strong>Name & Sign of Issuing Person:</strong> ___________
-            </p>
-            <p>
-              <strong>Name & Sign of Carrying Person:</strong> ___________
-            </p>
+              </thead>
+              <tbody>
+                {Object.entries(formData.accessories).map(([item, checked]) => (
+                  <tr key={item}>
+                    <td className="border border-gray-400 p-1">{item}</td>
+                    <td className="border border-gray-400 p-1 text-center">
+                      {checked ? "01" : "00"}
+                    </td>
+                    <td className="border border-gray-400 p-1 text-center">
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => handleCheckboxChange(item)}
+                        className="h-3 w-3"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          
+          {/* Signatures section */}
+          <div className="text-xs mt-8">
+            <div className="flex justify-between">
+              <div>
+                <p className="font-bold">Name & Sign of Issuing Person:</p>
+                <div className="border-b border-gray-400 w-64 h-6 mt-4"></div>
+              </div>
+              <div>
+                <p className="font-bold">Name & Sign of Carrying Person:</p>
+                <div className="border-b border-gray-400 w-64 h-6 mt-4"></div>
+              </div>
+            </div>
+            
+            <div className="mt-8">
+              <p className="font-bold">
+                I hereby confirm that I have received the above-mentioned items.
+              </p>
+              <p className="mt-2 font-bold">
+                System Status: Connected / Not Connected
+              </p>
+            </div>
+            
+            <div className="mt-10">
+              <p className="font-bold">Name & Sign of receiving Person:</p>
+              <div className="border-b border-gray-400 w-64 h-6 mt-4"></div>
+            </div>
           </div>
         </div>
-
-        <div className="text-xs space-y-1 mb-8">
-          <p>
-            <strong>
-              I hereby confirm that I have received the above - mentioned items.
-            </strong>
-          </p>
-          <p>
-            <strong>System Status: Connected / Not Connected </strong>
-          </p>
-        </div>
-
-        <div className="text-xs space-y-1">
-          <div className="flex justify-between mt-8">
-            <p>
-              <strong>Name & Sign of receiving Person:</strong>
-            </p>
-          </div>
-        </div>
+        
+        {/* Footer with page number */}
+        <div className="absolute bottom-2 right-4 text-xs print:block hidden">1/1</div>
       </div>
 
-      <div className="flex justify-center mt-2 print:hidden">
+      {/* Action buttons - hidden when printing */}
+      <div className="flex justify-center mt-4 space-x-4 print:hidden">
         <button
           onClick={handlePrintAndSave}
           disabled={loading}
-          className={`bg-teal-500 text-white px-4 py-1 rounded transition-colors text-sm ${
-            loading ? "opacity-50 cursor-not-allowed" : "hover:bg-teal-600"
-          }`}
+          className="bg-teal-500 text-white px-6 py-2 rounded shadow hover:bg-teal-600 transition-colors"
         >
           {loading ? "Processing..." : "Print & Save"}
         </button>
@@ -310,9 +334,7 @@ const PrintSheet = () => {
         <button
           onClick={handleViewAsset}
           disabled={loading}
-          className={`bg-blue-500 text-white px-4 py-1 rounded transition-colors text-sm ml-2 ${
-            loading ? "opacity-50 cursor-not-allowed" : "hover:bg-blue-600"
-          }`}
+          className="bg-blue-500 text-white px-6 py-2 rounded shadow hover:bg-blue-600 transition-colors"
         >
           View Asset
         </button>

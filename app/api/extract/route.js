@@ -1,3 +1,4 @@
+// app/api/extract/route.js
 import { NextResponse } from "next/server";
 import dbConnect from "@/lib/dbConnect";
 import Asset from "@/models/Asset";
@@ -5,110 +6,127 @@ import { stringify } from "csv-stringify/sync";
 
 export async function GET(req) {
   try {
-    // Connect to database
+    console.log("Extract API called");
+    
     await dbConnect();
-
-    // Extract query parameters for filtering
     const { searchParams } = new URL(req.url);
+    console.log("Search params:", Object.fromEntries(searchParams.entries()));
 
-    // Build query filter from all possible search params
+    // Build query filter
     const filter = {};
-    const possibleFilters = [
-      "status",
-      "department",
-      "category",
-      "checkOutDate",
-      "receivedDate"
-    ];
+    
+    // Handle status parameter with special case for "New Purchase"
+    const status = searchParams.get("status");
+    if (status) {
+      if (status.toLowerCase() === "new purchase") {
+        filter.status = "New Purchase";
+      } else {
+        filter.status = new RegExp(`^${status}$`, 'i');
+      }
+      console.log("Status filter:", filter.status);
+    }
+    
+    // Handle department
+    const department = searchParams.get("department");
+    if (department) filter.department = department;
+    
+    // Handle category
+    const category = searchParams.get("category");
+    if (category) filter.category = category;
 
-    possibleFilters.forEach((key) => {
-      const value = searchParams.get(key);
-      if (value) filter[key] = value;
-    });
-
-    // Handle special case for "today" checkOutDate
+    // Handle purchase date range
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+    if (startDate && endDate) {
+      filter.purchaseDate = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate)
+      };
+    }
+    
+    // Handle checkout date
     if (searchParams.get("checkOutDate") === "today") {
       const today = new Date();
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0));
-      const endOfDay = new Date(today.setHours(23, 59, 59, 999));
-
       filter.checkOutDate = {
-        $gte: startOfDay,
-        $lte: endOfDay
+        $gte: new Date(today.setHours(0, 0, 0, 0)),
+        $lte: new Date(today.setHours(23, 59, 59, 999))
       };
     }
 
-    // Fetch assets based on filter
-    const assets = await Asset.find(filter);
+    console.log("Final filter:", JSON.stringify(filter, null, 2));
 
-    // Prepare CSV filename based on export type
-    let filename = "assets_export.csv";
-    if (filter.status) {
-      filename = `${filter.status}_assets.csv`;
-    } else if (filter.checkOutDate) {
-      filename = "todays_allocation.csv";
+    // Fetch assets
+    const assets = await Asset.find(filter).lean();
+    console.log(`Found ${assets.length} assets matching the filter`);
+
+    if (assets.length === 0) {
+      return NextResponse.json(
+        { error: "No data found for the specified criteria" },
+        { status: 404 }
+      );
     }
 
-    // Prepare CSV columns
-    const columns = [
-      "NodeName",
-      "SerialNumber",
-      "Manufacturer",
-      "Model",
-      "Expires",
-      "Categories",
-      "Status",
-      "Department",
-      "IssueTo",
-      "Note",
-      "DefaultLocation",
-      "CostCenter",
-      "ReceivedDate",
-      "AssetOwner",
-      "Condition",
-      "StoreLocation",
-      "PONumber",
-      "Order",
-      "PurchaseNumber",
-      "CheckOutDate"
-    ];
+    // Prepare filename
+    const timestamp = new Date().toISOString().split('T')[0];
+    let filename = `assets_export_${timestamp}.csv`;
+    if (status) {
+      filename = `${status.toLowerCase().replace(/\s+/g, '_')}_assets_${timestamp}.csv`;
+    }
 
-    // Transform assets to CSV-friendly format
-    const csvData = assets.map((asset) => ({
-      NodeName: asset.nodeName,
-      SerialNumber: asset.serialNumber,
-      Manufacturer: asset.manufacturer,
-      Model: asset.model,
-      Expires: asset.expires ? formatDate(asset.expires) : "",
-      Categories: asset.category,
-      Status: asset.status,
-      Department: asset.department,
-      IssueTo: asset.issueTo,
-      Note: asset.note,
-      DefaultLocation: asset.defaultLocation,
-      CostCenter: asset.costCenter,
-      ReceivedDate: asset.receivedDate ? formatDate(asset.receivedDate) : "",
-      AssetOwner: asset.assetOwner,
-      Condition: asset.condition,
-      StoreLocation: asset.storeLocation,
-      PONumber: asset.poNumber,
-      Order: asset.order,
-      PurchaseNumber: asset.purchaseDate ? formatDate(asset.purchaseDate) : "",
-      CheckOutDate: asset.checkOutDate ? formatDate(asset.checkOutDate) : ""
-    }));
+    // Define columns with their display names
+    const columnMap = {
+      nodeName: "Node Name",
+      serialNumber: "Serial Number",
+      manufacturer: "Manufacturer",
+      model: "Model",
+      expires: "Expires",
+      category: "Category",
+      status: "Status",
+      department: "Department",
+      issueTo: "Issue To",
+      note: "Note",
+      defaultLocation: "Default Location",
+      costCenter: "Cost Center",
+      receivedDate: "Received Date",
+      assetOwner: "Asset Owner",
+      condition: "Condition",
+      storeLocation: "Store Location",
+      poNumber: "PO Number",
+      order: "Order",
+      purchaseDate: "Purchase Date",
+      checkOutDate: "Check Out Date"
+    };
+
+    // Transform assets data
+    const csvData = assets.map(asset => {
+      const row = {};
+      for (const [key, displayName] of Object.entries(columnMap)) {
+        if (key.includes('Date')) {
+          row[displayName] = asset[key] ? formatDate(asset[key]) : "";
+        } else if (key === 'issueTo') {
+          row[displayName] = asset[key] || "";
+        } else {
+          row[displayName] = asset[key] || "";
+        }
+      }
+      return row;
+    });
 
     // Convert to CSV
     const csvString = stringify(csvData, {
       header: true,
-      columns: columns
+      columns: Object.values(columnMap)
     });
+
+    console.log(`Generated CSV with ${csvData.length} rows`);
 
     // Create response with CSV file
     return new NextResponse(csvString, {
       status: 200,
       headers: {
         "Content-Type": "text/csv",
-        "Content-Disposition": `attachment; filename=${filename}`
+        "Content-Disposition": `attachment; filename=${filename}`,
+        "Cache-Control": "no-cache"
       }
     });
   } catch (error) {
@@ -116,18 +134,26 @@ export async function GET(req) {
     return NextResponse.json(
       {
         error: "Failed to export assets",
-        details: error.message
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
       { status: 500 }
     );
   }
 }
 
-// Helper function to format dates consistently
 function formatDate(date) {
-  const d = new Date(date);
-  const day = d.getDate().toString().padStart(2, "0");
-  const month = (d.getMonth() + 1).toString().padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}-${month}-${year}`;
+  try {
+    if (!date) return "";
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  } catch (error) {
+    console.error("Date formatting error for date:", date, error);
+    return "";
+  }
 }

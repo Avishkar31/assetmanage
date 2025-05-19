@@ -1,28 +1,36 @@
 "use client";
 import Link from "next/link";
 import Sidebar from "components/Sidebar";
-import SimpleRadialBarChart from "components/SimpleRadialBarChart";
+import DynamicTeamChart from "@/components/DynamicTeamChart";
 import ManufacturerPieChart from "components/ManufacturerPieChart";
 import StackedBarChart from "components/StackedBarChart";
-import AssetTimeline from "components/AssetTimeline";
 import { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
+import { FiDownload, FiPieChart, FiBarChart2 } from "react-icons/fi";
+import { BiCube, BiDevices } from "react-icons/bi";
+import { HiOutlineDocumentReport } from "react-icons/hi";
 import withAuth from "hooks/withAuth";
-import { exportAssets } from "utils/assetExport"; // Import the export utility
+import { exportAssets } from "utils/assetExport";
+import { toast } from "react-hot-toast";
 
 function Page() {
   const [isReportsOpen, setIsReportsOpen] = useState(false);
   const [isExtracting, setIsExtracting] = useState(false);
   const reportsRef = useRef(null);
-  const [allAssetsCount, setAllAssetsCount] = useState(null);
-  const [inPoolCount, setInPoolCount] = useState(null);
-  const [newPurchaseCount, setNewPurchaseCount] = useState(null);
-  const [inactiveCount, setInactiveCount] = useState(null);
-  const [deployedCount, setDeployedCount] = useState(null);
-  const [todaysDeployedCount, setTodaysDeployedCount] = useState(null);
+  const [assetCounts, setAssetCounts] = useState({
+    all: 0,
+    inpool: 0,
+    newPurchase: 0,
+    inactive: 0,
+    deployed: 0,
+    todaysDeployed: 0
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState(null);
+
+  const [manufacturers, setManufacturers] = useState([]);
+  const [chartKey, setChartKey] = useState(0);
 
   const toggleDropdown = (setter) => {
     setter((prev) => !prev);
@@ -39,53 +47,11 @@ function Page() {
     setIsReportsOpen(false);
 
     try {
-      // Option 1: Use your existing exportAssets utility
       await exportAssets(type);
-
-      // Option 2: Or implement the download logic directly here
-      /*
-    // Add query parameters based on the type selected
-    let apiUrl = "/api/extract";
-
-    // Map the UI type to the corresponding status parameter
-    if (type !== "AllAsset") {
-      const statusMapping = {
-        Inpool: "inpool",
-        NewPurchase: "new purchase",
-        Deployed: "deployed",
-        TodaysAllocation: "today"
-      };
-
-      // For TodaysAllocation, use a date parameter instead of status
-      if (type === "TodaysAllocation") {
-        const today = new Date();
-        const formattedDate = `${today
-          .getDate()
-          .toString()
-          .padStart(2, "0")}-${(today.getMonth() + 1)
-          .toString()
-          .padStart(2, "0")}-${today.getFullYear()}`;
-        apiUrl = `${apiUrl}?checkOutDate=${formattedDate}`;
-      } else {
-        // For other types, use the status parameter
-        apiUrl = `${apiUrl}?status=${statusMapping[type]}`;
-      }
-    }
-
-    const response = await fetch(apiUrl);
-    if (!response.ok) throw new Error("Failed to extract data");
-
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${type.toLowerCase()}_assets.csv`;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    a.remove();
-    */
+      toast.success(`${type} data exported successfully!`);
     } catch (err) {
+      console.error("Export error:", err);
+      toast.error(`Failed to export ${type} data: ${err.message}`);
       setError(err.message);
     } finally {
       setIsExtracting(false);
@@ -125,30 +91,17 @@ function Page() {
         }
         const data = await response.json();
 
-        // Only update counts based on selected status
-        if (!selectedStatus) {
-          setAllAssetsCount(data.allAssetsCount);
-          setInPoolCount(data.inPoolCount);
-          setNewPurchaseCount(data.newPurchaseCount);
-          setInactiveCount(data.inactiveCount);
-          setDeployedCount(data.deployedCount);
-          setTodaysDeployedCount(data.todaysDeployedCount);
-        } else {
-          // Reset all counts to 0 except selected status
-          setAllAssetsCount(0);
-          setInPoolCount(selectedStatus === "inpool" ? data.inPoolCount : 0);
-          setNewPurchaseCount(
-            selectedStatus === "newpurchase" ? data.newPurchaseCount : 0
-          );
-          setInactiveCount(0);
-          setDeployedCount(
-            selectedStatus === "deployed" ? data.deployedCount : 0
-          );
-          setTodaysDeployedCount(
-            selectedStatus === "deployed" && data.todaysDeployedCount
-          );
-        }
+        // Update all counts
+        setAssetCounts({
+          all: data.allAssetsCount || 0,
+          inpool: data.inPoolCount || 0,
+          newPurchase: data.newPurchaseCount || 0,
+          inactive: data.inactiveCount || 0,
+          deployed: data.deployedCount || 0,
+          todaysDeployed: data.todaysDeployedCount || 0
+        });
       } catch (err) {
+        console.error("Fetch error:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -158,30 +111,66 @@ function Page() {
     fetchAssetData();
   }, [selectedStatus]);
 
+
+  useEffect(() => {
+    async function fetchManufacturersData() {
+      try {
+        const response = await fetch("/api/Manufacturer");
+        
+        if (!response.ok) {
+          throw new Error("Failed to fetch manufacturers data");
+        }
+        
+        const data = await response.json();
+        setManufacturers(data.data || []);
+        setChartKey(prevKey => prevKey + 1); // Force chart re-render when data changes
+      } catch (err) {
+        console.error("Error fetching manufacturers:", err);
+        // Don't need to set error state here to avoid affecting the whole dashboard
+      }
+    }
+
+    fetchManufacturersData();
+  }, []);
+
   if (loading) {
-    return <p>Loading...</p>;
+    return (
+      <div className="flex h-screen bg-gray-900 text-white items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-teal-500 mx-auto mb-4"></div>
+          <p className="text-lg">Loading dashboard data...</p>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <p>Error: {error}</p>;
+    return (
+      <div className="flex h-screen bg-gray-900 text-white items-center justify-center">
+        <div className="bg-red-900/30 p-6 rounded-lg max-w-md">
+          <h2 className="text-xl font-bold mb-2">Error</h2>
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="mt-4 bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
   }
 
-  const totalActiveAssets = inPoolCount + deployedCount;
-  const inPoolPercentage = ((inPoolCount / totalActiveAssets) * 100).toFixed(2);
-  const newPurchasePercentage = (
-    (newPurchaseCount / totalActiveAssets) *
-    100
-  ).toFixed(2);
-  const deployedPercentage = (
-    (deployedCount / totalActiveAssets) *
-    100
-  ).toFixed(2);
+  // Calculate percentages
+  const totalActiveAssets = assetCounts.inpool + assetCounts.deployed;
+  const inPoolPercentage = totalActiveAssets > 0 ? ((assetCounts.inpool / totalActiveAssets) * 100).toFixed(1) : 0;
+  const deployedPercentage = totalActiveAssets > 0 ? ((assetCounts.deployed / totalActiveAssets) * 100).toFixed(1) : 0;
 
   return (
     <main>
       {isExtracting && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-8 rounded-lg text-white text-center">
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-70 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className="bg-gray-800 p-8 rounded-lg text-white text-center shadow-xl">
             <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-teal-500 mx-auto mb-4"></div>
             <p className="text-lg">Extracting data, please wait...</p>
           </div>
@@ -190,32 +179,18 @@ function Page() {
       <div className="flex h-screen bg-gray-900 text-white">
         <Sidebar />
         <div className="flex-1 p-5 overflow-y-auto">
-          <header className="flex justify-between items-center mb-5">
+          <header className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-2xl">OVERVIEW</h1>
-              <p className="text-gray-400">Welcome to store</p>
+              <h1 className="text-2xl font-bold">OVERVIEW</h1>
+              <p className="text-gray-400">Welcome to the asset management dashboard</p>
             </div>
             <div className="flex items-center">
-              <div className={`relative flex items-center mr-5`}>
-                <button className="text-white">
-                  {/* Placeholder for search icon */}
-                </button>
-                {false && (
-                  <>
-                    <input
-                      type="text"
-                      className="border border-teal-500 p-1 rounded bg-gray-800 text-white ml-2"
-                      placeholder="Search..."
-                    />
-                    <button className="text-white ml-2">✖</button>
-                  </>
-                )}
-              </div>
               <div className="relative" ref={reportsRef}>
                 <button
-                  className="bg-teal-500 text-white px-4 py-2 rounded flex items-center"
+                  className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md flex items-center transition-colors"
                   onClick={() => toggleDropdown(setIsReportsOpen)}
                 >
+                  <HiOutlineDocumentReport className="mr-2" size={18} />
                   Reports
                   <span className="ml-2">
                     {isReportsOpen ? (
@@ -226,44 +201,49 @@ function Page() {
                   </span>
                 </button>
                 {isReportsOpen && (
-                  <ul className="absolute bg-gray-900 rounded-lg p-2 mt-2 right-1 w-56 top-full flex flex-col">
-                    <li className="my-2">
+                  <ul className="absolute bg-gray-800 rounded-lg p-2 mt-2 right-0 w-64 top-full flex flex-col shadow-xl border border-gray-700 z-10">
+                    <li className="my-1">
                       <button
                         onClick={() => handleExtractData("AllAsset")}
-                        className="w-full text-left text-gray-400 hover:text-white"
+                        className="w-full text-left py-2 px-3 rounded hover:bg-gray-700 flex items-center text-gray-300 hover:text-white transition-colors"
                       >
-                        Extract All Asset
+                        <FiDownload className="mr-2" size={16} />
+                        Extract All Assets
                       </button>
                     </li>
-                    <li className="my-2">
+                    <li className="my-1">
                       <button
                         onClick={() => handleExtractData("Inpool")}
-                        className="w-full text-left text-gray-400 hover:text-white"
+                        className="w-full text-left py-2 px-3 rounded hover:bg-gray-700 flex items-center text-gray-300 hover:text-white transition-colors"
                       >
-                        Extract Inpool
+                        <FiDownload className="mr-2" size={16} />
+                        Extract Inpool Assets
                       </button>
                     </li>
-                    <li className="my-2">
+                    <li className="my-1">
                       <button
-                        onClick={() => handleExtractData("NewPurchase")}
-                        className="w-full text-left text-gray-400 hover:text-white"
+                        onClick={() => handleExtractData("New Purchase")}
+                        className="w-full text-left py-2 px-3 rounded hover:bg-gray-700 flex items-center text-gray-300 hover:text-white transition-colors"
                       >
+                        <FiDownload className="mr-2" size={16} />
                         Extract New Purchase
                       </button>
                     </li>
-                    <li className="my-2">
+                    <li className="my-1">
                       <button
                         onClick={() => handleExtractData("Deployed")}
-                        className="w-full text-left text-gray-400 hover:text-white"
+                        className="w-full text-left py-2 px-3 rounded hover:bg-gray-700 flex items-center text-gray-300 hover:text-white transition-colors"
                       >
-                        Extract Deployed
+                        <FiDownload className="mr-2" size={16} />
+                        Extract Deployed Assets
                       </button>
                     </li>
-                    <li className="my-2">
+                    <li className="my-1">
                       <button
                         onClick={() => handleExtractData("TodaysAllocation")}
-                        className="w-full text-left text-gray-400 hover:text-white"
+                        className="w-full text-left py-2 px-3 rounded hover:bg-gray-700 flex items-center text-gray-300 hover:text-white transition-colors"
                       >
+                        <FiDownload className="mr-2" size={16} />
                         Today's Hardware Allocation
                       </button>
                     </li>
@@ -272,96 +252,118 @@ function Page() {
               </div>
             </div>
           </header>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
+          
+          {/* Asset Count Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <Link
               href="./stocks/allasset"
-              passHref
-              onClick={() => setSelectedStatus(null)}
+              className="block bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
-              <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
-                <h3 className="text-lg">All assets</h3>
-                <p className="text-2xl">
-                  {allAssetsCount !== null ? allAssetsCount : "N/A"}
-                </p>
-                <span className="text-teal-500">+12%</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-300 group-hover:text-white">All Assets</h3>
+                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.all.toLocaleString()}</p>
+                </div>
+                <div className="bg-blue-500/20 p-3 rounded-full">
+                  <BiDevices className="text-blue-400 text-2xl" />
+                </div>
               </div>
             </Link>
+            
             <Link
-              href="./stocks/allasset?status=inpool"
-              passHref
-              onClick={() => setSelectedStatus("inpool")}
+              href="./stocks/allasset?status=Inpool"
+              className="block bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
-              <div className="block bg-gray-800 p-5 rounded-lg text-center text-gray-400 hover:text-white transition-colors">
-                <h3 className="text-lg text-green-500 hover:text-green-400">
-                  Inpool
-                </h3>
-                <p className="text-2xl">
-                  {inPoolCount !== null ? inPoolCount.toLocaleString() : "N/A"}
-                </p>
-                <span className="text-teal-500">{inPoolPercentage}%</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-green-400 group-hover:text-green-300">Inpool</h3>
+                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.inpool.toLocaleString()}</p>
+                  {/* <span className="text-green-500 text-sm">{inPoolPercentage}% of active assets</span> */}
+                </div>
+                <div className="bg-green-500/20 p-3 rounded-full">
+                  <BiCube className="text-green-400 text-2xl" />
+                </div>
               </div>
             </Link>
+            
             <Link
-              href="./stocks/allasset?status=newpurchase"
-              passHref
-              onClick={() => setSelectedStatus("newpurchase")}
+              href="./stocks/allasset?status=New Purchase"
+              className="block bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
-              <div className="bg-gray-800 p-5 rounded-lg text-center cursor-pointer hover:text-white">
-                <h3 className="text-lg text-yellow-500">New purchase</h3>
-                <p className="text-2xl">
-                  {newPurchaseCount !== null ? newPurchaseCount : "N/A"}
-                </p>
-                <span className="text-teal-500">{newPurchasePercentage}%</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-yellow-400 group-hover:text-yellow-300">New Purchase</h3>
+                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.newPurchase.toLocaleString()}</p>
+                </div>
+                <div className="bg-yellow-500/20 p-3 rounded-full">
+                  <FiBarChart2 className="text-yellow-400 text-2xl" />
+                </div>
               </div>
             </Link>
           </div>
-          <div className="flex justify-center gap-3 mt-5">
+          
+          {/* Deployment Stats */}
+          <div className="flex flex-col md:flex-row gap-4 mb-6">
             <Link
-              href="./stocks/allasset?status=deployed"
-              passHref
-              onClick={() => setSelectedStatus("deployed")}
+             href ="./stocks/allasset?status=Deployed"
+              className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
-              <div className="bg-gray-800 p-5 rounded-lg text-center cursor-pointer hover:text-white w-64">
-                <h3 className="text-lg text-purple-500">Deployed</h3>
-                <p className="text-2xl">
-                  {deployedCount !== null ? deployedCount : "N/A"}
-                </p>
-                <span className="text-teal-500">{deployedPercentage}%</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-purple-400 group-hover:text-purple-300">Deployed</h3>
+                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.deployed.toLocaleString()}</p>
+                  {/* <span className="text-purple-500 text-sm">{deployedPercentage}% of active assets</span> */}
+                </div>
+                <div className="bg-purple-500/20 p-3 rounded-full">
+                  <BiDevices className="text-purple-400 text-2xl" />
+                </div>
               </div>
             </Link>
+            
             <Link
               href="./stocks/allasset?status=deployed&date=today"
-              passHref
-              onClick={() => setSelectedStatus("deployed")}
+              className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
-              <div className="bg-gray-800 p-3 rounded-lg text-center cursor-pointer hover:text-white w-64">
-                <h3 className="text-lg text-white-500">
-                  Today's Hardware Allocation
-                </h3>
-                <p className="text-2xl">
-                  {todaysDeployedCount !== null ? todaysDeployedCount : "N/A"}
-                </p>
-                <span className="text-teal-500">Last 24 hours</span>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-medium text-teal-400 group-hover:text-teal-300">Today's Hardware Allocation</h3>
+                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.todaysDeployed.toLocaleString()}</p>
+                  <span className="text-teal-500 text-sm">Last 24 hours</span>
+                </div>
+                <div className="bg-teal-500/20 p-3 rounded-full">
+                  <FiPieChart className="text-teal-400 text-2xl" />
+                </div>
               </div>
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
-            <div className="bg-gray-800 p-5 rounded-lg">
-              <h2 className="text-lg mb-3">Manufacturer Wise</h2>
-              <div className="w-full max-w-2xl">
-                <ManufacturerPieChart />
+          {/* Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800">
+          <h2 className="text-lg font-medium mb-4 text-gray-200">Manufacturer Distribution</h2>
+          <div className="w-full h-96">
+            {/* Pass manufacturers data to the chart */}
+            <ManufacturerPieChart 
+              key={chartKey} 
+              manufacturers={manufacturers} 
+            />
+          </div>
+          {manufacturers.length === 0 && !loading && (
+            <p className="text-center text-gray-400 mt-4">No manufacturer data available</p>
+          )}
+        </div>
+            
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800">
+              <h2 className="text-lg font-medium mb-4 text-gray-200">Department Distribution</h2>
+              <div className="w-full h-96">
+
+                <DynamicTeamChart />
               </div>
             </div>
-            <div className="bg-gray-800 p-5 rounded-lg">
-              <h2 className="text-lg mb-3">Assets Department Wise</h2>
-              <div>
-                <SimpleRadialBarChart />
-              </div>
-            </div>
-            <div className="bg-gray-800 p-5 rounded-lg col-span-full flex flex-col items-center">
-              <h2 className="text-lg mb-3">Category wise Assets</h2>
-              <div>
+            
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800 col-span-full">
+              <h2 className="text-lg font-medium mb-4 text-gray-200">Category Distribution</h2>
+              <div className="w-full h-80">
                 <StackedBarChart />
               </div>
             </div>

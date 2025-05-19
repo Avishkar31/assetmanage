@@ -1,128 +1,123 @@
-// app/api/asset/update/[id]/route.js
-import dbConnect from "@/lib/dbConnect";
-import Asset from "@/models/Asset";
 import { NextResponse } from "next/server";
+import dbConnect from "../../../../lib/dbConnect";
+import Asset from "../../../../models/Asset";
+import User from "../../../../models/User";
 
-export async function PUT(req, { params }) {
+export async function PUT(req) {
   try {
     await dbConnect();
-    const { id } = params;
+
     const data = await req.json();
     const {
-      nodeName,
       serialNumber,
-      assetTag,
-      manufacturer,
+      nodeName,
       model,
-      expires,
       category,
+      type,
+      deskLocation,
+      poNumber,
+      orderNumber,
+      storeLocation,
       status,
-      department,
+      allocation,
+      period,
       issueTo,
       note,
-      defaultLocation,
-      costCenter,
-      receivedDate,
-      assetOwner,
-      condition,
-      storeLocation,
-      killdiskDate,
-      attachedFile,
-      disposedDate,
-      poNumber,
-      order,
-      purchaseDate,
-      user
+      accessories
     } = data;
 
-    // Get the existing asset
-    const existingAsset = await Asset.findById(id);
+    // Asset identifier validation
+    if (!serialNumber && !nodeName) {
+      return NextResponse.json(
+        { error: "Serial number or node name is required for identification." },
+        { status: 400 }
+      );
+    }
+
+    // Find the asset
+    const query = {};
+    if (serialNumber) query.serialNumber = serialNumber;
+    if (nodeName) query.nodeName = nodeName;
+    
+    const existingAsset = await Asset.findOne(query);
     if (!existingAsset) {
-      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Asset not found. Please check the serial number or node name." },
+        { status: 404 }
+      );
     }
 
-    // Check if serial number is being changed and if it already exists
-    if (serialNumber !== existingAsset.serialNumber) {
-      const duplicateAsset = await Asset.findOne({ serialNumber });
-      if (duplicateAsset) {
-        return NextResponse.json(
-          { error: "Asset with this serial number already exists." },
-          { status: 400 }
-        );
+    // Update fields if provided in the request
+    const fieldsToUpdate = [
+      'model', 'category', 'type', 'deskLocation', 'poNumber', 
+      'orderNumber', 'storeLocation', 'status', 'allocation', 
+      'period', 'note'
+    ];
+    
+    fieldsToUpdate.forEach(field => {
+      if (data[field] !== undefined) {
+        existingAsset[field] = data[field];
       }
+    });
+
+    // Handle accessories update
+    if (accessories) {
+      existingAsset.accessories = {
+        ...existingAsset.accessories,
+        ...accessories
+      };
     }
 
-    // Determine checkIn/checkOut logic
-    let checkOutDate = existingAsset.checkOutDate;
-    let checkInDate = existingAsset.checkInDate;
-    let action = null;
+    // Handle user assignment if issueTo is provided
+    let user = null;
+    if (issueTo) {
+      user = await User.findOne({ fullName: issueTo.toLowerCase() });
 
-    // If status is changing, update check in/out dates
-    if (status !== existingAsset.status) {
-      if (status === "Deployed" && existingAsset.status !== "Deployed") {
-        checkOutDate = new Date();
-        action = "checkOut";
-      } else if (
-        ["Inpool", "Inactive"].includes(status) &&
-        !["Inpool", "Inactive"].includes(existingAsset.status)
-      ) {
-        checkInDate = new Date();
-        action = "checkIn";
-      } else {
-        action = "update";
+      if (!user) {
+        user = new User({
+          fullName: issueTo.toLowerCase(),
+          createdDate: Date.now(),
+          department: "default",
+          password: "defaultPassword",
+          siemensId: `siemens-${Date.now()}`
+        });
+        await user.save();
       }
-    } else {
-      action = "update";
+      
+      existingAsset.issueTo = user._id;
     }
 
-    // Create history entry
-    const historyEntry = {
-      user: user.siemensId,
-      action,
+    // Add history entry for this update
+    if (!existingAsset.assetHistory) {
+      existingAsset.assetHistory = [];
+    }
+
+    existingAsset.assetHistory.push({
+      user: user?._id || null,
+      action: "update",
       date: new Date(),
-      status
-    };
+      status: existingAsset.status,
+      note: `Asset updated with ${Object.keys(data).filter(key => key !== 'serialNumber' && key !== 'nodeName').join(', ')}`
+    });
 
-    // Update the asset
-    const updatedAsset = await Asset.findByIdAndUpdate(
-      id,
-      {
-        nodeName,
-        serialNumber,
-        assetTag,
-        manufacturer,
-        model,
-        expires,
-        category,
-        status,
-        department,
-        issueTo,
-        note,
-        defaultLocation,
-        costCenter,
-        receivedDate,
-        assetOwner,
-        condition,
-        storeLocation,
-        killdiskDate,
-        attachedFile,
-        disposedDate,
-        poNumber,
-        order,
-        purchaseDate,
-        checkOutDate,
-        checkInDate,
-        $push: { assetHistory: historyEntry }
-      },
-      { new: true }
-    );
+    // Record update timestamp
+    existingAsset.lastUpdated = new Date();
 
+    // Save the updated asset
+    const updatedAsset = await existingAsset.save();
+    
     return NextResponse.json(updatedAsset, { status: 200 });
   } catch (err) {
-    console.log("API Error:", err);
+    console.error("Error in PUT handler:", err);
     return NextResponse.json(
       { error: "Internal Server Error", details: err.message },
       { status: 500 }
     );
   }
+}
+
+// If you need to support specific updates with PATCH
+export async function PATCH(req) {
+  // For partial updates, we can reuse the PUT logic
+  return PUT(req);
 }

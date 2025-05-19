@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import dbConnect from "../../../../lib/dbConnect"; // Ensure DB is connected
+import dbConnect from "../../../../lib/dbConnect";
 import Asset from "../../../../models/Asset";
 import User from "../../../../models/User";
 
 export async function POST(req) {
   try {
-    await dbConnect(); // Ensure DB connection
+    await dbConnect();
 
     const data = await req.json();
     const {
@@ -16,7 +16,9 @@ export async function POST(req) {
       nodeName,
       serialNumber,
       checkType,
-      model
+      model,
+      purchaseDate,
+      assetUser  // Changed from currentUser to assetUser for consistency
     } = data;
 
     if (!serialNumber || !nodeName) {
@@ -35,6 +37,14 @@ export async function POST(req) {
       );
     }
 
+    if (!assetUser) {
+      console.error("Missing current user information");
+      return NextResponse.json(
+        { error: "Current user information is required." },
+        { status: 400 }
+      );
+    }
+
     const existingAsset = await Asset.findOne({ serialNumber, nodeName });
     if (!existingAsset) {
       console.error("Asset not found");
@@ -44,9 +54,15 @@ export async function POST(req) {
       );
     }
 
+    // Update basic fields
     existingAsset.status = status || existingAsset.status;
     existingAsset.storeLocation = storeLocation || existingAsset.storeLocation;
     existingAsset.note = note || existingAsset.note;
+    
+    // Update purchase date if provided
+    if (purchaseDate) {
+      existingAsset.purchaseDate = new Date(purchaseDate);
+    }
 
     let user = null;
     if (issueTo) {
@@ -56,9 +72,9 @@ export async function POST(req) {
         user = new User({
           fullName: issueTo?.toLowerCase(),
           createdDate: Date.now(),
-          department: "default", // Provide default value for department
-          password: "defaultPassword", // Provide default value for password
-          siemensId: "defaultSiemensId" // Provide default value for siemensId
+          department: "default",
+          password: "defaultPassword",
+          siemensId: `siemens-${Date.now()}`
         });
         await user.save();
       }
@@ -82,20 +98,24 @@ export async function POST(req) {
       if (model) existingAsset.model = model;
 
       existingAsset.assetHistory.push({
-        user: user._id,
+        user: issueTo, // This is the recipient
+        updatedBy: assetUser, // Simplified to match check-in API
         action: "checkOut",
         date: new Date(),
-        status: existingAsset.status
+        status: existingAsset.status,
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined
       });
     } else if (checkType === "checkin") {
       existingAsset.issueTo = user?._id || null;
       existingAsset.checkInDate = new Date();
 
       existingAsset.assetHistory.push({
-        user: user?._id || null,
+        user: issueTo || null, // This is the recipient
+        updatedBy: assetUser, // Simplified to match check-in API
         action: "checkIn",
         date: new Date(),
-        status: existingAsset.status
+        status: existingAsset.status,
+        purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined
       });
     } else {
       console.error("Invalid check type");
@@ -105,12 +125,24 @@ export async function POST(req) {
       );
     }
 
+    // Add validation for purchase date if needed
+    if (purchaseDate && isNaN(new Date(purchaseDate).getTime())) {
+      return NextResponse.json(
+        { error: "Invalid purchase date format." },
+        { status: 400 }
+      );
+    }
+
     const updatedAsset = await existingAsset.save();
     return NextResponse.json(updatedAsset, { status: 200 });
   } catch (err) {
-    console.error("Error in POST handler:", err); // More detailed logging
+    console.error("Error in POST handler:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", details: err.message },
+      { 
+        error: "Internal Server Error", 
+        details: err.message,
+        stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      },
       { status: 500 }
     );
   }

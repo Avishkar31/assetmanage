@@ -43,7 +43,8 @@ const assetSchema = new mongoose.Schema({
       user: String, // Changed to String
       action: { type: String, enum: ["checkIn", "checkOut"] },
       date: { type: Date, default: Date.now },
-      status: String
+      status: String,
+      updatedBy: String,
     }
   ],
   accessories: String

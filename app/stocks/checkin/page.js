@@ -82,6 +82,7 @@ const Dashboard = () => {
           issueTo: data.issueTo,
           nodeName: data.nodeName
         };
+
         setFormData(intitialFormData); // Set the form data with the API response
       } catch (error) {
         console.error("Error fetching form data:", error);
@@ -114,6 +115,8 @@ const Dashboard = () => {
       );
       return;
     }
+    const storedUserData = JSON.parse(localStorage.getItem('user'));
+    console.log("Stored User Data:", storedUserData);
 
     const ddata = {
       nodeName: formData.nodeName,
@@ -123,11 +126,12 @@ const Dashboard = () => {
       note: formData.note || "Checked in after repair",
       checkType: "checkin",
       checkinDate: formData.checkinDate,
-      serialNumber: serialNumber
+      serialNumber: serialNumber,
+      assetUser: storedUserData.siemensId
     };
 
     try {
-      const response = await fetch("/api/asset/checkAsset", {
+      const response = await fetch("/api/asset/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ddata)

@@ -10,7 +10,7 @@ const InputComponent = ({ id, value, onChange, readOnly }) => (
     value={value}
     onChange={onChange}
     readOnly={readOnly}
-    className="bg-gray-800 text-white border-gray-600 rounded-lg p-2 outline-none"
+    className="w-full bg-gray-800 text-white border-gray-600 rounded-lg p-2 outline-none text-sm"
   />
 );
 
@@ -31,9 +31,15 @@ const ViewAsset = () => {
     storeLocation: "",
     poNumber: "",
     order: "",
+    issueTo: "",
+    type: "",
+    deskLocation: "",
+    allocation: "",
+    period: "",
     accessories: []
   });
 
+  const [originalData, setOriginalData] = useState({});
   const [history, setHistory] = useState([]);
   const [serialNumber, setSerialNumber] = useState(null);
   const [assetId, setAssetId] = useState(null);
@@ -42,44 +48,59 @@ const ViewAsset = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMessage, setUpdateMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [userRole, setUserRole] = useState(""); // Add userRole state
+
+  useEffect(() => {
+    // Handle responsive view
+    const handleResize = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+
+    handleResize(); // Set initial state
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const serialNumber = urlParams.get("SerialNumber");
     setSerialNumber(serialNumber);
+    
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `/api/asset/get?serialNumber=${serialNumber}`
-        );
+        const response = await fetch(`/api/asset/get?serialNumber=${serialNumber}`);
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         setFormData(data);
-        setAssetId(data._id); // Store the asset ID for update/delete operations
-        setHistory(data.assetHistory);
+        setOriginalData(data); // Store original data for comparison during updates
+        setAssetId(data._id);
+        setHistory(data.assetHistory || []);
 
-        // Parse accessories string into object
-        if (data.accessories) {
-          const accessoriesObj = data.accessories
-            .split(", ")
-            .reduce((acc, item) => {
-              const [key, value] = item.split(":");
-              acc[key] = parseInt(value);
-              return acc;
-            }, {});
-          setAccessories(accessoriesObj);
-        }
-
-        // Extract and set accessories from the latest history entry
-        if (data.assetHistory && data.assetHistory.length > 0) {
-          const latestEntry = data.assetHistory[data.assetHistory.length - 1];
-          setFormData((prev) => ({
-            ...prev,
-            accessories: latestEntry.accessories || []
-          }));
+        // Parse accessories
+        if (data.accessories && typeof data.accessories === 'object') {
+          setAccessories(data.accessories);
+        } else if (data.accessories && typeof data.accessories === 'string') {
+          try {
+            // Handle string format "key:value, key:value"
+            const accessoriesObj = data.accessories
+              .split(", ")
+              .reduce((acc, item) => {
+                const [key, value] = item.split(":");
+                acc[key] = parseInt(value) || 1;
+                return acc;
+              }, {});
+            setAccessories(accessoriesObj);
+          } catch (e) {
+            console.error("Error parsing accessories string:", e);
+          }
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        setErrorMessage("Failed to load asset data");
+        setErrorMessage(`Failed to load asset data: ${error.message}`);
       }
     };
 
@@ -87,6 +108,19 @@ const ViewAsset = () => {
       fetchData();
     }
   }, [serialNumber]);
+
+  useEffect(() => {
+    // Get user role from localStorage
+    const user = localStorage.getItem("user");
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setUserRole(userData.role || "");
+      } catch (e) {
+        setUserRole("");
+      }
+    }
+  }, []);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -107,15 +141,30 @@ const ViewAsset = () => {
       setIsUpdating(true);
       setErrorMessage("");
 
-      // Get current user info (you'll need to implement this based on your auth system)
-      const user = { siemensId: "current-user" }; // Replace with actual user info
-
+      // Prepare update data with only modified fields
       const updateData = {
-        ...formData,
-        user // Include user for history tracking
+        serialNumber: formData.serialNumber,
+        nodeName: formData.nodeName
       };
+      
+      // Include only fields that have changed
+      Object.keys(formData).forEach(key => {
+        if (formData[key] !== originalData[key] && key !== '_id' && key !== 'assetHistory') {
+          updateData[key] = formData[key];
+        }
+      });
 
-      const response = await fetch(`/api/asset/update/${assetId}`, {
+      // Only send update if there are changes
+      if (Object.keys(updateData).length <= 2) {
+        setUpdateMessage("No changes detected");
+        setTimeout(() => setUpdateMessage(""), 3000);
+        setIsReadOnly(true);
+        setIsUpdating(false);
+        return;
+      }
+
+      // Call the new PUT endpoint
+      const response = await fetch(`/api/asset/update`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"
@@ -128,11 +177,22 @@ const ViewAsset = () => {
         throw new Error(errorData.error || "Failed to update asset");
       }
 
-      const updatedAsset = await response.json();
-      setFormData(updatedAsset);
-      setHistory(updatedAsset.assetHistory);
+      const result = await response.json();
+      
+      // Update the UI with the returned asset
+      if (result.asset) {
+        setFormData(result.asset);
+        setOriginalData(result.asset);
+        setHistory(result.asset.assetHistory || []);
+      }
+      
       setIsReadOnly(true);
-      setUpdateMessage("Asset updated successfully");
+      setUpdateMessage(result.message || "Asset updated successfully");
+
+      // Show which fields were changed
+      if (result.changes && result.changes.length > 0) {
+        console.log("Changes made:", result.changes);
+      }
 
       // Clear message after 3 seconds
       setTimeout(() => setUpdateMessage(""), 3000);
@@ -181,12 +241,36 @@ const ViewAsset = () => {
     window.location.href = targetUrl;
   };
 
+  // Handle print form navigation
+  // const handlePrintForm = () => {
+  //   // Create query params for accessories
+  //   const accessoriesParams = Object.entries(accessories)
+  //     .filter(([_, value]) => value)
+  //     .map(([key]) => `${encodeURIComponent(key)}=1`)
+  //     .join('&');
+      
+  //   // Build URL with asset details
+  //   const printUrl = `/stocks/print?` + 
+  //     `serialNumber=${encodeURIComponent(formData.serialNumber)}` +
+  //     `&nodeName=${encodeURIComponent(formData.nodeName)}` +
+  //     `&model=${encodeURIComponent(formData.model || "")}` +
+  //     `&category=${encodeURIComponent(formData.category || "")}` +
+  //     `&type=${encodeURIComponent(formData.type || "")}` +
+  //     `&issueTo=${encodeURIComponent(formData.issueTo || "")}` +
+  //     `&deskLocation=${encodeURIComponent(formData.deskLocation || "")}` +
+  //     `&poNumber=${encodeURIComponent(formData.poNumber || "")}` +
+  //     `&orderNumber=${encodeURIComponent(formData.order || "")}` +
+  //     (accessoriesParams ? `&${accessoriesParams}` : '');
+    
+  //   window.open(printUrl, '_blank');
+  // };
+
   return (
-    <div className="flex h-screen bg-gray-900 text-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-900 text-white overflow-hidden">
       <Sidebar />
-      <div className="flex-1 p-6 bg-gray-900">
-        <header className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl">Stocks</h1>
+      <div className="flex-1 p-3 md:p-6 bg-gray-900 overflow-y-auto">
+        <header className="flex justify-between items-center mb-4 md:mb-6">
+          <h1 className="text-xl md:text-2xl">Stocks</h1>
           <div className="flex items-center space-x-4">
             <div className="relative">
               <button
@@ -206,30 +290,34 @@ const ViewAsset = () => {
 
         {/* Status Messages */}
         {updateMessage && (
-          <div className="bg-green-500 text-white p-3 mb-4 rounded">
+          <div className="bg-green-500 text-white p-2 md:p-3 mb-3 md:mb-4 rounded text-sm">
             {updateMessage}
           </div>
         )}
         {errorMessage && (
-          <div className="bg-red-500 text-white p-3 mb-4 rounded">
+          <div className="bg-red-500 text-white p-2 md:p-3 mb-3 md:mb-4 rounded text-sm">
             {errorMessage}
           </div>
         )}
 
-        <div className="flex gap-6">
-          <div className="flex-1 bg-gray-800 p-6 rounded-lg">
-            <header className="mb-4">
-              <h3 className="text-lg sticky">View Asset</h3>
+        <div className={`flex flex-col ${!isMobileView ? 'md:flex-row' : ''} gap-4 md:gap-6`}>
+          <div className="flex-1 bg-gray-800 p-4 md:p-6 rounded-lg">
+            <header className="mb-3 md:mb-4">
+              <h3 className="text-md md:text-lg sticky">View Asset</h3>
             </header>
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {[
                 ["Status", "status"],
                 ["Node Name", "nodeName"],
                 ["Serial Number", "serialNumber"],
-                ["Category", "category"],
+                // ["Category", "category"],
+                ["Type", "type"],
                 ["Model", "model"],
-                ["Expires", "expires"],
+                // ["Desk Location", "deskLocation"],
                 ["Issue To", "issueTo"],
+                // ["Allocation", "allocation"],
+                // ["Period", "period"],
+                ["Expires", "expires"],
                 ["Default Location", "defaultLocation"],
                 ["Asset Owner", "assetOwner"],
                 ["Cost Center", "costCenter"],
@@ -239,48 +327,50 @@ const ViewAsset = () => {
                 ["PO Number", "poNumber"],
                 ["Order", "order"]
               ].map(([label, id]) => (
-                <div key={id} className="flex justify-between">
-                  <span className="text-gray-400">{label}:</span>
-                  <span>
+                <div key={id} className="flex flex-col md:flex-row md:justify-between md:items-center">
+                  <span className="text-gray-400 text-sm mb-1 md:mb-0">{label}:</span>
+                  <div className="w-full md:w-1/2 lg:w-3/5">
                     <InputComponent
                       id={id}
                       value={formData[id] || ""} // Default to empty string if undefined
                       onChange={handleInputChange}
                       readOnly={isReadOnly}
                     />
-                  </span>
+                  </div>
                 </div>
               ))}
 
-              <div className="flex justify-between">
-                <span className="text-gray-400">Note:</span>
-                <span>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-start">
+                <span className="text-gray-400 text-sm mb-1 md:mb-0">Note:</span>
+                <div className="w-full md:w-1/2 lg:w-3/5">
                   <textarea
                     id="note"
                     value={formData.note || ""}
                     onChange={handleInputChange}
                     readOnly={isReadOnly}
-                    className="bg-gray-800 text-white border-gray-600 rounded-lg p-2 outline-none"
+                    className="w-full bg-gray-800 text-white border-gray-600 rounded-lg p-2 outline-none text-sm"
+                    rows={3}
                   />
-                </span>
+                </div>
               </div>
 
               {/* History Section */}
               <AssetHistoryShow history={history} />
             </div>
           </div>
-          <div className="flex-1 flex flex-col space-y-2">
+          <div className="flex-1 flex flex-col space-y-2 md:max-w-xs">
             {/* Action buttons */}
             <button
               type="button"
-              className="py-2.5 px-5 mb-2 w-80 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
+              className="py-2 px-4 mb-2 w-full text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
               onClick={handleCheckoutToggle}
             >
               {formData.status === "Deployed" ? "Checkin" : "Checkout"}
             </button>
+            
             <button
               type="button"
-              className={`py-2.5 px-5 mb-2 w-80 text-sm font-medium focus:outline-none rounded-lg border focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 ${
+              className={`py-2 px-4 mb-2 w-full text-sm font-medium focus:outline-none rounded-lg border focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 ${
                 !isReadOnly
                   ? "bg-blue-600 text-white hover:bg-blue-700 border-blue-700"
                   : "dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
@@ -295,20 +385,30 @@ const ViewAsset = () => {
                 : "Update"}
             </button>
 
+            {/* <button
+              type="button" 
+              className="py-2 px-4 mb-2 w-full text-sm font-medium text-white focus:outline-none bg-green-600 rounded-lg border border-green-700 hover:bg-green-700 focus:z-10 focus:ring-4 focus:ring-green-300"
+              onClick={handlePrintForm}
+            >
+              Print Form
+            </button> */}
+
             <button
               type="button"
-              className="py-2.5 px-5 mb-2 w-80 text-sm font-medium text-white focus:outline-none bg-red-600 rounded-lg border border-red-700 hover:bg-red-700 focus:z-10 focus:ring-4 focus:ring-red-300"
+              className="py-2 px-4 mb-2 w-full text-sm font-medium text-white focus:outline-none bg-red-600 rounded-lg border border-red-700 hover:bg-red-700 focus:z-10 focus:ring-4 focus:ring-red-300"
               onClick={handleDeleteClick}
+              disabled={userRole !== "Admin"}
+              title={userRole !== "Admin" ? "Only admin can delete asset" : ""}
             >
               Delete
             </button>
 
-            <div className="border p-4 rounded-lg dark:bg-gray-800 dark:border-gray-600">
-              <h3 className="text-lg font-medium mb-2 dark:text-white">
+            <div className="border p-3 md:p-4 rounded-lg dark:bg-gray-800 dark:border-gray-600">
+              <h3 className="text-md md:text-lg font-medium mb-2 dark:text-white">
                 Accessories
               </h3>
               {Object.keys(accessories).length === 0 ? (
-                <p className="dark:text-gray-400">
+                <p className="dark:text-gray-400 text-sm">
                   No Accessories available for this asset.
                 </p>
               ) : (
@@ -319,8 +419,8 @@ const ViewAsset = () => {
                         key={index}
                         className="border p-2 rounded dark:bg-gray-700 dark:border-gray-500"
                       >
-                        <p className="dark:text-white">{accessory}</p>
-                        <p className="dark:text-gray-400">
+                        <p className="dark:text-white text-sm">{accessory}</p>
+                        <p className="dark:text-gray-400 text-xs">
                           Quantity: {quantity}
                         </p>
                       </li>

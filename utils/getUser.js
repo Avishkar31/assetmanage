@@ -9,6 +9,7 @@ async function getUserData() {
   try {
     const response = await fetch("/api/users/get", {
       method: "GET",
+      mode: 'no-cors',
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",

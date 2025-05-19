@@ -21,7 +21,7 @@ const validOrder = ["asc", "desc"];
 const validStatuses = [
   "Inpool",
   "New Purchase",
-  "MIS Store",
+  "MIS Sorte",
   "Buyback",
   "Disposed",
   "Inactive",

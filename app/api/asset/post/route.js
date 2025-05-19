@@ -86,10 +86,11 @@ export async function POST(req) {
       checkInDate,
       assetHistory: [
         {
-          user: user.siemensId,
-          action,
-          date: new Date(),
-          status,
+           user: issueTo || "None", // Store recipient
+           updatedBy: user.siemensId, // Add this line to store who performed the action
+           action,
+           date: new Date(),
+            status,
         },
       ],
     });

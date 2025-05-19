@@ -9,7 +9,7 @@ export async function POST(req) {
 
     const formData = await req.formData();
     const file = formData.get("file");
-    const user = { siemensId: "SYSTEM" };
+    const assetUser = formData.get("assetUser") || "SYSTEM"; // Added to get the current user
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -26,7 +26,8 @@ export async function POST(req) {
       trim: true
     });
 
-    console.log("csvD", csvData);
+    console.log("CSV data sample:", csvData.slice(0, 2));
+    console.log("CSV columns:", csvData.length > 0 ? Object.keys(csvData[0]) : []);
 
     // Validate CSV structure
     const requiredColumns = [
@@ -51,15 +52,21 @@ export async function POST(req) {
       "PurchaseNumber"
     ];
 
-    if (!validateCSV(csvData, requiredColumns)) {
+    // Improved validation
+    const validationResult = validateCSV(csvData, requiredColumns);
+    if (!validationResult.valid) {
       return NextResponse.json(
-        { error: "Invalid CSV file structure. Missing required columns." },
+        { 
+          error: "Invalid CSV file structure. Missing required columns.",
+          missingColumns: validationResult.missingColumns,
+          foundColumns: validationResult.foundColumns
+        },
         { status: 400 }
       );
     }
 
     // Check for duplicate serial numbers
-    const serialNumbers = csvData.map((row) => row.SerialNumber);
+    const serialNumbers = csvData.map(row => getColumnValue(row, "SerialNumber"));
     const existingAssets = await Asset.find({
       serialNumber: { $in: serialNumbers }
     });
@@ -76,10 +83,7 @@ export async function POST(req) {
     }
 
     // Transform and insert data
-    const transformedData = csvData.map((row) => transformCSVData(row, user));
-
-    console.log("transformedData", transformedData);
-
+    const transformedData = csvData.map(row => transformCSVData(row, assetUser));
     const result = await Asset.insertMany(transformedData);
 
     return NextResponse.json(
@@ -102,33 +106,50 @@ export async function POST(req) {
   }
 }
 
-// Helper function to validate CSV structure
-// Helper function to validate CSV structure
+// Helper function to get column value regardless of case
+function getColumnValue(row, columnName) {
+  const normalizedColumnName = columnName.toLowerCase().trim();
+  const key = Object.keys(row).find(
+    k => k.toLowerCase().trim() === normalizedColumnName
+  );
+  return key ? row[key] : undefined;
+}
+
+// Helper function to validate CSV structure with improved error reporting
 const validateCSV = (data, requiredColumns) => {
-  if (!data || data.length === 0) return false;
+  if (!data || data.length === 0) {
+    return { 
+      valid: false, 
+      missingColumns: requiredColumns,
+      foundColumns: [] 
+    };
+  }
 
-  const headers = Object.keys(data[0]).map((header) =>
-    header.trim().toLowerCase()
-  );
-  console.log(headers); // Log to inspect the column names
+  const headers = Object.keys(data[0]).map(h => h.toLowerCase().trim());
+  console.log("Normalized headers in CSV:", headers);
+  console.log("Required columns:", requiredColumns.map(c => c.toLowerCase().trim()));
 
-  // Check if each required column exists in the headers (case-insensitive)
-  return requiredColumns.every(
-    (col) => headers.includes(col.trim().toLowerCase()) // Trim and compare lowercase columns
-  );
+  const missingColumns = [];
+  
+  for (const col of requiredColumns) {
+    const normalizedCol = col.toLowerCase().trim();
+    if (!headers.includes(normalizedCol)) {
+      missingColumns.push(col);
+    }
+  }
+
+  return { 
+    valid: missingColumns.length === 0,
+    missingColumns,
+    foundColumns: headers
+  };
 };
 
-const transformCSVData = (csvRow, user) => {
-  const status = csvRow.Status || csvRow.status;
+const transformCSVData = (csvRow, assetUser) => {
+  const status = getColumnValue(csvRow, "Status");
   let checkOutDate = null;
   let checkInDate = null;
   let action = null;
-
-  console.log("Exact keys:", Object.keys(csvRow));
-
-  const nodeNameKey = Object.keys(csvRow).find(
-    (key) => key.toLowerCase().trim() === "nodename"
-  );
 
   if (status === "Deployed") {
     checkOutDate = new Date();
@@ -136,50 +157,65 @@ const transformCSVData = (csvRow, user) => {
   } else if (["Inpool", "Inactive"].includes(status)) {
     checkInDate = new Date();
     action = "checkIn";
+  } else {
+    action = "statusChange"; // Default action for other status changes
   }
 
-  function convertDateFormat(dateString) {
-    const [day, month, year] = dateString.split("-");
-    return `${year}-${month}-${day}`;
-  }
+  function safelyParseDate(dateString) {
+    if (!dateString) return null;
 
-  console.log(csvRow, "csvrow");
-  console.log(csvRow["NodeName"], "Nodename");
-  const nodeName = nodeNameKey ? csvRow[nodeNameKey] : undefined;
-  console.log("Found NodeName:", nodeName);
+    // Try formats: DD-MM-YYYY, MM-DD-YYYY, YYYY-MM-DD
+    try {
+      // Check if it has dashes and convert
+      if (dateString.includes('-')) {
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+          // If the first part is 4 digits, assume YYYY-MM-DD
+          if (parts[0].length === 4) {
+            return new Date(dateString);
+          } 
+          // Otherwise assume DD-MM-YYYY
+          else {
+            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+          }
+        }
+      }
+
+      // Try direct parsing as a fallback
+      const date = new Date(dateString);
+      return isNaN(date) ? null : date;
+    } catch (e) {
+      console.error("Date parsing error:", e);
+      return null;
+    }
+  }
 
   return {
-    nodeName: nodeName,
-    serialNumber: csvRow.SerialNumber || csvRow.serialnumber,
-    manufacturer: csvRow.Manufacturer || csvRow.manufacturer,
-    model: csvRow.Model || csvRow.model,
-    expires:
-      csvRow.Expries && !isNaN(new Date(convertDateFormat(csvRow.Expries)))
-        ? new Date(convertDateFormat(csvRow.Expries))
-        : null,
-    category: csvRow.Categories || csvRow.categories,
+    nodeName: getColumnValue(csvRow, "NodeName"),
+    serialNumber: getColumnValue(csvRow, "SerialNumber"),
+    manufacturer: getColumnValue(csvRow, "Manufacturer"),
+    model: getColumnValue(csvRow, "Model"),
+    expires: safelyParseDate(getColumnValue(csvRow, "Expries")),
+    category: getColumnValue(csvRow, "Categories"),
     status: status,
-    department: csvRow.Department || csvRow.department,
-    issueTo: csvRow.IssueTo || csvRow.issueto,
-    note: csvRow.Note || csvRow.note,
-    defaultLocation: csvRow.DefaultLocation || csvRow.defaultlocation,
-    costCenter: csvRow.CostCenter || csvRow.costcenter,
-    receivedDate: csvRow.ReceivedDate
-      ? new Date(convertDateFormat(csvRow.ReceivedDate))
-      : null,
-    assetOwner: csvRow.AssetOwner || csvRow.assetowner,
-    condition: csvRow.Condition || csvRow.condition,
-    storeLocation: csvRow.StoreLocation || csvRow.storelocation,
-    poNumber: csvRow.PONumber || csvRow.ponumber,
-    order: csvRow.Order || csvRow.order,
-    purchaseDate: csvRow.PurchaseNumber
-      ? new Date(csvRow.PurchaseNumber)
-      : null,
+    department: getColumnValue(csvRow, "Department"),
+    issueTo: getColumnValue(csvRow, "IssueTo"),
+    note: getColumnValue(csvRow, "Note"),
+    defaultLocation: getColumnValue(csvRow, "DefaultLocation"),
+    costCenter: getColumnValue(csvRow, "CostCenter"),
+    receivedDate: safelyParseDate(getColumnValue(csvRow, "ReceivedDate")),
+    assetOwner: getColumnValue(csvRow, "AssetOwner"),
+    condition: getColumnValue(csvRow, "Condition"),
+    storeLocation: getColumnValue(csvRow, "StoreLocation"),
+    poNumber: getColumnValue(csvRow, "PONumber"),
+    order: getColumnValue(csvRow, "Order"),
+    purchaseDate: safelyParseDate(getColumnValue(csvRow, "PurchaseNumber")),
     checkOutDate,
     checkInDate,
     assetHistory: [
       {
-        user: user?.siemensId || "SYSTEM",
+        user: getColumnValue(csvRow, "IssueTo") || "None",
+        updatedBy: assetUser, // Added updatedBy field for consistency
         action,
         date: new Date(),
         status
