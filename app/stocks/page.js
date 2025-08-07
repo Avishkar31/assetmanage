@@ -31,7 +31,8 @@ function Page() {
 
   const [manufacturers, setManufacturers] = useState([]);
   const [chartKey, setChartKey] = useState(0);
-
+  
+  // Keep only one instance of each function
   const toggleDropdown = (setter) => {
     setter((prev) => !prev);
   };
@@ -55,6 +56,15 @@ function Page() {
       setError(err.message);
     } finally {
       setIsExtracting(false);
+    }
+  };
+
+  const getMisStoreTotal = () => {
+    try {
+      return assetCounts.inpool + assetCounts.newPurchase;
+    } catch (err) {
+      console.error("Error calculating MIS Store total:", err);
+      return 0;
     }
   };
 
@@ -261,8 +271,11 @@ function Page() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-300 group-hover:text-white">All Assets</h3>
-                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.all.toLocaleString()}</p>
+                  <h3 className="text-lg font-medium text-gray-300 group-hover:text-white">MIS Store</h3>
+                  <p className="text-3xl font-bold mt-1 text-white">
+                    {getMisStoreTotal().toLocaleString()}
+                  </p>
+                  <span className="text-gray-400 text-sm">Inpool + New Purchase</span>
                 </div>
                 <div className="bg-blue-500/20 p-3 rounded-full">
                   <BiDevices className="text-blue-400 text-2xl" />
@@ -270,7 +283,7 @@ function Page() {
               </div>
             </Link>
             
-            <Link
+             <Link
               href="./stocks/allasset?status=Inpool"
               className="block bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
@@ -278,8 +291,9 @@ function Page() {
                 <div>
                   <h3 className="text-lg font-medium text-green-400 group-hover:text-green-300">Inpool</h3>
                   <p className="text-3xl font-bold mt-1 text-white">{assetCounts.inpool.toLocaleString()}</p>
-                  {/* <span className="text-green-500 text-sm">{inPoolPercentage}% of active assets</span> */}
+                  <span className="text-gray-400 text-sm">Ready For Allocation</span>
                 </div>
+                
                 <div className="bg-green-500/20 p-3 rounded-full">
                   <BiCube className="text-green-400 text-2xl" />
                 </div>
@@ -294,6 +308,7 @@ function Page() {
                 <div>
                   <h3 className="text-lg font-medium text-yellow-400 group-hover:text-yellow-300">New Purchase</h3>
                   <p className="text-3xl font-bold mt-1 text-white">{assetCounts.newPurchase.toLocaleString()}</p>
+                  <span className="text-gray-400 text-sm">Not Deployed</span>
                 </div>
                 <div className="bg-yellow-500/20 p-3 rounded-full">
                   <FiBarChart2 className="text-yellow-400 text-2xl" />
@@ -304,7 +319,7 @@ function Page() {
           
           {/* Deployment Stats */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <Link
+            {/* <Link
              href ="./stocks/allasset?status=Deployed"
               className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
@@ -312,13 +327,13 @@ function Page() {
                 <div>
                   <h3 className="text-lg font-medium text-purple-400 group-hover:text-purple-300">Deployed</h3>
                   <p className="text-3xl font-bold mt-1 text-white">{assetCounts.deployed.toLocaleString()}</p>
-                  {/* <span className="text-purple-500 text-sm">{deployedPercentage}% of active assets</span> */}
+                 
                 </div>
                 <div className="bg-purple-500/20 p-3 rounded-full">
                   <BiDevices className="text-purple-400 text-2xl" />
                 </div>
               </div>
-            </Link>
+            </Link> */}
             
             <Link
               href="./stocks/allasset?status=deployed&date=today"
@@ -356,17 +371,16 @@ function Page() {
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800">
               <h2 className="text-lg font-medium mb-4 text-gray-200">Department Distribution</h2>
               <div className="w-full h-96">
-
                 <DynamicTeamChart />
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800 col-span-full">
+            {/* <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800 col-span-full">
               <h2 className="text-lg font-medium mb-4 text-gray-200">Category Distribution</h2>
               <div className="w-full h-80">
                 <StackedBarChart />
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

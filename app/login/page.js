@@ -152,7 +152,7 @@ export default function Login() {
               </div>
 
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                {/* <div className="flex items-center">
                   <input
                     id="remember-me"
                     name="remember-me"
@@ -164,13 +164,13 @@ export default function Login() {
                   <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-300">
                     Remember me
                   </label>
-                </div>
+                </div> */}
 
-                <div className="text-sm">
+                {/* <div className="text-sm">
                   <Link href="#" className="font-medium text-blue-400 hover:text-blue-300 transition-colors">
                     Forgot password?
                   </Link>
-                </div>
+                </div> */}
               </div>
 
               <div className="pt-4">
@@ -198,7 +198,7 @@ export default function Login() {
 
             <div className="mt-8 text-center">
               <p className="text-sm text-gray-400">
-                Don't have an account?{" "}
+                Don't have an account? Or reset the password {" "}
                 <Link href="#" className="text-blue-400 hover:text-blue-300 font-medium transition-colors">
                   Contact your administrator
                 </Link>

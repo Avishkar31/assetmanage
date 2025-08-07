@@ -198,7 +198,7 @@ const Sidebar = () => {
     },
     {
       label: "Disposed",
-      href: "/stocks/allasset?status= Disposed",
+      href: "/stocks/allasset?status=Disposed",
       icon: "🗑️",
       active: pathname === "/disposed"
     },
@@ -402,7 +402,7 @@ const Sidebar = () => {
 
         {/* Version info at bottom */}
         {/* <div className="absolute bottom-0 w-full p-4 text-center border-t border-gray-700">
-          <p className="text-gray-500 text-xs">Asset Manager v1.2.0</p>
+          <p className="text-gray-500 text-xs">Made by Avishkar Gadkar</p>
         </div> */}
 
         {/* Import Dialog */}

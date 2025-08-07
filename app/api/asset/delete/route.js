@@ -1,4 +1,4 @@
-// app/api/asset/delete/[id]/route.js
+
 import dbConnect from "@/lib/dbConnect";
 import Asset from "@/models/Asset";
 import { NextResponse } from "next/server";

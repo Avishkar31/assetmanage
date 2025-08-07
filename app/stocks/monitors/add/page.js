@@ -32,7 +32,7 @@ export default function AddMonitorPage() {
         const userData = JSON.parse(userString);
         setFormData(prev => ({
           ...prev,
-          updatedBy: userData?.email || userData?.name || "Unknown User" // Changed from username to updatedBy
+          updatedBy: userData?.siemensId || userData?.name || "Unknown User" // Changed from username to updatedBy
         }));
       } else {
         setFormData(prev => ({
@@ -239,7 +239,7 @@ export default function AddMonitorPage() {
             </select>
           </div>
 
-          {formData.status === "deployed" && (
+          {(formData.status === "deployed" || formData.status === "inpool") && (
             <div>
               <label className="block mb-2">Issue To*</label>
               <input

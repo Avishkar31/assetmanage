@@ -28,10 +28,12 @@ const AssetHistoryItem = ({ entry }) => {
   const capitalizedName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
 
   const getActionDescription = (entry) => {   
-    const recipient =entry.user;
+    const recipient = entry.user;
     const action = entry.action;
-    
+
     switch (action) {
+      case "created":
+        return `Created asset${recipient ? ` and issued to ${recipient}` : ""}`;
       case "checkIn":
         return `Checked in asset ${recipient}`;
       case "checkOut":

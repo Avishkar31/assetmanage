@@ -192,6 +192,7 @@ export default function MonitorsPage() {
             }` 
           });
           
+          
           // Reset file input
           if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -222,22 +223,27 @@ export default function MonitorsPage() {
   return (
     <div className="p-6 bg-gray-900 text-white min-h-screen">
       <div className="flex justify-between items-center mb-6">
+        {/* Back button */}
+        <button
+          onClick={() => router.push('/stocks')}
+          className="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg flex items-center mr-4"
+        >
+          {/* You can use an icon here if you want */}
+          &larr; Back
+        </button>
         <h1 className="text-2xl font-bold">Monitor Management</h1>
-        
         <div className="flex gap-2">
           <Link href="/stocks/monitors/add">
             <button className="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-lg flex items-center">
               <Plus size={18} className="mr-2" /> Add New Monitor
             </button>
           </Link>
-          
           <button 
             onClick={handleExport}
             className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg flex items-center"
           >
             <Download size={18} className="mr-2" /> Export
           </button>
-          
           <button 
             onClick={() => setImportModalOpen(true)}
             className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg flex items-center"
@@ -395,14 +401,14 @@ export default function MonitorsPage() {
                     <td className="p-4">
                       <Link href={`/stocks/monitors/${monitor._id}`}>
                         <button className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">
-                          View
+                          View / Update
                         </button>
                       </Link>
-                      <Link href={`/stocks/monitors/edit/${monitor._id}`}>
+                      {/* <Link href={`/stocks/monitors/edit/${monitor._id}`}>
                         <button className="bg-teal-600 hover:bg-teal-700 px-3 py-1 rounded text-sm">
                           Edit
                         </button>
-                      </Link>
+                      </Link> */}
                     </td>
                   </tr>
                 ))}

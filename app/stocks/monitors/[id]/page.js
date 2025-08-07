@@ -26,7 +26,7 @@ export default function MonitorDetailPage({ params }) {
     if (user) {
       try {
         const userData = JSON.parse(user);
-        setCurrentUser(userData.email || userData.name || "Unknown User");
+        setCurrentUser(userData.siemensId || userData.name || "Unknown User");
       } catch (e) {
         console.error("Error parsing user data:", e);
       }
@@ -232,11 +232,11 @@ export default function MonitorDetailPage({ params }) {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Monitor Details</h1>
         <div className="flex space-x-2">
-          <Link href={`/stocks/monitors/edit/${params.id}`}>
+          {/* <Link href={`/stocks/monitors/edit/${params.id}`}>
             <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded flex items-center">
               <Edit size={18} className="mr-2" /> Edit
             </button>
-          </Link>
+          </Link> */}
           <button 
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded flex items-center"
@@ -368,7 +368,7 @@ export default function MonitorDetailPage({ params }) {
               />
             </div>
             
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <div className="flex items-center mb-2">
                 <input
                   type="checkbox"
@@ -395,7 +395,7 @@ export default function MonitorDetailPage({ params }) {
                   />
                 </div>
               )}
-            </div>
+            </div> */}
             
             <div className="flex justify-end space-x-2">
               <button

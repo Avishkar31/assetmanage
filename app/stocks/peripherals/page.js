@@ -97,7 +97,7 @@ export default function PeripheralsPage() {
   
   const handleAddPeripheral = async (e) => {
     e.preventDefault();
-    
+
     try {
       // Get current user
       let username = "Unknown User";
@@ -105,7 +105,7 @@ export default function PeripheralsPage() {
       if (user) {
         try {
           const userData = JSON.parse(user);
-          username = userData.email || userData.name || "Unknown User";
+          username = userData.siemensId || userData.email || userData.name || "Unknown User";
         } catch (e) {
           console.error("Error parsing user data:", e);
         }
@@ -151,9 +151,9 @@ export default function PeripheralsPage() {
   
   const handleUpdatePeripheral = async (e) => {
     e.preventDefault();
-    
+
     if (!selectedPeripheral) return;
-    
+
     try {
       // Get current user
       let username = "Unknown User";
@@ -161,7 +161,7 @@ export default function PeripheralsPage() {
       if (user) {
         try {
           const userData = JSON.parse(user);
-          username = userData.email || userData.name || "Unknown User";
+          username = userData.siemensId || userData.email || userData.name || "Unknown User";
         } catch (e) {
           console.error("Error parsing user data:", e);
         }
@@ -435,7 +435,7 @@ export default function PeripheralsPage() {
       if (user) {
         try {
           const userData = JSON.parse(user);
-          username = userData.email || userData.name || "Unknown User";
+          username = userData.siemensId || userData.email || userData.name || "Unknown User";
         } catch (e) {
           console.error("Error parsing user data:", e);
         }
@@ -795,11 +795,11 @@ export default function PeripheralsPage() {
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block mb-2">Notes</label>
+                  <label className="block mb-2">Serial Number</label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                    placeholder="Optional notes about this peripheral"
+                    placeholder="Serial number or other notes"
                     className="w-full p-2 rounded bg-gray-700 text-white h-24 resize-none"
                   ></textarea>
                 </div>
@@ -997,7 +997,7 @@ export default function PeripheralsPage() {
                         )}
                         
                         <div className="text-xs text-gray-400 mt-2">
-                          Updated by: {entry.performedBy}
+                          Updated by: {entry.performedBy || (typeof window !== "undefined" ? (JSON.parse(localStorage.getItem("user") || "{}").siemensId || "Unknown User") : "Unknown User")}
                         </div>
                       </div>
                     </div>

@@ -35,7 +35,7 @@ const AssetHistoryItem = ({ entry }) => {
     
     switch (entry.action) {
       case "created":
-        return `Created new monitor with status: ${status}`;
+        return `Created new monitor with status: ${status}${recipient ? ` (Issued to ${recipient})` : ""}`;
       case "checkIn":
         return `Checked in monitor (${status})`;
       case "checkOut":

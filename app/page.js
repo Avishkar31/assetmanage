@@ -77,7 +77,7 @@ export default async function Home() {
               pariatur sunt sed doloremque tempore quos? Ullam voluptatum minima
               alias eaque architecto.
             </p>
-            <div>
+            {/* <div>
               <button className="w-40 md:w-52 h-10 md:h-12 bg-teal-600 border-none rounded cursor-pointer">
                 <a
                   href="http://"
@@ -88,7 +88,7 @@ export default async function Home() {
                   Register Now
                 </a>
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

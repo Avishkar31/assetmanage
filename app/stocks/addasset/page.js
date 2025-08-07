@@ -276,9 +276,21 @@ const AddAssetForm = () => {
         Object.entries(formData).filter(([_, v]) => v !== "")
       );
 
+      // Get user data for history entry
+      const user = await getUserData();
+      const siemensId = user?.siemensId || user?.email || user?.name || "Unknown User";
+
       const formDataUpdate = {
-        user: await getUserData(),
-        ...formDataFinal
+        user,
+        ...formDataFinal,
+        assetHistory: [
+          {
+            date: new Date(),
+            updatedBy: siemensId,
+            action: "created",
+            status: formDataFinal.status
+          }
+        ]
       };
 
       const response = await fetch("/api/asset/post", {
@@ -302,6 +314,7 @@ const AddAssetForm = () => {
         manufacturer: "",
         serialNumber: "",
         model: "",
+        type: "",
         expires: "",
         category: "",
         status: "",
@@ -1061,141 +1074,7 @@ const AddAssetForm = () => {
         </div>
       </div>
 
-      {/* Global CSS for form components */}
-      <style jsx global>{`
-        /* Core Form Styles */
-        .form-group {
-          @apply flex flex-col;
-        }
-        
-        .form-label {
-          @apply text-sm font-medium text-gray-300 mb-2;
-        }
-        
-        .input-group {
-          @apply relative flex items-center;
-        }
-        
-        .input-icon {
-          @apply absolute left-3 text-gray-400 pointer-events-none;
-        }
-        
-        .input-suffix {
-          @apply absolute right-3 text-gray-400 cursor-pointer hover:text-gray-200 transition-colors;
-        }
-        
-        .input-loader {
-          @apply absolute right-3 text-gray-400;
-        }
-        
-        .form-input, .form-select {
-          @apply w-full p-3 rounded-lg bg-gray-900/80 border border-gray-700 text-sm text-gray-200 
-            placeholder:text-gray-500 outline-none transition-all duration-200
-            hover:border-gray-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-400;
-        }
-        
-        .form-input.error, .form-select.error {
-          @apply border-red-500 focus:ring-red-500 focus:border-red-500;
-        }
-        
-        input[type="date"].form-input {
-          @apply text-gray-300;
-        }
-        
-        .form-file-input {
-          @apply block w-full file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 
-            file:text-sm file:text-white file:bg-blue-500/90 file:cursor-pointer 
-            hover:file:bg-blue-600/90 border border-gray-700 rounded-lg text-gray-300 
-            text-sm cursor-pointer bg-gray-900/80;
-        }
-        
-        .dropdown-menu {
-          @apply absolute z-30 bg-gray-800 border border-gray-700/70 rounded-lg shadow-xl overflow-hidden 
-            w-full -left-0 top-full mt-1 max-h-60 overflow-y-auto backdrop-blur-sm;
-        }
-        
-        .dropdown-item {
-          @apply p-3 hover:bg-gray-700/90 cursor-pointer transition-colors text-sm text-gray-200 border-b border-gray-700/30 last:border-0;
-        }
-        
-        .input-error {
-          @apply text-red-400 text-xs mt-1;
-        }
-        
-        .input-help {
-          @apply text-gray-500 text-xs mt-1;
-        }
-        
-        /* Collapsible Sections */
-        .collapsible-section {
-          @apply bg-gray-850/40 rounded-lg border border-gray-700/30 shadow-inner overflow-hidden;
-        }
-        
-        .collapsible-header {
-          @apply flex items-center justify-between w-full p-4 hover:bg-gray-800/40 transition-colors text-left;
-        }
-        
-        .collapsible-content {
-          @apply p-5 border-t border-gray-700/30 bg-gray-800/10;
-        }
-        
-        /* Buttons */
-        .btn-primary {
-          @apply flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 
-            hover:from-blue-500 hover:to-blue-600 text-white rounded-lg font-medium shadow-sm 
-            transition-all duration-200 hover:shadow outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 
-            focus:ring-offset-gray-900 disabled:opacity-70 disabled:cursor-not-allowed;
-        }
-        
-        .btn-primary.loading {
-          @apply from-blue-700 to-blue-600 cursor-wait;
-        }
-        
-        .btn-secondary {
-          @apply flex items-center justify-center px-6 py-3 bg-gray-700/50 hover:bg-gray-700 
-            text-gray-200 border border-gray-600 rounded-lg font-medium transition-colors 
-            outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 focus:ring-offset-gray-900
-            disabled:opacity-70 disabled:cursor-not-allowed;
-        }
-        
-        /* Better support for Edge/IE browsers */
-        @supports (-ms-ime-align: auto) {
-          .form-input, .form-select {
-            @apply bg-gray-900;
-          }
-          
-          input[type="date"]::-ms-clear, input[type="date"]::-ms-reveal {
-            display: none;
-          }
-          
-          input[type="date"]::-webkit-calendar-picker-indicator {
-            @apply bg-gray-600 rounded cursor-pointer;
-          }
-        }
-        
-        /* Fix for dropdown positioning */
-        .dropdown-menu {
-          position: absolute;
-          transform-origin: top center;
-          animation: dropdownOpen 0.15s ease-out;
-        }
-        
-        @keyframes dropdownOpen {
-          from {
-            opacity: 0;
-            transform: translateY(-10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        
-        /* Utilities */
-        .bg-gray-850 {
-          background-color: rgb(22, 27, 34);
-        }
-      `}</style>
+      
     </div>
   );
 };
