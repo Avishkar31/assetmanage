@@ -795,7 +795,7 @@ export default function PeripheralsPage() {
                 </div>
                 
                 <div className="mb-4">
-                  <label className="block mb-2">Serial Number</label>
+                  <label className="block mb-2">Serial Number/ Note</label>
                   <textarea
                     value={formData.notes}
                     onChange={(e) => setFormData({...formData, notes: e.target.value})}

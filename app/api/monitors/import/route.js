@@ -33,9 +33,9 @@ export async function POST(req) {
           continue;
         }
         
-        // Convert team ID to ObjectId if needed
-        if (monitorData.team && typeof monitorData.team === 'string' && mongoose.Types.ObjectId.isValid(monitorData.team)) {
-          monitorData.team = new mongoose.Types.ObjectId(monitorData.team);
+        // Convert segment ID to ObjectId if needed
+        if (monitorData.segment && typeof monitorData.segment === 'string' && mongoose.Types.ObjectId.isValid(monitorData.segment)) {
+          monitorData.segment = new mongoose.Types.ObjectId(monitorData.segment);
         }
         
         // Check if monitor exists by serial number
@@ -45,7 +45,7 @@ export async function POST(req) {
           // Update existing monitor with history entry
           const historyEntry = {
             date: new Date(),
-            user: monitorData.issueTo || existingMonitor.issueTo || null, // Recipient
+            user: monitorData.assetOwner || existingMonitor.assetOwner || null, // Recipient
             updatedBy: username, // Person performing the action
             action: "bulkUpdate",
             status: monitorData.status || existingMonitor.status
@@ -57,9 +57,9 @@ export async function POST(req) {
             historyEntry.action = "statusChange"; // More specific action
           }
           
-          // If issueTo changed, record previous issueTo
-          if (monitorData.issueTo !== undefined && monitorData.issueTo !== existingMonitor.issueTo) {
-            historyEntry.previousIssueTo = existingMonitor.issueTo;
+          // If assetOwner changed, record previous assetOwner
+          if (monitorData.assetOwner !== undefined && monitorData.assetOwner !== existingMonitor.assetOwner) {
+            historyEntry.previousAssetOwner = existingMonitor.assetOwner;
           }
           
           if (!existingMonitor.assetHistory) {
@@ -78,10 +78,10 @@ export async function POST(req) {
           results.updated++;
         } else {
           // Create new monitor
-          const defaultStatus = monitorData.status || "inpool"; // Use inpool as default status
+          const defaultStatus = monitorData.status || "MISStock"; // Use MISStock as default status
           
-          // Check if status is deployed but no issueTo
-          if (defaultStatus === "deployed" && !monitorData.issueTo) {
+          // Check if status is deployed but no assetOwner
+          if (defaultStatus === "deployed" && !monitorData.assetOwner) {
             results.errors.push(`Monitor ${monitorData.serialNumber}: Status is deployed but no recipient specified`);
             continue;
           }
@@ -93,7 +93,7 @@ export async function POST(req) {
             createdAt: new Date(),
             assetHistory: [{
               date: new Date(),
-              user: monitorData.issueTo || null, // Recipient
+              user: monitorData.assetOwner || null, // Recipient
               updatedBy: username, // Person performing the action
               action: "created",
               status: defaultStatus

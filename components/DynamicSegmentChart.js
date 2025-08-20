@@ -13,32 +13,32 @@ import { FiRefreshCw } from "react-icons/fi";
 
 ChartJS.register(RadialLinearScale, ArcElement, Tooltip, Legend);
 
-const DynamicTeamChart = () => {
-  const [teamData, setTeamData] = useState([]);
+const DynamicSegmentChart = () => {
+  const [segmentData, setSegmentData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTeamStats();
+    fetchSegmentStats();
   }, []);
 
-  const fetchTeamStats = async () => {
+  const fetchSegmentStats = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/team-stats");
+      const response = await fetch("/api/segment-stats");
       const data = await response.json();
       if (data.success) {
-        setTeamData(data.data);
+        setSegmentData(data.data);
       } else {
-        console.error("Failed to fetch team stats:", data.error);
+        console.error("Failed to fetch segment stats:", data.error);
       }
     } catch (error) {
-      console.error("Error fetching team stats:", error);
+      console.error("Error fetching segment stats:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate colors dynamically based on the number of teams
+  // Generate colors dynamically based on the number of segments
   const generateColors = (count) => {
     const baseColors = [
       [255, 99, 135],   // Red
@@ -68,17 +68,17 @@ const DynamicTeamChart = () => {
 
   // Prepare chart data
   const prepareChartData = () => {
-    if (!teamData.length) return null;
+    if (!segmentData.length) return null;
     
-    const labels = teamData.map(item => item.department);
-    const values = teamData.map(item => item.count);
-    const { bgColors, borderColors } = generateColors(teamData.length);
+    const labels = segmentData.map(item => item.department);
+    const values = segmentData.map(item => item.count);
+    const { bgColors, borderColors } = generateColors(segmentData.length);
     
     return {
       labels,
       datasets: [
         {
-          label: 'Members per Team',
+          label: 'Members per Segment',
           data: values,
           backgroundColor: bgColors,
           borderColor: borderColors,
@@ -133,7 +133,7 @@ const DynamicTeamChart = () => {
       },
       title: {
         display: true,
-        text: 'Team Distribution',
+        text: 'Segment Distribution',
         color: "#FFFFFF",
         font: {
           size: 18
@@ -147,7 +147,7 @@ const DynamicTeamChart = () => {
           <div className="w-full max-w-lg rounded-lg shadow-lg">
             <div className="flex justify-between items-center">  
               <button 
-                onClick={fetchTeamStats} 
+                onClick={fetchSegmentStats} 
                 className="bg-teal-600 px-3 py-1 rounded btransition-colors"
               >
                 <FiRefreshCw />
@@ -156,11 +156,11 @@ const DynamicTeamChart = () => {
         
             {loading ? (
               <div className="h-96 flex justify-center items-center">
-                <p className="text-white">Loading team data...</p>
+                <p className="text-white">Loading segment data...</p>
               </div>
-            ) : teamData.length === 0 ? (
+            ) : segmentData.length === 0 ? (
               <div className="h-96 flex justify-center items-center">
-                <p className="text-white">No team data available. Please add teams first.</p>
+                <p className="text-white">No segment data available. Please add segments first.</p>
               </div>
             ) : (
               <div className="relative h-72">
@@ -172,4 +172,4 @@ const DynamicTeamChart = () => {
   );
 };
 
-export default DynamicTeamChart;
+export default DynamicSegmentChart;

@@ -6,8 +6,8 @@ export async function exportAssets(type) {
     
     // Map the UI type to the corresponding API parameters
     switch (type) {
-      case "Inpool":
-        apiUrl = `${apiUrl}?status=inpool`;
+      case "MISStock":
+        apiUrl = `${apiUrl}?status=MISStock`;
         break;
       case "NewPurchase":
         apiUrl = `${apiUrl}?status=newpurchase`;

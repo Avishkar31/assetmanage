@@ -24,7 +24,7 @@ const PrintSheet = () => {
   const [formData, setFormData] = useState({
     poNumber: "",
     orderNumber: "",
-    issueTo: "",
+    assetOwner: "",
     deskLocation: "",
     category: "",
     type: "",
@@ -58,7 +58,7 @@ const PrintSheet = () => {
     
     // Load main form fields
     const fields = [
-      "poNumber", "orderNumber", "issueTo", "deskLocation", 
+      "poNumber", "orderNumber", "assetOwner", "deskLocation", 
       "category", "type", "model", "nodeName", "serialNumber", 
       "allocation", "period"
     ];
@@ -202,11 +202,11 @@ const PrintSheet = () => {
           {/* Form fields - positioned as in the image */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs mb-4">
             <div className="flex">
-              <span className="w-16">Issue To:</span>
+              <span className="w-16">Asset Owner:</span>
               <input
                 type="text"
-                name="issueTo"
-                value={formData.issueTo}
+                name="assetOwner"
+                value={formData.assetOwner}
                 onChange={handleInputChange}
                 className="border-b border-gray-500 flex-grow bg-transparent"
               />

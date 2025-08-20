@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 const ramOptions = [
   { label: "Default", description: "" },
   {
-    label: "Inpool",
+    label: "MISStock",
     description: "✓  That status is deployable. This asset can be checked out.",
     color: "text-green-500"
   },
@@ -18,11 +18,11 @@ const ramOptions = [
       "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
-  {
-    label: "MIS Store",
-    description: "✓  That status is deployable. This asset can be checked out.",
-    color: "text-green-500"
-  },
+  // {
+  //   label: "MIS Store",
+  //   description: "✓  That status is deployable. This asset can be checked out.",
+  //   color: "text-green-500"
+  // },
   {
     label: "Buyback",
     description:
@@ -79,7 +79,7 @@ const Dashboard = () => {
         const data = await response.json();
         const intitialFormData = {
           status: data.status,
-          issueTo: data.issueTo,
+          assetOwner: data.assetOwner,
           nodeName: data.nodeName
         };
 
@@ -106,12 +106,12 @@ const Dashboard = () => {
   const handleCheckIn = async () => {
     if (
       !formData.status ||
-      !formData.issueTo ||
+      !formData.assetOwner ||
       !formData.defaultLocation ||
       !formData.checkinDate
     ) {
       alert(
-        "Please fill in all mandatory fields: Status, Issue To, Default Location, and Check-in Date."
+        "Please fill in all mandatory fields: Status, Asset Owner, Default Location, and Check-in Date."
       );
       return;
     }
@@ -121,7 +121,7 @@ const Dashboard = () => {
     const ddata = {
       nodeName: formData.nodeName,
       status: formData.status,
-      issueTo: formData.issueTo,
+      assetOwner: formData.assetOwner,
       storeLocation: formData.defaultLocation,
       note: formData.note || "Checked in after repair",
       checkType: "checkin",
@@ -231,13 +231,13 @@ const Dashboard = () => {
 
             <div className="mb-4 ml-10">
               <div className="flex items-center mb-2">
-                <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
-                  Issue To <span className="text-red-500">*</span>
+                <label htmlFor="assetOwner" className="w-52 text-gray-500 mr-2">
+                   Asset Owner<span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
-                  id="issueTo"
-                  value={formData.issueTo}
+                  id="assetOwner"
+                  value={formData.assetOwner}
                   onChange={handleInputChange}
                   placeholder="Enter the name"
                   className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
@@ -312,7 +312,7 @@ const Dashboard = () => {
               <button
                 className={`px-5 py-2 mt-10 ${
                   formData.status &&
-                  formData.issueTo &&
+                  formData.assetOwner &&
                   formData.defaultLocation &&
                   formData.checkinDate
                     ? "bg-blue-500 text-white"
@@ -321,12 +321,12 @@ const Dashboard = () => {
                 onClick={handleCheckIn}
                 disabled={
                   !formData.status ||
-                  !formData.issueTo ||
+                  !formData.assetOwner ||
                   !formData.defaultLocation ||
                   !formData.checkinDate
                 }
               >
-                Check-in to {formData.issueTo || "Username"}
+                Check-in to {formData.assetOwner || "Username"}
               </button>
             </div>
           </div>

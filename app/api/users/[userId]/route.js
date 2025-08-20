@@ -8,7 +8,7 @@ export async function GET(_req, { params }) {
   try {
     await dbConnect();
 
-    const { userId } = params;
+    const { userId } = await params;
 
     // if (!userId.match(/^[0-9a-fA-F]{24}$/)) {
     //   return NextResponse.json({ error: "Invalid user ID format" }, { status: 400 });

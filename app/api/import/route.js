@@ -39,12 +39,12 @@ export async function POST(req) {
       "Categories",
       "Status",
       "Department",
-      "IssueTo",
+      "assetOwner",
       "Note",
       "DefaultLocation",
       "CostCenter",
       "ReceivedDate",
-      "AssetOwner",
+      
       "Condition",
       "StoreLocation",
       "PONumber",
@@ -154,7 +154,7 @@ const transformCSVData = (csvRow, assetUser) => {
   if (status === "Deployed") {
     checkOutDate = new Date();
     action = "checkOut";
-  } else if (["Inpool", "Inactive"].includes(status)) {
+  } else if (["MISStock", "Inactive"].includes(status)) {
     checkInDate = new Date();
     action = "checkIn";
   } else {
@@ -199,12 +199,11 @@ const transformCSVData = (csvRow, assetUser) => {
     category: getColumnValue(csvRow, "Categories"),
     status: status,
     department: getColumnValue(csvRow, "Department"),
-    issueTo: getColumnValue(csvRow, "IssueTo"),
+    assetOwner: getColumnValue(csvRow, "AssetOwner"),
     note: getColumnValue(csvRow, "Note"),
     defaultLocation: getColumnValue(csvRow, "DefaultLocation"),
     costCenter: getColumnValue(csvRow, "CostCenter"),
     receivedDate: safelyParseDate(getColumnValue(csvRow, "ReceivedDate")),
-    assetOwner: getColumnValue(csvRow, "AssetOwner"),
     condition: getColumnValue(csvRow, "Condition"),
     storeLocation: getColumnValue(csvRow, "StoreLocation"),
     poNumber: getColumnValue(csvRow, "PONumber"),
@@ -214,7 +213,7 @@ const transformCSVData = (csvRow, assetUser) => {
     checkInDate,
     assetHistory: [
       {
-        user: getColumnValue(csvRow, "IssueTo") || "None",
+        user: getColumnValue(csvRow, "AssetOwner") || "None",
         updatedBy: assetUser, // Added updatedBy field for consistency
         action,
         date: new Date(),

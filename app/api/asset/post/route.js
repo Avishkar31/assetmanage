@@ -13,17 +13,18 @@ export async function POST(req) {
       serialNumber,
       assetTag,
       manufacturer,
+      type, // Ensure type is included
       model,
       expires,
       category,
       status,
       department,
-      issueTo,
+      assetOwner,
       note,
       defaultLocation,
       costCenter,
       receivedDate,
-      assetOwner,
+      
       condition,
       storeLocation,
       killdiskDate,
@@ -52,7 +53,7 @@ export async function POST(req) {
     if (status === "Deployed") {
       checkOutDate = new Date();
       action = "checkOut";
-    } else if (["Inpool", "Inactive"].includes(status)) {
+    } else if (["MISStock", "Inactive"].includes(status)) {
       checkInDate = new Date();
       action = "checkIn";
     }
@@ -63,12 +64,13 @@ export async function POST(req) {
       serialNumber,
       assetTag,
       manufacturer,
+      type,
       model,
       expires,
       category,
       status,
       department,
-      issueTo,
+      assetOwner,
       note,
       defaultLocation,
       costCenter,
@@ -86,7 +88,7 @@ export async function POST(req) {
       checkInDate,
       assetHistory: [
         {
-           user: issueTo || "None", // Store recipient
+           user: assetOwner || "None", // Store recipient
            updatedBy: user.siemensId, // Add this line to store who performed the action
            action,
            date: new Date(),

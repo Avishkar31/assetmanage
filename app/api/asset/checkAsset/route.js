@@ -11,7 +11,7 @@ export async function POST(req) {
     const {
       note,
       storeLocation,
-      issueTo,
+      assetOwner,
       status,
       nodeName,
       serialNumber,
@@ -65,12 +65,12 @@ export async function POST(req) {
     }
 
     let user = null;
-    if (issueTo) {
-      user = await User.findOne({ fullName: issueTo?.toLowerCase() });
+    if (assetOwner) {
+      user = await User.findOne({ fullName: assetOwner?.toLowerCase() });
 
       if (!user) {
         user = new User({
-          fullName: issueTo?.toLowerCase(),
+          fullName: assetOwner?.toLowerCase(),
           createdDate: Date.now(),
           department: "default",
           password: "defaultPassword",
@@ -85,20 +85,20 @@ export async function POST(req) {
     }
 
     if (checkType === "checkout") {
-      if (!issueTo) {
-        console.error("Missing issueTo for checkout");
+      if (!assetOwner) {
+        console.error("Missing assetOwner for checkout");
         return NextResponse.json(
-          { error: "IssueTo is required for checkout." },
+          { error: "AssetOwner is required for checkout." },
           { status: 400 }
         );
       }
 
-      existingAsset.issueTo = user._id;
+      existingAsset.assetOwner = user._id;
       existingAsset.checkOutDate = new Date();
       if (model) existingAsset.model = model;
 
       existingAsset.assetHistory.push({
-        user: issueTo, // This is the recipient
+        user: assetOwner, // This is the recipient
         updatedBy: assetUser, // Simplified to match check-in API
         action: "checkOut",
         date: new Date(),
@@ -106,11 +106,11 @@ export async function POST(req) {
         purchaseDate: purchaseDate ? new Date(purchaseDate) : undefined
       });
     } else if (checkType === "checkin") {
-      existingAsset.issueTo = user?._id || null;
+      existingAsset.assetOwner = user?._id || null;
       existingAsset.checkInDate = new Date();
 
       existingAsset.assetHistory.push({
-        user: issueTo || null, // This is the recipient
+        user: assetOwner || null, // This is the recipient
         updatedBy: assetUser, // Simplified to match check-in API
         action: "checkIn",
         date: new Date(),

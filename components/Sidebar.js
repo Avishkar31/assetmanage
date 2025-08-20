@@ -215,10 +215,10 @@ const Sidebar = () => {
       dropdownKey: "settings",
       children: [
         {
-          label: "Teams",
-          href: "/stocks/teams",
+          label: "Segments",
+          href: "/stocks/segments",
           icon: "👥",
-          active: pathname === "/teams"
+          active: pathname === "/segments"
         },
         {
           label: "Create new user",

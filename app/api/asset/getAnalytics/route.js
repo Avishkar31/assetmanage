@@ -6,7 +6,7 @@ export async function GET(req) {
   await dbConnect();
 
   try {
-    const inPoolCount = await Asset.countDocuments({ status: "Inpool" });
+    const MISStockCount = await Asset.countDocuments({ status: "MISStock" });
     const newPurchaseCount = await Asset.countDocuments({
       status: "New Purchase"
     });
@@ -15,7 +15,7 @@ export async function GET(req) {
     const allAssetsCount = await Asset.countDocuments({});
 
     const analytics = {
-      inPoolCount,
+      MISStockCount,
       newPurchaseCount,
       inactiveCount,
       deployedCount,

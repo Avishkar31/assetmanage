@@ -6,11 +6,11 @@ import { Search, Plus, Filter, RefreshCw, Download, Upload } from "lucide-react"
 
 export default function MonitorsPage() {
   const [monitors, setMonitors] = useState([]);
-  const [teams, setTeams] = useState([]);
+  const [segments, setSegments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
-    team: "",
+    segment: "",
     status: "",
     serialNumber: "",
     manufacturer: ""
@@ -26,20 +26,20 @@ export default function MonitorsPage() {
   
   useEffect(() => {
     // Initialize filters from URL if present
-    const teamParam = searchParams.get('team');
+    const segmentParam = searchParams.get('segment');
     const statusParam = searchParams.get('status');
     
-    if (teamParam || statusParam) {
+    if (segmentParam || statusParam) {
       setFilters(prev => ({
         ...prev,
-        team: teamParam || "",
+        segment: segmentParam || "",
         status: statusParam || ""
       }));
     }
     
     // Load initial data
     fetchMonitors();
-    fetchTeams();
+    fetchSegments();
   }, [searchParams]);
   
   const fetchMonitors = async () => {
@@ -49,7 +49,7 @@ export default function MonitorsPage() {
     try {
       // Build query string from filters
       const queryParams = new URLSearchParams();
-      if (filters.team) queryParams.append('team', filters.team);
+      if (filters.segment) queryParams.append('segment', filters.segment);
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.serialNumber) queryParams.append('serialNumber', filters.serialNumber);
       if (filters.manufacturer) queryParams.append('manufacturer', filters.manufacturer);
@@ -71,15 +71,15 @@ export default function MonitorsPage() {
     }
   };
   
-  const fetchTeams = async () => {
+  const fetchSegments = async () => {
     try {
-      const response = await fetch('/api/teams');
+      const response = await fetch('/api/segments');
       if (response.ok) {
         const data = await response.json();
-        setTeams(data.data || []);
+        setSegments(data.data || []);
       }
     } catch (error) {
-      console.error("Error fetching teams:", error);
+      console.error("Error fetching segments:", error);
     }
   };
   
@@ -93,7 +93,7 @@ export default function MonitorsPage() {
     
     // Update URL with filters for shareable links
     const queryParams = new URLSearchParams();
-    if (filters.team) queryParams.append('team', filters.team);
+    if (filters.segment) queryParams.append('segment', filters.segment);
     if (filters.status) queryParams.append('status', filters.status);
     
     router.push(`/stocks/monitors?${queryParams.toString()}`, { scroll: false });
@@ -101,7 +101,7 @@ export default function MonitorsPage() {
   
   const resetFilters = () => {
     setFilters({
-      team: "",
+      segment: "",
       status: "",
       serialNumber: "",
       manufacturer: ""
@@ -116,7 +116,7 @@ export default function MonitorsPage() {
       
       // Build query string from filters
       const queryParams = new URLSearchParams();
-      if (filters.team) queryParams.append('team', filters.team);
+      if (filters.segment) queryParams.append('segment', filters.segment);
       if (filters.status) queryParams.append('status', filters.status);
       if (filters.manufacturer) queryParams.append('manufacturer', filters.manufacturer);
       
@@ -289,16 +289,16 @@ export default function MonitorsPage() {
         {showFilters && (
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block mb-1">Team</label>
+              <label className="block mb-1">Segment</label>
               <select 
-                name="team" 
-                value={filters.team} 
+                name="segment" 
+                value={filters.segment} 
                 onChange={handleFilterChange}
                 className="w-full p-2 rounded bg-gray-700 text-white"
               >
-                <option value="">All Teams</option>
-                {teams.map(team => (
-                  <option key={team._id} value={team._id}>{team.name}</option>
+                <option value="">All Segments</option>
+                {segments.map(segment => (
+                  <option key={segment._id} value={segment._id}>{segment.name}</option>
                 ))}
               </select>
             </div>
@@ -312,7 +312,7 @@ export default function MonitorsPage() {
                 className="w-full p-2 rounded bg-gray-700 text-white"
               >
                 <option value="">All Statuses</option>
-                <option value="inpool">Inpool</option>
+                <option value="MISStock">MIS Stock</option>
                 <option value="deployed">Deployed</option>
                 
               </select>
@@ -379,9 +379,9 @@ export default function MonitorsPage() {
                   <th className="p-4">Serial Number</th>
                   <th className="p-4">Manufacturer</th>
                   <th className="p-4">Model</th>
-                  <th className="p-4">Team</th>
+                  <th className="p-4">Segment</th>
                   <th className="p-4">Status</th>
-                  <th className="p-4">Issued To</th>
+                  <th className="p-4">Asset Owner</th>
                   <th className="p-4">Actions</th>
                 </tr>
               </thead>
@@ -391,13 +391,13 @@ export default function MonitorsPage() {
                     <td className="p-4">{monitor.serialNumber}</td>
                     <td className="p-4">{monitor.manufacturer}</td>
                     <td className="p-4">{monitor.model}</td>
-                    <td className="p-4">{monitor.team?.name || "N/A"}</td>
+                    <td className="p-4">{monitor.segment?.name || "N/A"}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-full text-xs ${getStatusColor(monitor.status)}`}>
                         {monitor.status}
                       </span>
                     </td>
-                    <td className="p-4">{monitor.issueTo || "N/A"}</td>
+                    <td className="p-4">{monitor.assetOwner || "N/A"}</td>
                     <td className="p-4">
                       <Link href={`/stocks/monitors/${monitor._id}`}>
                         <button className="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm mr-2">

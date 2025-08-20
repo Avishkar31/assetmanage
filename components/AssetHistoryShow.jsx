@@ -70,9 +70,9 @@ const AssetHistoryItem = ({ entry }) => {
 
           <p className="mt-2 text-gray-300">{actionDescription}</p>
 
-          {entry.previousIssueTo && (
+          {entry.previousAssetOwner && (
             <div className="mt-1 text-sm text-gray-400">
-              Previous recipient: <span className="text-gray-300">{entry.previousIssueTo}</span>
+              Previous recipient: <span className="text-gray-300">{entry.previousAssetOwner}</span>
             </div>
           )}
         </div>

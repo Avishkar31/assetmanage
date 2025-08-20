@@ -18,18 +18,18 @@ const StackedBarChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch("/api/teams");
+        const response = await fetch("/api/segments");
         if (!response.ok) {
-          throw new Error("Failed to fetch teams data");
+          throw new Error("Failed to fetch segments data");
         }
-        const teamsData = await response.json();
+        const segmentsData = await response.json();
 
         // Transform the data to match the chart format
-        const formattedData = teamsData.map((team) => ({
-          name: team.name,
-          Monitor: team.assets?.Monitor || 0,
-          Laptop: team.assets?.Laptop || 0,
-          Desktop: team.assets?.Desktop || 0
+        const formattedData = segmentsData.map((segment) => ({
+          name: segment.name,
+          Monitor: segment.assets?.Monitor || 0,
+          Laptop: segment.assets?.Laptop || 0,
+          Desktop: segment.assets?.Desktop || 0
         }));
 
         setData(formattedData);

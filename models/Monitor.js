@@ -21,7 +21,7 @@ const historyEntrySchema = new mongoose.Schema({
   },
   status: String,
   previousStatus: String,
-  previousIssueTo: String
+  previousAssetOwner: String
 });
 
 const monitorSchema = new mongoose.Schema({
@@ -44,14 +44,14 @@ const monitorSchema = new mongoose.Schema({
   status: {
     type: String,
     required: true,
-    enum: ['inpool', 'deployed', 'disposed'],
-    default: 'inpool'
+    enum: ['MISStock', 'deployed', 'disposed'],
+    default: 'MISStock'
   },
-  team: {
+  segment: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Team'
+    ref: 'Segment'
   },
-  issueTo: {
+  assetOwner: {
     type: String,
     default: ""
   },

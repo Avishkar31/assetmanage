@@ -1,19 +1,21 @@
 "use client";
 import { useState, useEffect } from "react";
 
-export default function TeamManagement() {
-  const [teams, setTeams] = useState([]);
+export default function SegmentManagement() {
+  // Error 1: Variable name mismatch - setSegment vs setSegments
+  const [segments, setSegments] = useState([]); // Changed from setSegment to setSegments
+  
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     department: ""
   });
-  const [editingTeam, setEditingTeam] = useState(null);
+  const [editingSegment, setEditingSegment] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
   useEffect(() => {
-    fetchTeams();
+    fetchSegments();
   }, []);
 
   // Clear notification after 3 seconds
@@ -26,19 +28,20 @@ export default function TeamManagement() {
     }
   }, [notification]);
 
-  const fetchTeams = async () => {
+  const fetchSegments = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/teams");
+      // Error 2: API endpoint mismatch - should match your actual API route
+      const response = await fetch("/api/segments"); // Changed from segments to segments to match your existing API
       const data = await response.json();
       if (data.success) {
-        setTeams(data.data);
+        setSegments(data.data);
       } else {
-        showNotification("Failed to fetch teams", "error");
+        showNotification("Failed to fetch segments", "error");
       }
     } catch (error) {
-      console.error("Error fetching teams:", error);
-      showNotification("Error fetching teams", "error");
+      console.error("Error fetching segments:", error);
+      showNotification("Error fetching segments", "error");
     } finally {
       setIsLoading(false);
     }
@@ -55,8 +58,9 @@ export default function TeamManagement() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const method = editingTeam ? "PUT" : "POST";
-    const url = editingTeam ? `/api/teams?id=${editingTeam._id}` : "/api/teams";
+    const method = editingSegment ? "PUT" : "POST";
+    // Error 3: API endpoint mismatch
+    const url = editingSegment ? `/api/segments?id=${editingSegment._id}` : "/api/segments"; // Changed from segments to segments
 
     try {
       const response = await fetch(url, {
@@ -68,66 +72,67 @@ export default function TeamManagement() {
       const data = await response.json();
       
       if (response.ok) {
-        await fetchTeams();
+        await fetchSegments();
         setFormData({ name: "", description: "", department: "" });
-        setEditingTeam(null);
+        setEditingSegment(null);
         
         // Show success message
         showNotification(
-          editingTeam ? "Team updated successfully" : "Team added successfully", 
+          editingSegment ? "Segment updated successfully" : "Segment added successfully", 
           "success"
         );
         
-        // Invalidate the team stats cache to refresh charts
-        await fetch("/api/team-stats", { cache: "no-store" });
+        // Error 4: API endpoint mismatch
+        await fetch("/api/segment-stats", { cache: "no-store" }); // Changed from segment-stats to segment-stats
       } else {
         showNotification(data.error || "Operation failed", "error");
       }
     } catch (error) {
-      console.error("Error saving team:", error);
-      showNotification("Error saving team", "error");
+      console.error("Error saving segment:", error);
+      showNotification("Error saving segment", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("Are you sure you want to delete this team?")) return;
+    if (!confirm("Are you sure you want to delete this segment?")) return;
     
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/teams?id=${id}`, { method: "DELETE" });
+      // Error 5: API endpoint mismatch
+      const response = await fetch(`/api/segments?id=${id}`, { method: "DELETE" }); // Changed from segments to segments
       const data = await response.json();
       
       if (response.ok) {
-        await fetchTeams();
-        showNotification("Team deleted successfully", "success");
+        await fetchSegments();
+        showNotification("Segment deleted successfully", "success");
         
-        // Invalidate the team stats cache to refresh charts
-        await fetch("/api/team-stats", { cache: "no-store" });
+        // Error 6: API endpoint mismatch
+        await fetch("/api/segment-stats", { cache: "no-store" }); // Changed from segment-stats to segment-stats
       } else {
-        showNotification(data.error || "Failed to delete team", "error");
+        showNotification(data.error || "Failed to delete segment", "error");
       }
     } catch (error) {
-      console.error("Error deleting team:", error);
-      showNotification("Error deleting team", "error");
+      console.error("Error deleting segment:", error);
+      showNotification("Error deleting segment", "error");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEdit = (team) => {
+  const handleEdit = (segment) => {
     setFormData({
-      name: team.name,
-      description: team.description || "",
-      department: team.department
+      name: segment.name,
+      description: segment.description || "",
+      department: segment.department
     });
-    setEditingTeam(team);
+    setEditingSegment(segment);
   };
 
   const cancelEdit = () => {
     setFormData({ name: "", description: "", department: "" });
-    setEditingTeam(null);
+    setEditingSegment(null);
   };
 
   return (
@@ -141,13 +146,13 @@ export default function TeamManagement() {
       )}
       
       <div className="flex justify-between items-center mt-2">
-        <h1 className="text-2xl mb-4">Team Management</h1>
+        <h1 className="text-2xl mb-4">Segment Management</h1>
         <div className="flex gap-2">
           {/* <button
-            onClick={() => (window.location.href = "/team-chart")}
+            onClick={() => (window.location.href = "/segment-chart")}
             className="bg-blue-600 p-2 rounded mb-6 hover:bg-blue-700 transition-colors"
           >
-            View Team Chart
+            View segment Chart
           </button> */}
           <button
             onClick={() => (window.location.href = "/stocks")}
@@ -159,7 +164,7 @@ export default function TeamManagement() {
       </div>
       
       <form onSubmit={handleSubmit} className="bg-gray-800 p-4 rounded mb-4">
-        <h2 className="text-xl mb-3">{editingTeam ? "Edit Team" : "Add New Team"}</h2>
+        <h2 className="text-xl mb-3">{editingSegment ? "Edit Segment" : "Add New Segment"}</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div className="mb-2">
             <label className="block mb-1">Name:</label>
@@ -170,7 +175,7 @@ export default function TeamManagement() {
               onChange={handleInputChange}
               required
               className="w-full p-2 rounded bg-gray-700"
-              placeholder="Team name"
+              placeholder="Segment name"
             />
           </div>
           <div className="mb-2">
@@ -193,7 +198,7 @@ export default function TeamManagement() {
             value={formData.description}
             onChange={handleInputChange}
             className="w-full p-2 rounded bg-gray-700 h-20"
-            placeholder="Team description (optional)"
+            placeholder="Segment description (optional)"
           />
         </div>
         <div className="flex gap-2">
@@ -202,9 +207,9 @@ export default function TeamManagement() {
             className="bg-teal-600 p-2 rounded mt-2 hover:bg-teal-700 transition-colors"
             disabled={isLoading}
           >
-            {isLoading ? "Processing..." : editingTeam ? "Update Team" : "Add Team"}
+            {isLoading ? "Processing..." : editingSegment ? "Update Segment" : "Add Segment"}
           </button>
-          {editingTeam && (
+          {editingSegment && (
             <button 
               type="button" 
               onClick={cancelEdit}
@@ -216,32 +221,32 @@ export default function TeamManagement() {
         </div>
       </form>
 
-      <h2 className="text-xl mb-2">Team List</h2>
-      {isLoading && !teams.length ? (
-        <p>Loading teams...</p>
-      ) : teams.length === 0 ? (
-        <p>No teams found. Add your first team above.</p>
+      <h2 className="text-xl mb-2">Segment List</h2>
+      {isLoading && !segments.length ? (
+        <p>Loading segments...</p>
+      ) : segments.length === 0 ? (
+        <p>No segments found. Add your first segment above.</p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {teams.map((team) => (
+          {segments.map((segment) => (
             <div
-              key={team._id}
+              key={segment._id}
               className="bg-gray-800 p-4 rounded shadow-md hover:shadow-lg transition-shadow"
             >
               <div className="mb-3">
-                <h3 className="text-lg font-bold">{team.name}</h3>
-                <div className="text-sm text-teal-300 mb-1">Department: {team.department}</div>
-                <p className="text-gray-300 text-sm">{team.description || "No description provided."}</p>
+                <h3 className="text-lg font-bold">{segment.name}</h3>
+                <div className="text-sm text-teal-300 mb-1">Department: {segment.department}</div>
+                <p className="text-gray-300 text-sm">{segment.description || "No description provided."}</p>
               </div>
               <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => handleEdit(team)}
+                  onClick={() => handleEdit(segment)}
                   className="bg-blue-500 px-3 py-1 rounded hover:bg-blue-600 transition-colors"
                 >
                   Edit
                 </button>
                 <button
-                  onClick={() => handleDelete(team._id)}
+                  onClick={() => handleDelete(segment._id)}
                   className="bg-red-500 px-3 py-1 rounded hover:bg-red-600 transition-colors"
                 >
                   Delete

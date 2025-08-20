@@ -9,18 +9,18 @@ export async function GET(request) {
     
     // Get query parameters for filtering
     const { searchParams } = new URL(request.url);
-    const team = searchParams.get("team");
+    const segment = searchParams.get("segment");
     const status = searchParams.get("status");
     const manufacturer = searchParams.get("manufacturer");
     
     // Build query
     const query = {};
-    if (team) query.team = team;
+    if (segment) query.segment = segment;
     if (status) query.status = status;
     if (manufacturer) query.manufacturer = { $regex: manufacturer, $options: "i" };
     
-    // Get monitors with populated team
-    const monitors = await Monitor.find(query).populate("team");
+    // Get monitors with populated segment
+    const monitors = await Monitor.find(query).populate("segment");
     
     if (monitors.length === 0) {
       return NextResponse.json({ error: "No monitors found matching your criteria" }, { status: 404 });
@@ -29,7 +29,7 @@ export async function GET(request) {
     // Define CSV headers
     const headers = [
       "Serial Number", "Manufacturer", "Model", "PR Number", "PO Number",
-      "PR Requester", "Status", "Team", "Issued To", "Created By", "Created At"
+      "PR Requester", "Status", "segment", "Asset Owner", "Created By", "Created At"
     ];
     
     // Generate CSV content
@@ -46,8 +46,8 @@ export async function GET(request) {
         escapeCSV(monitor.poNumber || ""),
         escapeCSV(monitor.prRequester || ""),
         escapeCSV(monitor.status || ""),
-        escapeCSV(monitor.team?.name || ""),
-        escapeCSV(monitor.issueTo || ""),
+        escapeCSV(monitor.segment?.name || ""),
+        escapeCSV(monitor.assetOwner || ""),
         escapeCSV(monitor.username || ""),
         monitor.createdAt ? escapeCSV(new Date(monitor.createdAt).toLocaleDateString()) : ""
       ];

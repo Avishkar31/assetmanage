@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Sidebar from "components/Sidebar";
-import DynamicTeamChart from "@/components/DynamicTeamChart";
+import DynamicSegmentChart from "@/components/DynamicSegmentChart";
 import ManufacturerPieChart from "components/ManufacturerPieChart";
 import StackedBarChart from "components/StackedBarChart";
 import { useState, useEffect, useRef } from "react";
@@ -19,7 +19,7 @@ function Page() {
   const reportsRef = useRef(null);
   const [assetCounts, setAssetCounts] = useState({
     all: 0,
-    inpool: 0,
+    MISStock: 0,
     newPurchase: 0,
     inactive: 0,
     deployed: 0,
@@ -61,7 +61,7 @@ function Page() {
 
   const getMisStoreTotal = () => {
     try {
-      return assetCounts.inpool + assetCounts.newPurchase;
+      return assetCounts.MISStock + assetCounts.newPurchase;
     } catch (err) {
       console.error("Error calculating MIS Store total:", err);
       return 0;
@@ -104,7 +104,7 @@ function Page() {
         // Update all counts
         setAssetCounts({
           all: data.allAssetsCount || 0,
-          inpool: data.inPoolCount || 0,
+          MISStock: data.MISStockCount || 0,
           newPurchase: data.newPurchaseCount || 0,
           inactive: data.inactiveCount || 0,
           deployed: data.deployedCount || 0,
@@ -172,8 +172,8 @@ function Page() {
   }
 
   // Calculate percentages
-  const totalActiveAssets = assetCounts.inpool + assetCounts.deployed;
-  const inPoolPercentage = totalActiveAssets > 0 ? ((assetCounts.inpool / totalActiveAssets) * 100).toFixed(1) : 0;
+  const totalActiveAssets = assetCounts.MISStock + assetCounts.deployed;
+  const MISStockPercentage = totalActiveAssets > 0 ? ((assetCounts.MISStock / totalActiveAssets) * 100).toFixed(1) : 0;
   const deployedPercentage = totalActiveAssets > 0 ? ((assetCounts.deployed / totalActiveAssets) * 100).toFixed(1) : 0;
 
   return (
@@ -223,11 +223,11 @@ function Page() {
                     </li>
                     <li className="my-1">
                       <button
-                        onClick={() => handleExtractData("Inpool")}
+                        onClick={() => handleExtractData("MISStock")}
                         className="w-full text-left py-2 px-3 rounded hover:bg-gray-700 flex items-center text-gray-300 hover:text-white transition-colors"
                       >
                         <FiDownload className="mr-2" size={16} />
-                        Extract Inpool Assets
+                        Extract MISStock Assets
                       </button>
                     </li>
                     <li className="my-1">
@@ -271,11 +271,11 @@ function Page() {
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium text-gray-300 group-hover:text-white">MIS Store</h3>
+                  <h3 className="text-lg font-medium text-gray-300 group-hover:text-white">Total</h3>
                   <p className="text-3xl font-bold mt-1 text-white">
                     {getMisStoreTotal().toLocaleString()}
                   </p>
-                  <span className="text-gray-400 text-sm">Inpool + New Purchase</span>
+                  <span className="text-gray-400 text-sm">MISStock + New Purchase</span>
                 </div>
                 <div className="bg-blue-500/20 p-3 rounded-full">
                   <BiDevices className="text-blue-400 text-2xl" />
@@ -284,13 +284,13 @@ function Page() {
             </Link>
             
              <Link
-              href="./stocks/allasset?status=Inpool"
+              href="./stocks/allasset?status=MISStock"
               className="block bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium text-green-400 group-hover:text-green-300">Inpool</h3>
-                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.inpool.toLocaleString()}</p>
+                  <h3 className="text-lg font-medium text-green-400 group-hover:text-green-300">MIS Stock</h3>
+                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.MISStock.toLocaleString()}</p>
                   <span className="text-gray-400 text-sm">Ready For Allocation</span>
                 </div>
                 
@@ -369,9 +369,9 @@ function Page() {
         </div>
             
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800">
-              <h2 className="text-lg font-medium mb-4 text-gray-200">Department Distribution</h2>
+              <h2 className="text-lg font-medium mb-4 text-gray-200">Segment Distribution</h2>
               <div className="w-full h-96">
-                <DynamicTeamChart />
+                <DynamicSegmentChart />
               </div>
             </div>
             

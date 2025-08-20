@@ -12,7 +12,7 @@ export async function POST(req) {
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     // }
 
-    const { serialNumber, nodeName, issueTo,assetUser } = await req.json();
+    const { serialNumber, nodeName, assetOwner,assetUser } = await req.json();
 
     if (!serialNumber || !nodeName) {
       return NextResponse.json(
@@ -22,7 +22,7 @@ export async function POST(req) {
     }
 
     const asset = await Asset.findOne({ serialNumber, nodeName })
-      .populate('issueTo')
+      .populate('assetOwner')
       .populate('assetHistory.user');
 
     if (!asset) {
@@ -30,20 +30,20 @@ export async function POST(req) {
     }
 
     asset.status = 'Deployed';
-    asset.issueTo = issueTo;
+    asset.assetOwner = assetOwner;
     asset.checkOutDate = new Date();
     asset.assetHistory.push({
-      user: issueTo,
+      user: assetOwner,
       action: 'checkOut',
       date: new Date(),
       status: 'Deployed',
-      updatedBy: assetUser, // Assuming issueTo is the user checking out the asset
+      updatedBy: assetUser, // Assuming assetOwner is the user checking out the asset
     });
 
     await asset.save();
 
     const populatedAsset = await Asset.findById(asset._id)
-      .populate('issueTo')
+      .populate('assetOwner')
       .populate('assetHistory.user');
 
     return NextResponse.json({ 

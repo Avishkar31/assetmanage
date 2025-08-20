@@ -12,14 +12,15 @@ export default function MonitorDetailPage({ params }) {
   const [error, setError] = useState(null);
   const [showDeployModal, setShowDeployModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
-  const [issueTo, setIssueTo] = useState("");
-  const [returnBy, setReturnBy] = useState(""); 
+  const [assetOwner, setAssetOwner] = useState("");
+  // const [returnBy, setReturnBy] = useState("");
+  const [returnTo, setReturnTo]= useState("");
   const [reassignMonitor, setReassignMonitor] = useState(false);
   const [newAssignee, setNewAssignee] = useState("");
   const [currentUser, setCurrentUser] = useState("");
-  
+
   const router = useRouter();
-  
+
   useEffect(() => {
     fetchMonitor();
     const user = localStorage.getItem("user");
@@ -32,7 +33,7 @@ export default function MonitorDetailPage({ params }) {
       }
     }
   }, [params.id]);
-  
+
   const fetchMonitor = async () => {
     setLoading(true);
     try {
@@ -47,15 +48,15 @@ export default function MonitorDetailPage({ params }) {
       setLoading(false);
     }
   };
-  
+
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this monitor?")) return;
-    
+
     try {
       const response = await fetch(`/api/monitors?id=${params.id}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) throw new Error("Failed to delete monitor");
       router.push('/stocks/monitors');
     } catch (error) {
@@ -63,15 +64,15 @@ export default function MonitorDetailPage({ params }) {
       setError("Error deleting monitor");
     }
   };
-  
+
   const handleDeploy = async (e) => {
     e.preventDefault();
-    
-    if (!issueTo) {
+
+    if (!assetOwner) {
       alert("Please enter recipient name");
       return;
     }
-    
+
     try {
       const response = await fetch(`/api/monitors?id=${params.id}`, {
         method: 'PUT',
@@ -80,29 +81,29 @@ export default function MonitorDetailPage({ params }) {
         },
         body: JSON.stringify({
           updatedBy: currentUser,
-          user: issueTo,
-          issueTo: issueTo,
+          user: assetOwner,
+          assetOwner: assetOwner,
           status: "deployed",
           action: "statusChange",
           previousStatus: monitor.status
         }),
       });
-      
+
       if (!response.ok) throw new Error("Failed to deploy monitor");
-      
+
       setShowDeployModal(false);
-      setIssueTo("");
+      setAssetOwner("");
       fetchMonitor();
     } catch (error) {
       console.error("Error deploying monitor:", error);
       setError("Error deploying monitor");
     }
   };
-  
+
   const handleReturnToPool = async (e) => {
     e.preventDefault();
 
-    if (!returnBy) {
+    if (!reassignMonitor && !returnTo) {
       alert("Please enter the name of the person returning the monitor");
       return;
     }
@@ -123,18 +124,17 @@ export default function MonitorDetailPage({ params }) {
           body: JSON.stringify({
             updatedBy: currentUser,
             user: newAssignee,
-            issueTo: newAssignee,
+            assetOwner: newAssignee,
             status: "deployed",
             action: "reassigned",
-            previousIssueTo: monitor.issueTo,
-            returnBy: returnBy,
-            note: `Returned by ${returnBy} and reassigned to ${newAssignee}`
+            previousAssetOwner: monitor.assetOwner,
+            note: `Reassigned from ${monitor.assetOwner} to ${newAssignee}`
           }),
         });
 
         if (!response.ok) throw new Error("Failed to reassign monitor");
       } else {
-        // Just return to pool
+        // Return to MISStock with returnto information
         const response = await fetch(`/api/monitors?id=${params.id}`, {
           method: 'PUT',
           headers: {
@@ -143,20 +143,20 @@ export default function MonitorDetailPage({ params }) {
           body: JSON.stringify({
             updatedBy: currentUser,
             user: "",
-            issueTo: "",
-            status: "inpool",
+            assetOwner: returnTo,   // ✅ store the "Returned to" person in assetOwner
+            status: "MISStock",
             action: "statusChange",
-            previousIssueTo: monitor.issueTo,
+            previousAssetOwner: monitor.assetOwner,
             previousStatus: monitor.status,
-            returnBy: returnBy
+            note: `Returned to MISStock by ${returnTo}`
           }),
         });
 
-        if (!response.ok) throw new Error("Failed to return monitor to pool");
+        if (!response.ok) throw new Error("Failed to return monitor to MISStock");
       }
 
       setShowReturnModal(false);
-      setReturnBy("");
+      setReturnTo("");
       setReassignMonitor(false);
       setNewAssignee("");
       fetchMonitor();
@@ -168,7 +168,7 @@ export default function MonitorDetailPage({ params }) {
 
   const handleDispose = async () => {
     if (!confirm("Are you sure you want to mark this monitor as disposed?")) return;
-    
+
     try {
       const response = await fetch(`/api/monitors?id=${params.id}`, {
         method: 'PUT',
@@ -182,7 +182,7 @@ export default function MonitorDetailPage({ params }) {
           previousStatus: monitor.status
         }),
       });
-      
+
       if (!response.ok) throw new Error("Failed to dispose monitor");
       fetchMonitor();
     } catch (error) {
@@ -228,16 +228,16 @@ export default function MonitorDetailPage({ params }) {
           </button>
         </Link>
       </div>
-      
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Monitor Details</h1>
         <div className="flex space-x-2">
-          {/* <Link href={`/stocks/monitors/edit/${params.id}`}>
+          <Link href={`/stocks/monitors/edit/${params.id}`}>
             <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded flex items-center">
               <Edit size={18} className="mr-2" /> Edit
             </button>
-          </Link> */}
-          <button 
+          </Link>
+          <button
             onClick={handleDelete}
             className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded flex items-center"
           >
@@ -259,7 +259,7 @@ export default function MonitorDetailPage({ params }) {
               <DetailRow label="PR Requester" value={monitor.prRequester} />
             </div>
           </div>
-          
+
           <div>
             <h2 className="text-xl font-semibold mb-4">Status Information</h2>
             <div className="space-y-2">
@@ -269,18 +269,18 @@ export default function MonitorDetailPage({ params }) {
                   {monitor.status}
                 </span>
               </div>
-              <DetailRow label="Team" value={monitor.team?.name || "N/A"} />
-              <DetailRow label="Issued To" value={monitor.issueTo || "N/A"} />
+              <DetailRow label="Segment" value={monitor.segment?.name || "N/A"} />
+              <DetailRow label="Issued To" value={monitor.assetOwner || "N/A"} />
               <DetailRow label="Created By" value={monitor.username || "N/A"} />
-              <DetailRow 
-                label="Created At" 
-                value={monitor.createdAt ? new Date(monitor.createdAt).toLocaleDateString() : "N/A"} 
+              <DetailRow
+                label="Created At"
+                value={monitor.createdAt ? new Date(monitor.createdAt).toLocaleDateString() : "N/A"}
               />
             </div>
-            
+
             <div className="mt-6 flex space-x-2">
-              {monitor.status === "inpool" && (
-                <button 
+              {monitor.status === "MISStock" && (
+                <button
                   onClick={() => setShowDeployModal(true)}
                   className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded flex items-center"
                 >
@@ -288,21 +288,21 @@ export default function MonitorDetailPage({ params }) {
                 </button>
               )}
               {monitor.status === "deployed" && (
-                <button 
+                <button
                   onClick={() => setShowReturnModal(true)}
                   className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded flex items-center"
                 >
                   <XCircle size={18} className="mr-2" /> Return to Pool
                 </button>
               )}
-              {/* {monitor.status !== "disposed" && (
-                <button 
+              {monitor.status !== "disposed" && (
+                <button
                   onClick={handleDispose}
                   className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded flex items-center"
                 >
                   <Trash size={18} className="mr-2" /> Mark as Disposed
                 </button>
-              )} */}
+              )}
             </div>
           </div>
         </div>
@@ -311,23 +311,23 @@ export default function MonitorDetailPage({ params }) {
       <AssetHistoryShow history={monitor.assetHistory || []} />
 
       {showDeployModal && (
-        <Modal 
+        <Modal
           title="Deploy Monitor"
           onClose={() => setShowDeployModal(false)}
         >
           <form onSubmit={handleDeploy}>
             <div className="mb-4">
-              <label className="block mb-2">Issue To*</label>
+              <label className="block mb-2">Asset Owner*</label>
               <input
                 type="text"
-                value={issueTo}
-                onChange={(e) => setIssueTo(e.target.value)}
+                value={assetOwner}
+                onChange={(e) => setAssetOwner(e.target.value)}
                 required
                 placeholder="Enter recipient name"
                 className="w-full p-2 rounded bg-gray-700 text-white"
               />
             </div>
-            
+
             <div className="flex justify-end space-x-2">
               <button
                 type="button"
@@ -348,42 +348,65 @@ export default function MonitorDetailPage({ params }) {
       )}
 
       {showReturnModal && (
-        <Modal 
+        <Modal
           title="Return Monitor to Pool"
           onClose={() => setShowReturnModal(false)}
         >
           <form onSubmit={handleReturnToPool}>
             <p className="mb-4">
-              Are you sure you want to return this monitor from <strong>{monitor.issueTo || "N/A"}</strong>?
+              Currently assigned to: <strong>{monitor.assetOwner || "N/A"}</strong>
             </p>
+
             <div className="mb-4">
-              <label className="block mb-2">Return By*</label>
-              <input
-                type="text"
-                value={returnBy}
-                onChange={(e) => setReturnBy(e.target.value)}
-                required
-                placeholder="Enter returner's name"
-                className="w-full p-2 rounded bg-gray-700 text-white"
-              />
-            </div>
-            
-            {/* <div className="mb-4">
+              <div className="flex items-center mb-4">
+                <label className="block text-lg font-medium">Do you want to reassign this monitor to another user?</label>
+              </div>
+
               <div className="flex items-center mb-2">
                 <input
-                  type="checkbox"
-                  id="reassign-checkbox"
-                  checked={reassignMonitor}
-                  onChange={() => setReassignMonitor(!reassignMonitor)}
+                  type="radio"
+                  id="no-reassign"
+                  name="transferType"
+                  checked={!reassignMonitor}
+                  onChange={() => setReassignMonitor(false)}
                   className="mr-2 h-4 w-4"
                 />
-                <label htmlFor="reassign-checkbox">
-                  Reassign this monitor right away?
+                <label htmlFor="no-reassign">
+                  No, return to MISStock
                 </label>
               </div>
-              
+
+              <div className="flex items-center mb-2">
+                <input
+                  type="radio"
+                  id="yes-reassign"
+                  name="transferType"
+                  checked={reassignMonitor}
+                  onChange={() => setReassignMonitor(true)}
+                  className="mr-2 h-4 w-4"
+                />
+                <label htmlFor="yes-reassign">
+                  Yes, reassign to another user
+                </label>
+              </div>
+
+              {!reassignMonitor && (
+                <div className="mt-4 ml-6">
+                  <label className="block mb-2 ">Returned to*</label>
+                  <input
+                    type="text"
+                    id="returnTo"
+                    value={returnTo}
+                    onChange={(e) => setReturnTo(e.target.value)}
+                    required={!reassignMonitor}
+                    placeholder="Enter name of person returning the monitor"
+                    className="w-full p-2 rounded bg-gray-700 text-white"
+                  />
+                </div>
+              )}
+
               {reassignMonitor && (
-                <div className="mt-2">
+                <div className="mt-4 ml-6">
                   <label className="block mb-2">New Assignee*</label>
                   <input
                     type="text"
@@ -395,9 +418,9 @@ export default function MonitorDetailPage({ params }) {
                   />
                 </div>
               )}
-            </div> */}
-            
-            <div className="flex justify-end space-x-2">
+            </div>
+
+            <div className="flex justify-end space-x-2 mt-6">
               <button
                 type="button"
                 onClick={() => setShowReturnModal(false)}
@@ -411,11 +434,11 @@ export default function MonitorDetailPage({ params }) {
               >
                 {reassignMonitor ? (
                   <>
-                    <CheckCircle size={18} className="mr-2" /> Return & Reassign
+                    <CheckCircle size={18} className="mr-2" /> Reassign to User
                   </>
                 ) : (
                   <>
-                    <XCircle size={18} className="mr-2" /> Return to Pool
+                    <XCircle size={18} className="mr-2" /> Return to MISStock
                   </>
                 )}
               </button>
@@ -447,7 +470,7 @@ const Modal = ({ children, title, onClose }) => (
 
 const getStatusColor = (status) => {
   switch (status) {
-    case 'inpool':
+    case 'MISStock':
       return 'bg-green-900 text-green-300';
     case 'deployed':
       return 'bg-blue-900 text-blue-300';

@@ -31,7 +31,7 @@ const ViewAsset = () => {
     storeLocation: "",
     poNumber: "",
     order: "",
-    issueTo: "",
+    assetOwner: "",
     type: "",
     deskLocation: "",
     allocation: "",
@@ -241,29 +241,6 @@ const ViewAsset = () => {
     window.location.href = targetUrl;
   };
 
-  // Handle print form navigation
-  // const handlePrintForm = () => {
-  //   // Create query params for accessories
-  //   const accessoriesParams = Object.entries(accessories)
-  //     .filter(([_, value]) => value)
-  //     .map(([key]) => `${encodeURIComponent(key)}=1`)
-  //     .join('&');
-      
-  //   // Build URL with asset details
-  //   const printUrl = `/stocks/print?` + 
-  //     `serialNumber=${encodeURIComponent(formData.serialNumber)}` +
-  //     `&nodeName=${encodeURIComponent(formData.nodeName)}` +
-  //     `&model=${encodeURIComponent(formData.model || "")}` +
-  //     `&category=${encodeURIComponent(formData.category || "")}` +
-  //     `&type=${encodeURIComponent(formData.type || "")}` +
-  //     `&issueTo=${encodeURIComponent(formData.issueTo || "")}` +
-  //     `&deskLocation=${encodeURIComponent(formData.deskLocation || "")}` +
-  //     `&poNumber=${encodeURIComponent(formData.poNumber || "")}` +
-  //     `&orderNumber=${encodeURIComponent(formData.order || "")}` +
-  //     (accessoriesParams ? `&${accessoriesParams}` : '');
-    
-  //   window.open(printUrl, '_blank');
-  // };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-900 text-white overflow-hidden">
@@ -314,16 +291,16 @@ const ViewAsset = () => {
                 ["Type", "type"],
                 ["Model", "model"],
                 // ["Desk Location", "deskLocation"],
-                ["Issue To", "issueTo"],
+                ["Asset Owner", "assetOwner"],
                 // ["Allocation", "allocation"],
                 // ["Period", "period"],
                 ["Expires", "expires"],
                 ["Default Location", "defaultLocation"],
-                ["Asset Owner", "assetOwner"],
+                
                 ["Cost Center", "costCenter"],
                 ["Received Date", "receivedDate"],
                 ["Asset Condition", "condition"],
-                ["MIS Store Location", "storeLocation"],
+                // ["MIS Store Location", "storeLocation"],
                 ["PO Number", "poNumber"],
                 ["Order", "order"]
               ].map(([label, id]) => (

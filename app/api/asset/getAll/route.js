@@ -7,7 +7,7 @@ const validSortColumns = [
   "nodeName",
   "serialNumber",
   "manufacturer",
-  // "type",
+  "type",
   "model",
   "category",
   "status",
@@ -19,7 +19,7 @@ const validSortColumns = [
 const validOrder = ["asc", "desc"];
 
 const validStatuses = [
-  "Inpool",
+  "MISStock",
   "New Purchase",
   "MIS Sorte",
   "Buyback",
@@ -77,7 +77,7 @@ export async function GET(req) {
 
     // Fetch assets with sorting, searching, status filtering, and pagination
     const assets = await Asset.find(searchQuery)
-      .populate("issueTo", "name")
+      .populate("assetOwner", "name")
       .sort({ [sort]: order === "asc" ? 1 : -1 })
       .skip(Number(offset))
       .limit(Number(limit));

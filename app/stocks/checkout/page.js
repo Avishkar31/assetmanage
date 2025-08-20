@@ -8,7 +8,7 @@ const CheckoutForm = () => {
   const statusOptions = [
     { label: "Default", description: "" },
     {
-      label: "Inpool",
+      label: "MISStock",
       description:
         "✓  This asset can be checked out. Please change the status accordingly.",
       color: "text-green-500"
@@ -19,12 +19,12 @@ const CheckoutForm = () => {
         "✗ This asset cannot be checked out. Please change the status accordingly.",
       color: "text-red-500"
     },
-    {
-      label: "MIS Store",
-      description:
-        "✓  This asset can be checked out.  Please change the status accordingly. ",
-      color: "text-green-500"
-    },
+    // {
+    //   label: "MIS Store",
+    //   description:
+    //     "✓  This asset can be checked out.  Please change the status accordingly. ",
+    //   color: "text-green-500"
+    // },
     {
       label: "Buyback",
       description:
@@ -50,7 +50,7 @@ const CheckoutForm = () => {
     status: "",
     nodeName: "",
     model: "",
-    issueTo: "",
+    assetOwner: "",
     checkOutDate: "",
     note: ""
   });
@@ -84,7 +84,7 @@ const CheckoutForm = () => {
           status: data.status || "",
           nodeName: data.nodeName || "",
           model: data.model || "",
-          issueTo: data.issueTo || "",
+          assetOwner: data.assetOwner || "",
           checkOutDate: data.checkOutDate || "",
           note: ""
         });
@@ -109,17 +109,17 @@ const CheckoutForm = () => {
   };
 
   const handleCheckOut = async () => {
-    const { status, issueTo, checkOutDate } = formData;
+    const { status, assetOwner, checkOutDate } = formData;
 
-    if (!status || !issueTo) {
-      alert("Please fill out all mandatory fields: Status and Issue To.");
+    if (!status || !assetOwner) {
+      alert("Please fill out all mandatory fields: Status and Asset Owner.");
       return;
     }
 
-    // Check if status is 'Inpool'
-    if (status === "Inpool") {
+    // Check if status is 'MISStock'
+    if (status === "MISStock") {
       alert(
-        "Status cannot be 'Inpool' for checkout. Please select a different status."
+        "Status cannot be 'MISStock' for checkout. Please select a different status."
       );
       return;
     }
@@ -136,7 +136,7 @@ const CheckoutForm = () => {
       model: formData.model,
       nodeName: formData.nodeName,
       status: formData.status,
-      issueTo: formData.issueTo,
+      assetOwner: formData.assetOwner,
       storeLocation: "Storage Room A",
       note: formData.note,
       checkType: "checkout",
@@ -274,16 +274,16 @@ const CheckoutForm = () => {
             </div>
           </div>
 
-          {/* Issue To */}
+          {/* Asset Owner */}
           <div className="mb-4 ml-10">
             <div className="flex items-center mb-2">
-              <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
-                Issue To <span className="text-red-600">*</span>
+              <label htmlFor="assetOwner" className="w-52 text-gray-500 mr-2">
+                Asset Owner <span className="text-red-600">*</span>
               </label>
               <input
                 type="text"
-                id="issueTo"
-                value={formData.issueTo}
+                id="assetOwner"
+                value={formData.assetOwner}
                 onChange={handleInputChange}
                 placeholder="Enter the name"
                 className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"

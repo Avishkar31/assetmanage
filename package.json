@@ -4,7 +4,7 @@
   "private": true,
   "proxy": "http://api.server.com",
   "scripts": {
-    "dev": "next dev --hostname 0.0.0.0 --port 4000",
+    "dev": "cross-env HOST=10.22.112.6 PORT=4000 next dev --hostname 10.22.112.6 --port 4000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -29,7 +29,7 @@
     "lucide-react": "^0.477.0",
     "mongodb": "^6.13.1",
     "mongoose": "^8.10.2",
-    "next": "14.2.5",
+    "next": "^15.4.2-canary.35",
     "next-auth": "^4.24.11",
     "path": "^0.12.7",
     "react": "^18",
@@ -38,9 +38,11 @@
     "react-hot-toast": "^2.5.2",
     "react-icons": "^5.5.0",
     "recharts": "^2.12.7",
+    "use-debounce": "^10.0.5",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
+    "cross-env": "^10.0.0",
     "daisyui": "^4.12.10",
     "postcss": "^8",
     "tailwindcss": "^3.4.1"

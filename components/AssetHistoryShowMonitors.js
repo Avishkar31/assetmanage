@@ -43,7 +43,7 @@ const AssetHistoryItem = ({ entry }) => {
       case "statusChange":
         if (status === "deployed" && recipient) {
           return `Deployed monitor to ${recipient}`;
-        } else if (status === "inpool") {
+        } else if (status === "MISStock") {
           return `Returned monitor to pool`;
         } else {
           return `Changed status to ${status}`;
@@ -88,9 +88,9 @@ const AssetHistoryItem = ({ entry }) => {
             </div>
           )}
 
-          {entry.previousIssueTo && (
+          {entry.previousAssetOwner&& (
             <div className="mt-1 text-sm text-gray-400">
-              Previous recipient: <span className="text-gray-300">{entry.previousIssueTo}</span>
+              Previous recipient: <span className="text-gray-300">{entry.previousAssetOwner}</span>
             </div>
           )}
         </div>

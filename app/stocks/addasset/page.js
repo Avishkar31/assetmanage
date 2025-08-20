@@ -24,7 +24,7 @@ const typeOptions = [
 const statusOptions = [
   { label: "Default", description: "" },
   {
-    label: "Inpool",
+    label: "MISStock",
     description: "✓  That status is deployable. This asset can be checked out.",
     color: "text-green-500"
   },
@@ -73,10 +73,10 @@ const conditionOptions = [
 
 const locationOptions = [
   { value: "select", label: "Select Location" },
-  { value: "buyback", label: "Buyback" },
-  { value: "home", label: "Home" },
-  { value: "second", label: "MIS Store - 2nd floor Compactor Room" },
-  { value: "four", label: "MIS Store - 4th Floor" },
+  { value: "Buyback", label: "Buyback" },
+  { value: "Home", label: "Home" },
+  { value: "MIS Store - 2nd floor Compactor Room", label: "MIS Store - 2nd floor Compactor Room" },
+  { value: "MIS Store - 4th Floor", label: "MIS Store - 4th Floor" },
   { value: "basement", label: "Basement" }
 ];
 
@@ -92,12 +92,12 @@ const AddAssetForm = () => {
     category: "",
     status: "",
     department: "",
-    issueTo: "",
+    assetOwner: "",
     note: "",
     defaultLocation: "Select Location",
     costCenter: "",
     receivedDate: "",
-    assetOwner: "",
+
     condition: "",
     storeLocation: "Rack No",
     killdiskDate: "",
@@ -114,14 +114,14 @@ const AddAssetForm = () => {
     serialNumber: false,
     status: false,
     department: false,
-    issueTo: false,
+    assetOwner: false,
     type: false
   });
 
-  const [teams, setTeams] = useState([]);
+  const [Segments, setSegments] = useState([]);
   const [manufacturers, setManufacturers] = useState([]);
   const [loading, setLoading] = useState({
-    teams: false,
+    Segments: false,
     manufacturers: false,
     form: false
   });
@@ -136,26 +136,26 @@ const AddAssetForm = () => {
     condition: useRef(null)
   };
 
-  // Fetch teams data
+  // Fetch Segments data
   useEffect(() => {
-    const fetchTeams = async () => {
-      setLoading(prev => ({ ...prev, teams: true }));
+    const fetchSegments = async () => {
+      setLoading(prev => ({ ...prev, segments: true }));
       try {
-        const response = await fetch("/api/teams");
+        const response = await fetch("/api/segments");
         const data = await response.json();
         if (data.success) {
-          setTeams(data.data);
+          setSegments(data.data);
         } else {
-          console.error("Failed to fetch teams:", data.error);
+          console.error("Failed to fetch segments:", data.error);
         }
       } catch (error) {
-        console.error("Error fetching teams:", error);
+        console.error("Error fetching segments:", error);
       } finally {
-        setLoading(prev => ({ ...prev, teams: false }));
+        setLoading(prev => ({ ...prev, segments: false }));
       }
     };
 
-    fetchTeams();
+    fetchSegments();
   }, []);
 
   // Fetch manufacturers data
@@ -198,17 +198,17 @@ const AddAssetForm = () => {
     setFormData((prevData) => ({
       ...prevData,
       [id]: value,
-      
+
       category:
         id === "type" && value.toLowerCase() === "laptop"
           ? "laptop"
           : id === "type" && value.toLowerCase() === "desktop"
-          ? "desktop"
-          : id === "type" && value.toLowerCase() === "monitor"
-          ? "monitor"
-          : id === "type" && value.toLowerCase() === "printer"
-          ? "printer"
-          : prevData.category
+            ? "desktop"
+            : id === "type" && value.toLowerCase() === "monitor"
+              ? "monitor"
+              : id === "type" && value.toLowerCase() === "printer"
+                ? "printer"
+                : prevData.category
     }));
 
     if (errors[id]) {
@@ -233,9 +233,9 @@ const AddAssetForm = () => {
   };
 
   const handleClickOutside = (event) => {
-    if (openSection && 
-        dropdownRefs[openSection] && 
-        !dropdownRefs[openSection].current?.contains(event.target)) {
+    if (openSection &&
+      dropdownRefs[openSection] &&
+      !dropdownRefs[openSection].current?.contains(event.target)) {
       setOpenSection("");
     }
   };
@@ -247,12 +247,12 @@ const AddAssetForm = () => {
 
   const handleSubmit = async () => {
     const requiredFields = [
-      "nodeName", 
-      "manufacturer", 
-      "serialNumber", 
-      "status", 
-      "department", 
-      "issueTo", 
+
+      "manufacturer",
+      "serialNumber",
+      "status",
+      "department",
+      "assetOwner",
       "type"
     ];
 
@@ -307,7 +307,7 @@ const AddAssetForm = () => {
       await response.json();
       showNotification("Asset added successfully", "success");
       toast.success("Asset added successfully");
-      
+
       // Reset form
       setFormData({
         nodeName: "",
@@ -319,12 +319,11 @@ const AddAssetForm = () => {
         category: "",
         status: "",
         department: "",
-        issueTo: "",
+        assetOwner: "",
         note: "",
         defaultLocation: "Select Location",
         costCenter: "",
         receivedDate: "",
-        assetOwner: "",
         condition: "",
         storeLocation: "Rack No",
         killdiskDate: "",
@@ -334,7 +333,7 @@ const AddAssetForm = () => {
         order: "",
         purchaseDate: ""
       });
-      
+
       setErrors({});
     } catch (error) {
       console.error("Error submitting form:", error);
@@ -347,11 +346,11 @@ const AddAssetForm = () => {
 
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
-    
+
     if (formData.status === "Deployed") {
       setFormData((prev) => ({ ...prev, defaultLocation: "Home" }));
     }
-    
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
@@ -372,33 +371,32 @@ const AddAssetForm = () => {
 
         {/* Notification */}
         {notification.message && (
-          <div 
-            className={`fixed top-4 right-4 px-4 py-3 rounded-md shadow-lg z-50 transform transition-all duration-300 ease-in-out ${
-              notification.type === "success" 
-                ? "bg-green-500/90 border-l-4 border-green-700" 
+          <div
+            className={`fixed top-4 right-4 px-4 py-3 rounded-md shadow-lg z-50 transform transition-all duration-300 ease-in-out ${notification.type === "success"
+                ? "bg-green-500/90 border-l-4 border-green-700"
                 : "bg-red-500/90 border-l-4 border-red-700"
-            }`}
+              }`}
           >
             {notification.message}
           </div>
         )}
-        
+
         {/* Main Form */}
         <div className="bg-gradient-to-b from-gray-800/70 to-gray-900/90 p-5 md:p-6 rounded-xl w-full max-w-6xl mx-auto shadow-xl border border-gray-800/50 backdrop-blur-sm">
-          
-          
+
+
           <div className="space-y-8">
             {/* Essential Information Section */}
             <div className="bg-gray-850/40 rounded-lg p-5 border border-gray-700/30 shadow-inner">
               <h3 className="text-md font-medium mb-4 flex items-center text-gray-200">
                 <FiInfo className="mr-2 text-blue-400" /> Essential Information
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {/* Node Name */}
                 <div className="form-group">
                   <label htmlFor="nodeName" className="form-label">
-                    Node Name <span className="text-red-400">*</span>
+                    Node Name
                   </label>
                   <div className="input-group">
                     <span className="input-icon">
@@ -413,9 +411,7 @@ const AddAssetForm = () => {
                       className={`form-input pl-10 ${errors.nodeName ? "error" : ""}`}
                     />
                   </div>
-                  {errors.nodeName && (
-                    <p className="input-error">Node name is required</p>
-                  )}
+
                 </div>
 
                 {/* Serial Number */}
@@ -495,8 +491,8 @@ const AddAssetForm = () => {
                       type="text"
                       id="type"
                       value={formData.type || ""}
-                      readOnly
-                      placeholder="Select type"
+                      onChange={(e) => handleInputChange(e)} // Add this onChange handler
+                      placeholder="Select or type"
                       className={`form-input pl-10 ${errors.type ? "error" : ""}`}
                       onClick={() => toggleSection("type")}
                     />
@@ -580,7 +576,7 @@ const AddAssetForm = () => {
                             className="dropdown-item"
                           >
                             <span className={`mr-2 ${option.color}`}>
-                              {option.label === "Inpool" || option.label === "MIS Store" || option.label === "Deployed" ? "✓" : "✗"}
+                              {option.label === "MISStock" || option.label === "Deployed" ? "✓" : "✗"}
                             </span>
                             <span>{option.label}</span>
                           </div>
@@ -596,10 +592,10 @@ const AddAssetForm = () => {
                   </p>
                 </div>
 
-                {/* Team/Department */}
+                {/* Segment/Department */}
                 <div className="form-group">
                   <label htmlFor="department" className="form-label">
-                    Team <span className="text-red-400">*</span>
+                    Segment <span className="text-red-400">*</span>
                   </label>
                   <div className="input-group">
                     <span className="input-icon">
@@ -610,29 +606,29 @@ const AddAssetForm = () => {
                       value={formData.department}
                       onChange={handleSelectChange}
                       className={`form-select pl-10 ${errors.department ? "error" : ""}`}
-                      disabled={loading.teams}
+                      disabled={loading.segments}
                     >
-                      <option value="">Select Team</option>
-                      {loading.teams ? (
-                        <option value="" disabled>Loading teams...</option>
+                      <option value="">Select Segment</option>
+                      {loading.segments ? (
+                        <option value="" disabled>Loading segments...</option>
                       ) : (
-                        teams.map((team) => (
-                          <option key={team._id} value={team.name}>
-                            {team.name} {team.department && `(${team.department})`}
+                        Segments.map((segment) => (
+                          <option key={segment._id} value={segment.name}>
+                            {segment.name} {segment.department && `(${segment.department})`}
                           </option>
                         ))
                       )}
                     </select>
                   </div>
                   {errors.department && (
-                    <p className="input-error">Team is required</p>
+                    <p className="input-error">Segment is required</p>
                   )}
                 </div>
 
-                {/* Issue To */}
+                {/* Asset Owner */}
                 <div className="form-group">
-                  <label htmlFor="issueTo" className="form-label">
-                    Issue To <span className="text-red-400">*</span>
+                  <label htmlFor="assetOwner" className="form-label">
+                    Asset Owner <span className="text-red-400">*</span>
                   </label>
                   <div className="input-group">
                     <span className="input-icon">
@@ -640,15 +636,15 @@ const AddAssetForm = () => {
                     </span>
                     <input
                       type="text"
-                      id="issueTo"
-                      value={formData.issueTo}
+                      id="assetOwner"
+                      value={formData.assetOwner}
                       onChange={handleInputChange}
                       placeholder="Enter recipient name"
-                      className={`form-input pl-10 ${errors.issueTo ? "error" : ""}`}
+                      className={`form-input pl-10 ${errors.assetOwner ? "error" : ""}`}
                     />
                   </div>
-                  {errors.issueTo && (
-                    <p className="input-error">Issue To is required</p>
+                  {errors.assetOwner && (
+                    <p className="input-error">Asset Owner is required</p>
                   )}
                 </div>
               </div>
@@ -659,7 +655,7 @@ const AddAssetForm = () => {
               <h3 className="text-md font-medium mb-4 flex items-center text-gray-200">
                 <FiTool className="mr-2 text-blue-400" /> Additional Details
               </h3>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {/* Category */}
                 <div className="form-group">
@@ -686,7 +682,7 @@ const AddAssetForm = () => {
 
                 {/* Expires */}
                 <div className="form-group">
-                  <label htmlFor="expires" className="form-label">Expires</label>
+                  <label htmlFor="expires" className="form-label">Warranty Expire</label>
                   <div className="input-group">
                     <span className="input-icon">
                       <FiCalendar />
@@ -795,23 +791,7 @@ const AddAssetForm = () => {
                   </div>
                 </div>
 
-                {/* Asset Owner */}
-                <div className="form-group">
-                  <label htmlFor="assetOwner" className="form-label">Asset Owner</label>
-                  <div className="input-group">
-                    <span className="input-icon">
-                      <FiTag />
-                    </span>
-                    <input
-                      type="text"
-                      id="assetOwner"
-                      value={formData.assetOwner}
-                      onChange={handleInputChange}
-                      placeholder="Enter asset owner"
-                      className="form-input pl-10"
-                    />
-                  </div>
-                </div>
+
 
                 {/* Cost Center */}
                 <div className="form-group">
@@ -853,7 +833,7 @@ const AddAssetForm = () => {
               <div className="space-y-5">
                 {/* Killdisk Section */}
                 <div className="collapsible-section">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => toggleSection("killdiskDate")}
                     className="collapsible-header"
@@ -866,7 +846,7 @@ const AddAssetForm = () => {
                       {openSection === "killdiskDate" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
                     </span>
                   </button>
-                  
+
                   {openSection === "killdiskDate" && (
                     <div className="collapsible-content">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -908,7 +888,7 @@ const AddAssetForm = () => {
 
                 {/* Disposed Section */}
                 <div className="collapsible-section">
-                  <button 
+                  <button
                     type="button"
                     onClick={() => toggleSection("disposed")}
                     className="collapsible-header"
@@ -921,7 +901,7 @@ const AddAssetForm = () => {
                       {openSection === "disposed" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
                     </span>
                   </button>
-                  
+
                   {openSection === "disposed" && (
                     <div className="collapsible-content">
                       <div className="form-group">
@@ -947,7 +927,7 @@ const AddAssetForm = () => {
 
             {/* Order Information Section */}
             <div className="collapsible-section">
-              <button 
+              <button
                 type="button"
                 onClick={() => toggleSection("orderInfo")}
                 className="collapsible-header"
@@ -960,7 +940,7 @@ const AddAssetForm = () => {
                   {openSection === "orderInfo" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
                 </span>
               </button>
-              
+
               {openSection === "orderInfo" && (
                 <div className="collapsible-content">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1033,12 +1013,12 @@ const AddAssetForm = () => {
                     category: "",
                     status: "",
                     department: "",
-                    issueTo: "",
+                    assetOwner: "",
                     note: "",
                     defaultLocation: "Select Location",
                     costCenter: "",
                     receivedDate: "",
-                    assetOwner: "",
+
                     condition: "",
                     storeLocation: "Rack No",
                     killdiskDate: "",
@@ -1053,7 +1033,7 @@ const AddAssetForm = () => {
               >
                 Reset Form
               </button>
-              
+
               <button
                 type="button"
                 className={`btn-primary ${loading.form ? 'loading' : ''}`}
@@ -1074,7 +1054,7 @@ const AddAssetForm = () => {
         </div>
       </div>
 
-      
+
     </div>
   );
 };

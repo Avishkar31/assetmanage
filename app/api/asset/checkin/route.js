@@ -12,7 +12,7 @@ export async function POST(req) {
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     // }
 
-    const { serialNumber, nodeName, assetUser,issueTo } = await req.json();
+    const { serialNumber, nodeName, assetUser,assetOwner } = await req.json();
 
     if (!serialNumber || !nodeName) {
       return NextResponse.json(
@@ -22,30 +22,30 @@ export async function POST(req) {
     }
 
     const asset = await Asset.findOne({ serialNumber, nodeName })
-      .populate('issueTo')
+      .populate('assetOwner')
       .populate('assetHistory.user');
 
     if (!asset) {
       return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
-    // const previousIssueTo = asset.issueTo;
+    // const previousAssetOwner = asset.assetOwner;
     
-    asset.status = "Inpool";
-    asset.issueTo = issueTo;
+    asset.status = "MISStock";
+    asset.assetOwner = assetOwner;
     asset.checkInDate = new Date();
     asset.assetHistory.push({
-      user: issueTo,
+      user: assetOwner,
       action: "checkIn",
       date: new Date(),
-      status: "Inpool",  
+      status: "MISStock",  
       updatedBy: assetUser, // Assuming assetUser is the user checking in the asset
     });
 
     await asset.save();
 
     const populatedAsset = await Asset.findById(asset._id)
-      .populate('issueTo')
+      .populate('assetOwner')
       .populate('assetHistory.user')
 
     return NextResponse.json({

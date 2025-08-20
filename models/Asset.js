@@ -5,15 +5,15 @@ const assetSchema = new mongoose.Schema({
   nodeName: String,
   serialNumber: { type: String, required: true, unique: true },
   manufacturer: String,
+  type: String, // Changed to String for consistency
   model: String,
   expires: Date,
   category: String,
   status: {
     type: String,
     enum: [
-      "Inpool",
+      "MISStock",
       "New Purchase",
-      "MIS Store",
       "Buyback",
       "Disposed",
       "Inactive",
@@ -22,12 +22,11 @@ const assetSchema = new mongoose.Schema({
     required: true
   },
   department: String,
-  issueTo: String, // Changed to String
+  assetOwner: String, // Changed to String
   note: String,
   defaultLocation: String,
   costCenter: String,
   receivedDate: Date,
-  assetOwner: String,
   condition: String,
   storeLocation: String,
   killdiskDate: Date,

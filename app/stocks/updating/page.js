@@ -7,9 +7,8 @@ const Dashboard = () => {
   const [selectedCondition, setSelectedCondition] = useState("Excellent");
 
   const ramOptions = [
-    { label: "Inpool", available: true },
+    { label: "MISStock", available: true },
     { label: "New Purchase", available: true },
-    { label: "MIS Store", available: true },
     { label: "Buyback", available: true },
     { label: "Disposed", available: true },
     { label: "Inactive", available: true },
@@ -130,12 +129,12 @@ const Dashboard = () => {
           </div>
           <div className="mb-4">
             <div className="flex items-center mb-2">
-              <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
-                Issue to
+              <label htmlFor="assetOwner" className="w-52 text-gray-500 mr-2">
+                Asset Owner
               </label>
               <input
                 type="text"
-                id="issueTo"
+                id="assetOwner"
                 placeholder="Enter the username"
                 className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
               />
@@ -254,7 +253,7 @@ const Dashboard = () => {
             </div>
             <div className="mb-4">
               <div className="flex items-center mb-2">
-                <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
+                <label htmlFor="assetOwner" className="w-52 text-gray-500 mr-2">
                   Note
                 </label>
                 <textarea
@@ -320,12 +319,12 @@ const Dashboard = () => {
             <h3>Order Information related</h3>
             <div className="mb-4">
               <div className="flex items-center mb-2">
-                <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
+                <label htmlFor="ponumber" className="w-52 text-gray-500 mr-2">
                   PO Number
                 </label>
                 <input
                   type="text"
-                  id="issueTo"
+                  id="ponumber"
                   placeholder="Enter the username"
                   className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
                 />
@@ -333,12 +332,12 @@ const Dashboard = () => {
             </div>
             <div className="mb-4">
               <div className="flex items-center mb-2">
-                <label htmlFor="issueTo" className="w-52 text-gray-500 mr-2">
+                <label htmlFor="order" className="w-52 text-gray-500 mr-2">
                   Order
                 </label>
                 <input
                   type="text"
-                  id="issueTo"
+                  id="order"
                   placeholder="Enter the username"
                   className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
                 />

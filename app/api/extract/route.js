@@ -83,12 +83,12 @@ export async function GET(req) {
       category: "Category",
       status: "Status",
       department: "Department",
-      issueTo: "Issue To",
+      assetOwner: "Asset Owner",
       note: "Note",
       defaultLocation: "Default Location",
       costCenter: "Cost Center",
       receivedDate: "Received Date",
-      assetOwner: "Asset Owner",
+      
       condition: "Condition",
       storeLocation: "Store Location",
       poNumber: "PO Number",
@@ -103,7 +103,7 @@ export async function GET(req) {
       for (const [key, displayName] of Object.entries(columnMap)) {
         if (key.includes('Date')) {
           row[displayName] = asset[key] ? formatDate(asset[key]) : "";
-        } else if (key === 'issueTo') {
+        } else if (key === 'assetOwner') {
           row[displayName] = asset[key] || "";
         } else {
           row[displayName] = asset[key] || "";

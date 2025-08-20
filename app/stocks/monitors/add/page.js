@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Save } from "lucide-react";
 
 export default function AddMonitorPage() {
-  const [teams, setTeams] = useState([]);
+  const [segments, setSegments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
@@ -16,16 +16,16 @@ export default function AddMonitorPage() {
     prNumber: "",
     poNumber: "",
     serialNumber: "",
-    status: "inpool",
+    status: "MISStock",
     updatedBy: "", // Changed from username to updatedBy for consistency
-    team: "",
-    issueTo: ""
+    segment: "",
+    assetOwner: ""
   });
   
   const router = useRouter();
   
   useEffect(() => {
-    fetchTeams();
+    fetchSegments();
     try {
       const userString = localStorage.getItem("user");
       if (userString) {
@@ -49,15 +49,15 @@ export default function AddMonitorPage() {
     }
   }, []);
   
-  const fetchTeams = async () => {
+  const fetchSegments = async () => {
     try {
-      const response = await fetch('/api/teams');
+      const response = await fetch('/api/segments');
       if (response.ok) {
         const data = await response.json();
-        setTeams(data.data || []);
+        setSegments(data.data || []);
       }
     } catch (error) {
-      console.error("Error fetching teams:", error);
+      console.error("Error fetching segments:", error);
     }
   };
   
@@ -71,8 +71,8 @@ export default function AddMonitorPage() {
     setLoading(true);
     setError(null);
     
-    // Validate if deployed but no issueTo
-    if (formData.status === "deployed" && !formData.issueTo) {
+    // Validate if deployed but no assetOwner
+    if (formData.status === "deployed" && !formData.assetOwner) {
       setError("Recipient is required when status is set to Deployed");
       setLoading(false);
       return;
@@ -86,7 +86,7 @@ export default function AddMonitorPage() {
         // Create proper history entry with separate user and updatedBy fields
         assetHistory: {
           date: new Date(),
-          user: formData.issueTo || null, // Recipient
+          user: formData.assetOwner || null, // Recipient
           updatedBy: formData.updatedBy, // Person performing the action
           action: 'created',
           status: formData.status
@@ -217,35 +217,35 @@ export default function AddMonitorPage() {
               required
               className="w-full p-2 rounded bg-gray-700 text-white"
             >
-              <option value="inpool">In Pool</option>
+              <option value="MISStock">MIS Stock</option>
               <option value="deployed">Deployed</option>
               <option value="disposed">Disposed</option>
             </select>
           </div>
           
           <div>
-            <label className="block mb-2">Team*</label>
+            <label className="block mb-2">Segment*</label>
             <select
-              name="team"
-              value={formData.team}
+              name="segment"
+              value={formData.segment}
               onChange={handleInputChange}
               required
               className="w-full p-2 rounded bg-gray-700 text-white"
             >
-              <option value="">Select Team</option>
-              {teams.map(team => (
-                <option key={team._id} value={team._id}>{team.name}</option>
+              <option value="">Select Segment</option>
+              {segments.map(segment => (
+                <option key={segment._id} value={segment._id}>{segment.name}</option>
               ))}
             </select>
           </div>
 
-          {(formData.status === "deployed" || formData.status === "inpool") && (
+          {(formData.status === "deployed" || formData.status === "MISStock") && (
             <div>
-              <label className="block mb-2">Issue To*</label>
+              <label className="block mb-2">Asset Owner*</label>
               <input
                 type="text"
-                name="issueTo"
-                value={formData.issueTo}
+                name="assetOwner"
+                value={formData.assetOwner}
                 onChange={handleInputChange}
                 className="w-full p-2 rounded bg-gray-700 text-white"
                 required={formData.status === "deployed"}

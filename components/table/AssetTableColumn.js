@@ -1,6 +1,6 @@
 import { FaEdit, FaTrash } from "react-icons/fa";
 
-import { useNavigate } from "react-router-dom"; 
+import { useRouter } from "next/navigation";
 const columnData = [
   {
     accessorKey: "nodeName",
@@ -91,8 +91,8 @@ const columnData = [
     enableColumnFilter: true,
   },
   {
-    accessorKey: "issueTo",
-    header: "Issued To",
+    accessorKey: "assetOwner",
+    header: "Asset Owner",
     minWidth: 120,
     cell: (info) => info.getValue() || "-",
     enableColumnFilter: true,
@@ -126,13 +126,7 @@ const columnData = [
     },
     enableColumnFilter: true,
   },
-  {
-    accessorKey: "assetOwner",
-    header: "Asset Owner",
-    minWidth: 130,
-    cell: (info) => info.getValue() || "-",
-    enableColumnFilter: true,
-  },
+  
   {
     accessorKey: "condition",
     header: "Condition",

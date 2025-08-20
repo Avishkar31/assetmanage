@@ -21,9 +21,14 @@ export async function PUT(req) {
       status,
       allocation,
       period,
-      issueTo,
+      assetOwner,
       note,
-      accessories
+      accessories,
+      action,
+      updatedBy,
+      previousAssetOwner,
+      returnBy,
+      newAssignee
     } = data;
 
     // Asset identifier validation
@@ -47,7 +52,7 @@ export async function PUT(req) {
       );
     }
 
-    // Update fields if provided in the request
+    // Update general fields
     const fieldsToUpdate = [
       'model', 'category', 'type', 'deskLocation', 'poNumber', 
       'orderNumber', 'storeLocation', 'status', 'allocation', 
@@ -68,14 +73,14 @@ export async function PUT(req) {
       };
     }
 
-    // Handle user assignment if issueTo is provided
+    // Handle user assignment if assetOwner is provided
     let user = null;
-    if (issueTo) {
-      user = await User.findOne({ fullName: issueTo.toLowerCase() });
+    if (assetOwner) {
+      user = await User.findOne({ fullName: assetOwner.toLowerCase() });
 
       if (!user) {
         user = new User({
-          fullName: issueTo.toLowerCase(),
+          fullName: assetOwner.toLowerCase(),
           createdDate: Date.now(),
           department: "default",
           password: "defaultPassword",
@@ -84,21 +89,41 @@ export async function PUT(req) {
         await user.save();
       }
       
-      existingAsset.issueTo = user._id;
+      existingAsset.assetOwner = user._id;
+    } else {
+      existingAsset.assetOwner = null; // returned to pool
     }
 
-    // Add history entry for this update
+    // Add history entry
     if (!existingAsset.assetHistory) {
       existingAsset.assetHistory = [];
     }
 
+    let historyNote = note;
+
+    if (!historyNote) {
+      if (action === "reassigned") {
+        historyNote = `Returned by ${returnBy}, reassigned from ${previousAssetOwner} to ${newAssignee}`;
+      } else if (action === "statusChange") {
+        historyNote = `Status changed to ${status}`;
+      } else {
+        historyNote = `Asset updated with ${Object.keys(data).filter(key => key !== 'serialNumber' && key !== 'nodeName').join(', ')}`;
+      }
+    }
+
     existingAsset.assetHistory.push({
       user: user?._id || null,
-      action: "update",
+      action: action || "update",
       date: new Date(),
-      status: existingAsset.status,
-      note: `Asset updated with ${Object.keys(data).filter(key => key !== 'serialNumber' && key !== 'nodeName').join(', ')}`
+      status: status || existingAsset.status,
+      updatedBy: updatedBy || "system",
+      note: historyNote
     });
+
+    // Update status if provided
+    if (status) {
+      existingAsset.status = status;
+    }
 
     // Record update timestamp
     existingAsset.lastUpdated = new Date();
@@ -116,8 +141,7 @@ export async function PUT(req) {
   }
 }
 
-// If you need to support specific updates with PATCH
+// If you need to support partial updates
 export async function PATCH(req) {
-  // For partial updates, we can reuse the PUT logic
   return PUT(req);
 }
