@@ -21,7 +21,7 @@ export async function GET(req) {
       if (status.toLowerCase() === "new purchase") {
         filter.status = "New Purchase";
       } else {
-        filter.status = new RegExp(`^${status}$`, 'i');
+        filter.status = new RegExp(`^${status}$`, "i");
       }
       console.log("Status filter:", filter.status);
     }
@@ -33,6 +33,10 @@ export async function GET(req) {
     // Handle category
     const category = searchParams.get("category");
     if (category) filter.category = category;
+
+    // Handle segment
+    const segment = searchParams.get("segment");
+    if (segment) filter.segment = segment;
 
     // Handle purchase date range
     const startDate = searchParams.get("startDate");
@@ -67,44 +71,44 @@ export async function GET(req) {
     }
 
     // Prepare filename
-    const timestamp = new Date().toISOString().split('T')[0];
+    const timestamp = new Date().toISOString().split("T")[0];
     let filename = `assets_export_${timestamp}.csv`;
     if (status) {
-      filename = `${status.toLowerCase().replace(/\s+/g, '_')}_assets_${timestamp}.csv`;
+      filename = `${status.toLowerCase().replace(/\s+/g, "_")}_assets_${timestamp}.csv`;
     }
 
-    // Define columns with their display names
+    // Define columns with their display names (aligned with import headers)
     const columnMap = {
-      nodeName: "Node Name",
-      serialNumber: "Serial Number",
+      nodeName: "NodeName",
+      serialNumber: "SerialNumber",
       manufacturer: "Manufacturer",
+      type: "Type",
       model: "Model",
-      expires: "Expires",
-      category: "Category",
+      expires: "Expries",
+      category: "Categories",
       status: "Status",
+      segment: "Segment",
       department: "Department",
-      assetOwner: "Asset Owner",
+      assetOwner: "AssetOwner",
       note: "Note",
-      defaultLocation: "Default Location",
-      costCenter: "Cost Center",
-      receivedDate: "Received Date",
-      
+      defaultLocation: "DefaultLocation",
+      costCenter: "CostCenter",
+      receivedDate: "ReceivedDate",
       condition: "Condition",
-      storeLocation: "Store Location",
-      poNumber: "PO Number",
+      storeLocation: "StoreLocation",
+      poNumber: "PONumber",
       order: "Order",
-      purchaseDate: "Purchase Date",
-      checkOutDate: "Check Out Date"
+      purchaseDate: "PurchaseNumber",
+      checkOutDate: "CheckOutDate",
+      checkInDate: "CheckInDate"
     };
 
     // Transform assets data
     const csvData = assets.map(asset => {
       const row = {};
       for (const [key, displayName] of Object.entries(columnMap)) {
-        if (key.includes('Date')) {
+        if (key.toLowerCase().includes("date")) {
           row[displayName] = asset[key] ? formatDate(asset[key]) : "";
-        } else if (key === 'assetOwner') {
-          row[displayName] = asset[key] || "";
         } else {
           row[displayName] = asset[key] || "";
         }
@@ -135,7 +139,7 @@ export async function GET(req) {
       {
         error: "Failed to export assets",
         details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        stack: process.env.NODE_ENV === "development" ? error.stack : undefined
       },
       { status: 500 }
     );

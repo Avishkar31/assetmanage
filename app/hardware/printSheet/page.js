@@ -22,17 +22,12 @@ const PrintSheet = () => {
   };
   
   const [formData, setFormData] = useState({
-    poNumber: "",
-    orderNumber: "",
     assetOwner: "",
-    deskLocation: "",
-    category: "",
     type: "",
     model: "",
     nodeName: "",
     serialNumber: "",
-    allocation: "",
-    period: "",
+    
     issueDate: getCurrentDateTime(),
     accessories: {
       CPU: false,
@@ -58,14 +53,21 @@ const PrintSheet = () => {
     
     // Load main form fields
     const fields = [
-      "poNumber", "orderNumber", "assetOwner", "deskLocation", 
-      "category", "type", "model", "nodeName", "serialNumber", 
-      "allocation", "period"
+      "assetOwner", "type", "model", "nodeName", "serialNumber"
     ];
 
     const updatedData = {};
     fields.forEach((field) => {
-      const value = searchParams.get(field);
+      let value = null;
+
+      // case-insensitive match
+      for (const [key, val] of searchParams.entries()) {
+        if (key.toLowerCase() === field.toLowerCase()) {
+          value = val;
+          break;
+        }
+      }
+
       if (value) updatedData[field] = value;
     });
 
@@ -199,7 +201,7 @@ const PrintSheet = () => {
           {/* Form title */}
           <h2 className="text-center font-bold my-4 underline">Hardware Allocation & Receipt Form</h2>
           
-          {/* Form fields - positioned as in the image */}
+          {/* Form fields */}
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs mb-4">
             <div className="flex">
               <span className="w-16">Asset Owner:</span>
@@ -212,7 +214,6 @@ const PrintSheet = () => {
               />
             </div>
             
-        
             <div className="flex">
               <span className="w-24">Type:</span>
               <input
@@ -253,7 +254,6 @@ const PrintSheet = () => {
                 className="border-b border-gray-500 flex-grow bg-transparent"
               />
             </div>
-            
           </div>
           
           {/* Accessories section */}

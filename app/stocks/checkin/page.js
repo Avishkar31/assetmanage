@@ -104,49 +104,60 @@ const Dashboard = () => {
   };
 
   const handleCheckIn = async () => {
-    if (
-      !formData.status ||
-      !formData.assetOwner ||
-      !formData.defaultLocation ||
-      !formData.checkinDate
-    ) {
-      alert(
-        "Please fill in all mandatory fields: Status, Asset Owner, Default Location, and Check-in Date."
-      );
-      return;
-    }
-    const storedUserData = JSON.parse(localStorage.getItem('user'));
-    console.log("Stored User Data:", storedUserData);
+  if (
+    !formData.status ||
+    !formData.assetOwner ||
+    !formData.defaultLocation ||
+    !formData.checkinDate
+  ) {
+    alert(
+      "Please fill in all mandatory fields: Status, Asset Owner, Default Location, and Check-in Date."
+    );
+    return;
+  }
 
-    const ddata = {
-      nodeName: formData.nodeName,
-      status: formData.status,
-      assetOwner: formData.assetOwner,
-      storeLocation: formData.defaultLocation,
-      note: formData.note || "Checked in after repair",
-      checkType: "checkin",
-      checkinDate: formData.checkinDate,
-      serialNumber: serialNumber,
-      assetUser: storedUserData.siemensId
-    };
+  // Blocked statuses for check-in
+  const invalidStatuses = [ "Deployed", "Buyback", "Disposed"];
 
-    try {
-      const response = await fetch("/api/asset/checkin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(ddata)
-      });
-      if (response.ok) {
-        await response.json();
-        alert("Asset Check-In successfully");
-        router.push("/stocks/allasset");
-      } else {
-        alert("Failed to check-in asset!");
-      }
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    }
+  if (invalidStatuses.includes(formData.status)) {
+    alert(
+      `Status cannot be '${formData.status}' for check-in. Please select a different status.`
+    );
+    return;
+  }
+
+  const storedUserData = JSON.parse(localStorage.getItem("user"));
+  console.log("Stored User Data:", storedUserData);
+
+  const ddata = {
+    nodeName: formData.nodeName,
+    status: formData.status,
+    assetOwner: formData.assetOwner,
+    storeLocation: formData.defaultLocation,
+    note: formData.note || "Checked in after repair",
+    checkType: "checkin",
+    checkinDate: formData.checkinDate,
+    serialNumber: serialNumber,
+    assetUser: storedUserData.siemensId
   };
+
+  try {
+    const response = await fetch("/api/asset/checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(ddata)
+    });
+    if (response.ok) {
+      await response.json();
+      alert("Asset Check-In successfully");
+      router.push("/stocks/allasset");
+    } else {
+      alert("Failed to check-in asset!");
+    }
+  } catch (error) {
+    alert(`Error: ${error.message}`);
+  }
+};
 
   return (
       <div className="flex">
@@ -251,7 +262,7 @@ const Dashboard = () => {
                   htmlFor="defaultLocation"
                   className="w-52 text-gray-500 mr-2"
                 >
-                  Default Location <span className="text-red-500">*</span>
+                  Location <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="defaultLocation"

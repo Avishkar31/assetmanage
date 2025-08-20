@@ -33,18 +33,18 @@ export async function POST(req) {
     const requiredColumns = [
       "NodeName",
       "Manufacturer",
+      "Type",          // ✅ ensure required
       "SerialNumber",
       "Model",
       "Expries",
       "Categories",
       "Status",
-      "Department",
+      "Segment",       // ✅ ensure required
       "assetOwner",
       "Note",
       "DefaultLocation",
       "CostCenter",
       "ReceivedDate",
-      
       "Condition",
       "StoreLocation",
       "PONumber",
@@ -166,22 +166,16 @@ const transformCSVData = (csvRow, assetUser) => {
 
     // Try formats: DD-MM-YYYY, MM-DD-YYYY, YYYY-MM-DD
     try {
-      // Check if it has dashes and convert
       if (dateString.includes('-')) {
         const parts = dateString.split('-');
         if (parts.length === 3) {
-          // If the first part is 4 digits, assume YYYY-MM-DD
           if (parts[0].length === 4) {
-            return new Date(dateString);
-          } 
-          // Otherwise assume DD-MM-YYYY
-          else {
-            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            return new Date(dateString); // YYYY-MM-DD
+          } else {
+            return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // DD-MM-YYYY
           }
         }
       }
-
-      // Try direct parsing as a fallback
       const date = new Date(dateString);
       return isNaN(date) ? null : date;
     } catch (e) {
@@ -194,10 +188,12 @@ const transformCSVData = (csvRow, assetUser) => {
     nodeName: getColumnValue(csvRow, "NodeName"),
     serialNumber: getColumnValue(csvRow, "SerialNumber"),
     manufacturer: getColumnValue(csvRow, "Manufacturer"),
+    type: getColumnValue(csvRow, "Type"),          // ✅ Added
     model: getColumnValue(csvRow, "Model"),
     expires: safelyParseDate(getColumnValue(csvRow, "Expries")),
     category: getColumnValue(csvRow, "Categories"),
     status: status,
+    segment: getColumnValue(csvRow, "Segment"),    // ✅ Added
     department: getColumnValue(csvRow, "Department"),
     assetOwner: getColumnValue(csvRow, "AssetOwner"),
     note: getColumnValue(csvRow, "Note"),
@@ -214,7 +210,7 @@ const transformCSVData = (csvRow, assetUser) => {
     assetHistory: [
       {
         user: getColumnValue(csvRow, "AssetOwner") || "None",
-        updatedBy: assetUser, // Added updatedBy field for consistency
+        updatedBy: assetUser, // ✅ Consistent with user tracking
         action,
         date: new Date(),
         status
