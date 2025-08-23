@@ -11,7 +11,32 @@ export default function Signup() {
   const [role, setRole] = useState("regular");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    // Check if user is admin
+    const checkAuthorization = () => {
+      try {
+        const user = localStorage.getItem('user');
+        if (!user) {
+          router.push('/login');
+          return;
+        }
+        const userData = JSON.parse(user);
+        if (userData.role?.toLowerCase() !== 'admin') {
+          router.push('/stocks');
+          return;
+        }
+        setIsAuthorized(true);
+      } catch (e) {
+        console.error('Authorization check failed:', e);
+        router.push('/login');
+      }
+    };
+    
+    checkAuthorization();
+  }, [router]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -57,6 +82,23 @@ export default function Signup() {
       alert("Database check failed");
     }
   };
+
+  if (!isAuthorized) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">
+        <div className="bg-red-500/10 p-8 rounded-lg text-center">
+          <h2 className="text-2xl text-red-500 font-bold mb-4">Access Denied</h2>
+          <p className="text-gray-300 mb-4">Only administrators can access this page.</p>
+          <button
+            onClick={() => router.push('/stocks')}
+            className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center p-4">

@@ -100,7 +100,7 @@ const Sidebar = () => {
         const user = localStorage.getItem("user");
         const userData = user ? JSON.parse(user) : null;
         const userId = userData?.id;
-    
+
         if (!token || !userId) {
           console.warn("No token or user ID found in localStorage");
           setUserEmail("Guest");
@@ -108,31 +108,31 @@ const Sidebar = () => {
           setIsLoading(false);
           return;
         }
-    
+
         const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
         const response = await fetch(`${baseUrl}/api/users/${userId}`);
-    
+
         if (!response.ok) {
           console.error("API response error:", response.status);
           setUserEmail("Error " + response.status);
           setIsLoading(false);
           return;
         }
-    
+
         const apiUserData = await response.json();
-    
+
         const userInfo = apiUserData.data || apiUserData;
-    
+
         // Modified siemensId extraction
-        const siemensId = userInfo.siemensId || 
-                         (userInfo.user && userInfo.user.siemensId) || 
-                         (typeof userInfo.email === 'string' ? userInfo.email : null) ||
-                         "";
-    
+        const siemensId = userInfo.siemensId ||
+          (userInfo.user && userInfo.user.siemensId) ||
+          (typeof userInfo.email === 'string' ? userInfo.email : null) ||
+          "";
+
         const role = userInfo.role ||
-                    (userInfo.user && userInfo.user.role) ||
-                    "User";
-    
+          (userInfo.user && userInfo.user.role) ||
+          "User";
+
         if (siemensId) {
           // Only split if it's an email address
           const username = siemensId.includes("@") ? siemensId.split("@")[0] : siemensId;
@@ -155,6 +155,20 @@ const Sidebar = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
+  }, []);
+
+  useEffect(() => {
+    // Get user role from localStorage
+    const user = localStorage.getItem("user");
+    if (user) {
+      try {
+        const userData = JSON.parse(user);
+        setUserRole((userData.role || "").toLowerCase()); // Convert to lowercase for consistent comparison
+      } catch (e) {
+        console.error("Error parsing user data:", e);
+        setUserRole("");
+      }
+    }
   }, []);
 
   const menuItems = [
@@ -224,7 +238,9 @@ const Sidebar = () => {
           label: "Create new user",
           href: "/signup",
           icon: "👤",
-          active: pathname === "/signup"
+          active: pathname === "/signup",
+          disabled: userRole.toLowerCase() !== "admin",
+          title: userRole.toLowerCase() !== "admin" ? "Only admin can delete asset" : ""
         },
         {
           label: "Manufacturers",
@@ -361,22 +377,28 @@ const Sidebar = () => {
                         className="ml-4 mt-1 space-y-1 border-l-2 border-gray-700 pl-4"
                         ref={dropdownRefs[item.dropdownKey]}
                       >
-                        {item.children.map((child, childIndex) => (
-                          <li key={childIndex}>
-                            <a
-                              href={child.href}
-                              className={clsx(
-                                "flex items-center p-2 rounded-md transition-colors",
-                                child.active
-                                  ? "bg-gray-700 text-white font-medium"
-                                  : "text-gray-400 hover:bg-gray-700 hover:text-white"
-                              )}
-                            >
-                              <span className="mr-2">{child.icon}</span>
-                              {child.label}
-                            </a>
-                          </li>
-                        ))}
+                        {item.children.map((child, childIndex) => {
+                          // Special handling for "Create new user" menu item
+                          if (child.label === "Create new user" && userRole.toLowerCase() !== "admin") {
+                            return null; // Don't show the menu item for non-admin users
+                          }
+                          return (
+                            <li key={childIndex}>
+                              <a
+                                href={child.href}
+                                className={clsx(
+                                  "flex items-center p-2 rounded-md transition-colors",
+                                  child.active
+                                    ? "bg-gray-700 text-white font-medium"
+                                    : "text-gray-400 hover:bg-gray-700 hover:text-white"
+                                )}
+                              >
+                                <span className="mr-2">{child.icon}</span>
+                                {child.label}
+                              </a>
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </>

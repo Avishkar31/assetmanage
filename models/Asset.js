@@ -24,7 +24,10 @@ const assetSchema = new mongoose.Schema({
   department: String,
   assetOwner: String, // Changed to String
   note: String,
-  defaultLocation: String,
+  defaultLocation: {
+    type: String,
+    required: false
+  },
   costCenter: String,
   receivedDate: Date,
   condition: String,

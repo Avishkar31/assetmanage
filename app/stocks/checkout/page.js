@@ -19,12 +19,7 @@ const CheckoutForm = () => {
         "✗ This asset cannot be checked out. Please change the status accordingly.",
       color: "text-red-500"
     },
-    // {
-    //   label: "MIS Store",
-    //   description:
-    //     "✓  This asset can be checked out.  Please change the status accordingly. ",
-    //   color: "text-green-500"
-    // },
+
     {
       label: "Buyback",
       description:
@@ -117,9 +112,9 @@ const CheckoutForm = () => {
     }
 
     // Check if status is 'MISStock'
-    if (status === "MISStock") {
+    if (status == "MISStock" || status == "New Purchase") {
       alert(
-        "Status cannot be 'MISStock' for checkout. Please select a different status."
+        "Status cannot be 'MISStock'or 'New Purchase' for checkout. Please select a different status."
       );
       return;
     }
@@ -290,6 +285,34 @@ const CheckoutForm = () => {
               />
             </div>
           </div>
+
+          <div className="mb-4 ml-10">
+              <div className="flex items-center mb-2">
+                <label
+                  htmlFor="defaultLocation"
+                  className="w-52 text-gray-500 mr-2"
+                >
+                  Default Location <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="defaultLocation"
+                  value={formData.defaultLocation || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, defaultLocation: e.target.value })
+                  }
+                  className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
+                >
+                  <option value="">Select Location</option>
+                  <option value="Home">Home</option>
+                  <option value="MIS Store-2nd Compactor Floor">
+                    MIS Store-2nd Compactor Floor
+                  </option>
+                  <option value="MIS Store-4th Floor">MIS Store-4th Floor</option>
+                  <option value="MIS Store-Basement">MIS Store-Basement</option>
+                  <option value="Buyback">Buyback</option>
+                </select>
+              </div>
+            </div>
 
           {/* Checkout Date */}
           <div className="mb-4 ml-10">

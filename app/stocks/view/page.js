@@ -2,14 +2,14 @@
 import { useState, useEffect } from "react";
 import Sidebar from "components/Sidebar";
 import AssetHistoryShow from "@/components/AssetHistoryShow";
+import { toast } from "react-hot-toast";
 
-// Reusable InputComponent
-const InputComponent = ({ id, value, onChange, readOnly }) => (
+// Reusabnent
+const InputComponent = ({ id, value }) => (
   <input
     id={id}
     value={value}
-    onChange={onChange}
-    readOnly={readOnly}
+    readOnly={true}
     className="w-full bg-gray-800 text-white border-gray-600 rounded-lg p-2 outline-none text-sm"
   />
 );
@@ -31,7 +31,6 @@ const ViewAsset = () => {
     storeLocation: "",
     poNumber: "",
     order: "",
-    assetOwner: "",
     type: "",
     deskLocation: "",
     allocation: "",
@@ -39,17 +38,16 @@ const ViewAsset = () => {
     accessories: []
   });
 
-  const [originalData, setOriginalData] = useState({});
   const [history, setHistory] = useState([]);
   const [serialNumber, setSerialNumber] = useState(null);
   const [assetId, setAssetId] = useState(null);
-  const [isReadOnly, setIsReadOnly] = useState(true);
   const [accessories, setAccessories] = useState({});
-  const [isUpdating, setIsUpdating] = useState(false);
-  const [updateMessage, setUpdateMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
   const [userRole, setUserRole] = useState(""); // Add userRole state
+  const [isEditingAccessories, setIsEditingAccessories] = useState(false);
+  const [editableAccessories, setEditableAccessories] = useState({});
+  const [newAccessory, setNewAccessory] = useState({ name: "", quantity: 1 });
 
   useEffect(() => {
     // Handle responsive view
@@ -66,17 +64,16 @@ const ViewAsset = () => {
     const urlParams = new URLSearchParams(window.location.search);
     const serialNumber = urlParams.get("SerialNumber");
     setSerialNumber(serialNumber);
-    
+
     const fetchData = async () => {
       try {
         const response = await fetch(`/api/asset/get?serialNumber=${serialNumber}`);
         if (!response.ok) {
           throw new Error(`Error ${response.status}: ${response.statusText}`);
         }
-        
+
         const data = await response.json();
         setFormData(data);
-        setOriginalData(data); // Store original data for comparison during updates
         setAssetId(data._id);
         setHistory(data.assetHistory || []);
 
@@ -109,18 +106,19 @@ const ViewAsset = () => {
     }
   }, [serialNumber]);
 
-  useEffect(() => {
-    // Get user role from localStorage
-    const user = localStorage.getItem("user");
-    if (user) {
-      try {
-        const userData = JSON.parse(user);
-        setUserRole(userData.role || "");
-      } catch (e) {
-        setUserRole("");
-      }
+useEffect(() => {
+  // Get user role from localStorage
+  const user = localStorage.getItem("user");
+  if (user) {
+    try {
+      const userData = JSON.parse(user);
+      setUserRole((userData.role || "").toLowerCase()); // Convert to lowercase for consistent comparison
+    } catch (e) {
+      console.error("Error parsing user data:", e);
+      setUserRole("");
     }
-  }, []);
+  }
+}, []);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -130,77 +128,10 @@ const ViewAsset = () => {
     }));
   };
 
-  const handleUpdateClick = async () => {
-    if (isReadOnly) {
-      // If in read-only mode, switch to edit mode
-      setIsReadOnly(false);
-      return;
-    }
-
-    try {
-      setIsUpdating(true);
-      setErrorMessage("");
-
-      // Prepare update data with only modified fields
-      const updateData = {
-        serialNumber: formData.serialNumber,
-        nodeName: formData.nodeName
-      };
-      
-      // Include only fields that have changed
-      Object.keys(formData).forEach(key => {
-        if (formData[key] !== originalData[key] && key !== '_id' && key !== 'assetHistory') {
-          updateData[key] = formData[key];
-        }
-      });
-
-      // Only send update if there are changes
-      if (Object.keys(updateData).length <= 2) {
-        setUpdateMessage("No changes detected");
-        setTimeout(() => setUpdateMessage(""), 3000);
-        setIsReadOnly(true);
-        setIsUpdating(false);
-        return;
-      }
-
-      // Call the new PUT endpoint
-      const response = await fetch(`/api/asset/update`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(updateData)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update asset");
-      }
-
-      const result = await response.json();
-      
-      // Update the UI with the returned asset
-      if (result.asset) {
-        setFormData(result.asset);
-        setOriginalData(result.asset);
-        setHistory(result.asset.assetHistory || []);
-      }
-      
-      setIsReadOnly(true);
-      setUpdateMessage(result.message || "Asset updated successfully");
-
-      // Show which fields were changed
-      if (result.changes && result.changes.length > 0) {
-        console.log("Changes made:", result.changes);
-      }
-
-      // Clear message after 3 seconds
-      setTimeout(() => setUpdateMessage(""), 3000);
-    } catch (error) {
-      console.error("Error updating asset:", error);
-      setErrorMessage(error.message || "Failed to update asset");
-    } finally {
-      setIsUpdating(false);
+  const handleUpdateClick = () => {
+    // Redirect to update page with the serial number
+    if (serialNumber) {
+      window.location.href = `/stocks/updating?serialNumber=${serialNumber}`;
     }
   };
 
@@ -241,6 +172,51 @@ const ViewAsset = () => {
     window.location.href = targetUrl;
   };
 
+  const handleUpdateAccessories = () => {
+    setEditableAccessories({...accessories});
+    setIsEditingAccessories(true);
+  };
+
+  const handleSaveAccessories = async () => {
+    try {
+      const response = await fetch(`/api/asset/${assetId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          accessories: editableAccessories
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update accessories');
+      }
+
+      setAccessories(editableAccessories);
+      setIsEditingAccessories(false);
+      toast.success('Accessories updated successfully');
+    } catch (error) {
+      console.error('Error updating accessories:', error);
+      toast.error('Failed to update accessories');
+    }
+  };
+
+  const handleAddAccessory = () => {
+    if (newAccessory.name.trim()) {
+      setEditableAccessories(prev => ({
+        ...prev,
+        [newAccessory.name]: newAccessory.quantity
+      }));
+      setNewAccessory({ name: "", quantity: 1 });
+    }
+  };
+
+  const handleRemoveAccessory = (accessoryName) => {
+    const updatedAccessories = {...editableAccessories};
+    delete updatedAccessories[accessoryName];
+    setEditableAccessories(updatedAccessories);
+  };
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-900 text-white overflow-hidden">
@@ -249,28 +225,10 @@ const ViewAsset = () => {
         <header className="flex justify-between items-center mb-4 md:mb-6">
           <h1 className="text-xl md:text-2xl">Stocks</h1>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <button
-                className="bg-transparent border-none cursor-pointer"
-                onClick={toggleReadOnly}
-              >
-                <lord-icon
-                  src="https://cdn.lordicon.com/fkdzyfle.json"
-                  trigger="hover"
-                  colors="primary:#e4e4e4"
-                  style={{ width: "30px", height: "50px" }}
-                />
-              </button>
-            </div>
           </div>
         </header>
 
         {/* Status Messages */}
-        {updateMessage && (
-          <div className="bg-green-500 text-white p-2 md:p-3 mb-3 md:mb-4 rounded text-sm">
-            {updateMessage}
-          </div>
-        )}
         {errorMessage && (
           <div className="bg-red-500 text-white p-2 md:p-3 mb-3 md:mb-4 rounded text-sm">
             {errorMessage}
@@ -296,11 +254,11 @@ const ViewAsset = () => {
                 // ["Period", "period"],
                 ["Expires", "expires"],
                 ["Default Location", "defaultLocation"],
-                
+
                 ["Cost Center", "costCenter"],
                 ["Received Date", "receivedDate"],
                 ["Asset Condition", "condition"],
-                // ["MIS Store Location", "storeLocation"],
+                ["MIS Store Location", "storeLocation"],
                 ["PO Number", "poNumber"],
                 ["Order", "order"]
               ].map(([label, id]) => (
@@ -310,8 +268,6 @@ const ViewAsset = () => {
                     <InputComponent
                       id={id}
                       value={formData[id] || ""} // Default to empty string if undefined
-                      onChange={handleInputChange}
-                      readOnly={isReadOnly}
                     />
                   </div>
                 </div>
@@ -323,8 +279,7 @@ const ViewAsset = () => {
                   <textarea
                     id="note"
                     value={formData.note || ""}
-                    onChange={handleInputChange}
-                    readOnly={isReadOnly}
+                    readOnly={true}
                     className="w-full bg-gray-800 text-white border-gray-600 rounded-lg p-2 outline-none text-sm"
                     rows={3}
                   />
@@ -344,22 +299,13 @@ const ViewAsset = () => {
             >
               {formData.status === "Deployed" ? "Checkin" : "Checkout"}
             </button>
-            
+
             <button
               type="button"
-              className={`py-2 px-4 mb-2 w-full text-sm font-medium focus:outline-none rounded-lg border focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 ${
-                !isReadOnly
-                  ? "bg-blue-600 text-white hover:bg-blue-700 border-blue-700"
-                  : "dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-              }`}
+              className="py-2 px-4 mb-2 w-full text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:ring-4 focus:ring-gray-100 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
               onClick={handleUpdateClick}
-              disabled={isUpdating}
             >
-              {isUpdating
-                ? "Updating..."
-                : !isReadOnly
-                ? "Save Changes"
-                : "Update"}
+              Update Asset
             </button>
 
             {/* <button
@@ -374,16 +320,24 @@ const ViewAsset = () => {
               type="button"
               className="py-2 px-4 mb-2 w-full text-sm font-medium text-white focus:outline-none bg-red-600 rounded-lg border border-red-700 hover:bg-red-700 focus:z-10 focus:ring-4 focus:ring-red-300"
               onClick={handleDeleteClick}
-              disabled={userRole !== "Admin"}
-              title={userRole !== "Admin" ? "Only admin can delete asset" : ""}
+              disabled={userRole.toLowerCase() !== "admin"}
+              title={userRole.toLowerCase() !== "admin" ? "Only admin can delete asset" : ""}
             >
               Delete
             </button>
 
             <div className="border p-3 md:p-4 rounded-lg dark:bg-gray-800 dark:border-gray-600">
-              <h3 className="text-md md:text-lg font-medium mb-2 dark:text-white">
-                Accessories
-              </h3>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-md md:text-lg font-medium dark:text-white">
+                  Accessories
+                </h3>
+                <button
+                  onClick={handleUpdateAccessories}
+                  className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                >
+                  Edit Accessories
+                </button>
+              </div>
               {Object.keys(accessories).length === 0 ? (
                 <p className="dark:text-gray-400 text-sm">
                   No Accessories available for this asset.
@@ -409,6 +363,82 @@ const ViewAsset = () => {
           </div>
         </div>
       </div>
+
+      {/* Edit Accessories Modal */}
+      {isEditingAccessories && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg w-96 max-w-full mx-4">
+            <h2 className="text-xl font-bold mb-4">Edit Accessories</h2>
+            
+            {/* Add new accessory */}
+            <div className="mb-4 flex space-x-2">
+              <input
+                type="text"
+                placeholder="Accessory name"
+                value={newAccessory.name}
+                onChange={(e) => setNewAccessory(prev => ({ ...prev, name: e.target.value }))}
+                className="flex-1 px-3 py-2 bg-gray-700 rounded-lg text-white"
+              />
+              <input
+                type="number"
+                min="1"
+                value={newAccessory.quantity}
+                onChange={(e) => setNewAccessory(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                className="w-20 px-3 py-2 bg-gray-700 rounded-lg text-white"
+              />
+              <button
+                onClick={handleAddAccessory}
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
+              >
+                Add
+              </button>
+            </div>
+
+            {/* Accessories list */}
+            <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
+              {Object.entries(editableAccessories).map(([accessory, quantity], index) => (
+                <div key={index} className="flex items-center justify-between bg-gray-700 p-2 rounded-lg">
+                  <span className="text-white">{accessory}</span>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="1"
+                      value={quantity}
+                      onChange={(e) => setEditableAccessories(prev => ({
+                        ...prev,
+                        [accessory]: parseInt(e.target.value) || 1
+                      }))}
+                      className="w-16 px-2 py-1 bg-gray-600 rounded text-white"
+                    />
+                    <button
+                      onClick={() => handleRemoveAccessory(accessory)}
+                      className="text-red-500 hover:text-red-400"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setIsEditingAccessories(false)}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveAccessories}
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -7,12 +7,13 @@ export async function POST(req) {
   try {
     await dbConnect();
     // const user = await verifyToken(req);
-    
+
     // if (!user || (user.role !== 'admin' && user.role !== 'regular')) {
     //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     // }
 
-    const { serialNumber, nodeName, assetOwner,assetUser } = await req.json();
+    const { serialNumber, nodeName, assetOwner, assetUser, defaultLocation } = await req.json();
+
 
     if (!serialNumber || !nodeName) {
       return NextResponse.json(
@@ -32,12 +33,17 @@ export async function POST(req) {
     asset.status = 'Deployed';
     asset.assetOwner = assetOwner;
     asset.checkOutDate = new Date();
+
+    if (defaultLocation) {
+      asset.defaultLocation = defaultLocation;  // <-- new line
+    }
     asset.assetHistory.push({
       user: assetOwner,
       action: 'checkOut',
       date: new Date(),
       status: 'Deployed',
-      updatedBy: assetUser, // Assuming assetOwner is the user checking out the asset
+      updatedBy: assetUser,
+      location: defaultLocation || asset.defaultLocation // optional
     });
 
     await asset.save();
@@ -46,9 +52,9 @@ export async function POST(req) {
       .populate('assetOwner')
       .populate('assetHistory.user');
 
-    return NextResponse.json({ 
-      message: "Asset checked out successfully", 
-      asset: populatedAsset 
+    return NextResponse.json({
+      message: "Asset checked out successfully",
+      asset: populatedAsset
     });
   } catch (error) {
     console.error("Error:", error);
