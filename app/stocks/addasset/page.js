@@ -699,7 +699,7 @@ const AddAssetForm = () => {
 
                 {/* Default Location */}
                 <div className="form-group">
-                  <label htmlFor="defaultLocation" className="form-label">Default Location</label>
+                  <label htmlFor="defaultLocation" className="form-label"> Location</label>
                   <div className="input-group">
                     <span className="input-icon">
                       <HiOutlineLocationMarker />
