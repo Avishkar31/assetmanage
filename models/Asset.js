@@ -21,8 +21,10 @@ const assetSchema = new mongoose.Schema({
     ],
     required: true
   },
-  department: String,
-  assetOwner: String, // Changed to String
+  segment: String,
+  assetOwner: {
+  type: String
+}, // Changed to String
   note: String,
   defaultLocation: {
     type: String,
@@ -41,14 +43,18 @@ const assetSchema = new mongoose.Schema({
   checkOutDate: Date,
   checkInDate: Date,
   assetHistory: [
-    {
-      user: String, // Changed to String
-      action: { type: String, enum: ["checkIn", "checkOut"] },
-      date: { type: Date, default: Date.now },
-      status: String,
-      updatedBy: String,
-    }
-  ],
+  {
+    user: String, 
+    action: { 
+      type: String, 
+      enum: ["created", "checkIn", "checkOut", "update", "disposed"] // added disposed
+    },
+    date: { type: Date, default: Date.now },
+    status: String,
+    updatedBy: String,
+    assetOwner: String // 👈 add this if you want to display owner in history
+  }
+],
   accessories: String
 });
 

@@ -143,19 +143,31 @@ useEffect(() => {
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`/api/asset/delete/${assetId}`, {
-        method: "DELETE"
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete asset");
+      if (!assetId) {
+        throw new Error("Asset ID is missing");
       }
 
+      const response = await fetch(`/api/asset/delete/${assetId}`, {
+        method: "DELETE",
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete asset");
+      }
+
+      toast.success("Asset deleted successfully");
       // Redirect to assets list page after successful deletion
-      window.location.href = "/stocks";
+      setTimeout(() => {
+        window.location.href = "/stocks/allasset";
+      }, 1000);
     } catch (error) {
       console.error("Error deleting asset:", error);
+      toast.error(error.message || "Failed to delete asset. You may not have permission.");
       setErrorMessage(
         error.message || "Failed to delete asset. You may not have permission."
       );

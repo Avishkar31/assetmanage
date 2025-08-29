@@ -1,49 +1,40 @@
 import { NextResponse } from "next/server";
 import dbConnect from "../../../../lib/dbConnect";
 import Asset from "../../../../models/Asset";
-import { verifyToken } from "../../../../lib/auth";
+
 
 export async function POST(req) {
   try {
     await dbConnect();
-    // const user = await verifyToken(req);
+    
 
-    // if (!user || (user.role !== 'admin' && user.role !== 'regular')) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
+    const { serialNumber, nodeName, status, assetOwner, storeLocation, note, checkOutDate, assetUser } = await req.json();
 
-    const { serialNumber, nodeName, assetOwner, assetUser, defaultLocation } = await req.json();
-
-
-    if (!serialNumber || !nodeName) {
+    if (!serialNumber || !nodeName || !status || !assetOwner || !storeLocation || !checkOutDate) {
       return NextResponse.json(
-        { error: "Serial number and node name are required." },
+        { error: "All fields are required." },
         { status: 400 }
       );
     }
 
-    const asset = await Asset.findOne({ serialNumber, nodeName })
-      .populate('assetOwner')
-      .populate('assetHistory.user');
+    const asset = await Asset.findOne({ serialNumber, nodeName });
 
     if (!asset) {
       return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
-    asset.status = 'Deployed';
+    asset.status = status;
     asset.assetOwner = assetOwner;
-    asset.checkOutDate = new Date();
+    asset.checkOutDate = new Date(checkOutDate);
+    asset.storeLocation = storeLocation;
+    asset.note = note || "Standard check-out";
 
-    if (defaultLocation) {
-      asset.defaultLocation = defaultLocation;  // <-- new line
-    }
     asset.assetHistory.push({
       user: assetOwner,
       action: 'checkOut',
       date: new Date(),
-      status: 'Deployed',
-      updatedBy: assetUser,
-      location: defaultLocation || asset.defaultLocation // optional
+      status: status,
+      updatedBy: assetUser || "unknown-user"
     });
 
     await asset.save();

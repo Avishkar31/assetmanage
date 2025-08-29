@@ -11,7 +11,7 @@ const validSortColumns = [
   "model",
   "category",
   "status",
-  "department",
+  "segment",
   "assetOwner",
   "condition",
 ];

@@ -7,7 +7,7 @@ import Link from "next/link";
 export default function Signup() {
   const [siemensId, setSiemensId] = useState("");
   const [password, setPassword] = useState("");
-  const [department, setDepartment] = useState("");
+  const [segment, setSegment] = useState("");
   const [role, setRole] = useState("regular");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -43,7 +43,7 @@ export default function Signup() {
     setError("");
     setIsLoading(true);
 
-    if (!siemensId || !password || !department || !role) {
+    if (!siemensId || !password || !segment || !role) {
       setError("All fields are required.");
       setIsLoading(false);
       return;
@@ -59,7 +59,7 @@ export default function Signup() {
       const response = await fetch("/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siemensId, password, department, role })
+        body: JSON.stringify({ siemensId, password, segment, role })
       });
 
       const data = await response.json();
@@ -158,18 +158,18 @@ export default function Signup() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label htmlFor="department" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                  <label htmlFor="segment" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
                     <FiBriefcase className="mr-2" />
-                    Department
+                    Segment
                   </label>
                   <div className="relative">
                     <input
-                      id="department"
+                      id="segment"
                       type="text"
-                      placeholder="Your department"
+                      placeholder="Your segment"
                       className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                      value={department}
-                      onChange={(e) => setDepartment(e.target.value)}
+                      value={segment}
+                      onChange={(e) => setSegment(e.target.value)}
                       required
                     />
                   </div>

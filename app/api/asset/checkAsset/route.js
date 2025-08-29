@@ -58,7 +58,7 @@ export async function POST(req) {
     existingAsset.status = status || existingAsset.status;
     existingAsset.storeLocation = storeLocation || existingAsset.storeLocation;
     existingAsset.note = note || existingAsset.note;
-    
+
     // Update purchase date if provided
     if (purchaseDate) {
       existingAsset.purchaseDate = new Date(purchaseDate);
@@ -72,7 +72,7 @@ export async function POST(req) {
         user = new User({
           fullName: assetOwner?.toLowerCase(),
           createdDate: Date.now(),
-          department: "default",
+          segment: "default",
           password: "defaultPassword",
           siemensId: `siemens-${Date.now()}`
         });
@@ -138,8 +138,8 @@ export async function POST(req) {
   } catch (err) {
     console.error("Error in POST handler:", err);
     return NextResponse.json(
-      { 
-        error: "Internal Server Error", 
+      {
+        error: "Internal Server Error",
         details: err.message,
         stack: process.env.NODE_ENV === 'development' ? err.stack : undefined
       },

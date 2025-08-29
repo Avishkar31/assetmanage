@@ -91,7 +91,7 @@ const AddAssetForm = () => {
     expires: "",
     category: "",
     status: "",
-    department: "",
+    segment: "",
     assetOwner: "",
     note: "",
     defaultLocation: "Select Location",
@@ -113,7 +113,7 @@ const AddAssetForm = () => {
     manufacturer: false,
     serialNumber: false,
     status: false,
-    department: false,
+    segment: false,
     assetOwner: false,
     type: false
   });
@@ -251,7 +251,7 @@ const AddAssetForm = () => {
       "manufacturer",
       "serialNumber",
       "status",
-      "department",
+      "segment",
       "assetOwner",
       "type"
     ];
@@ -318,7 +318,7 @@ const AddAssetForm = () => {
         expires: "",
         category: "",
         status: "",
-        department: "",
+        segment: "",
         assetOwner: "",
         note: "",
         defaultLocation: "Select Location",
@@ -592,9 +592,9 @@ const AddAssetForm = () => {
                   </p>
                 </div>
 
-                {/* Segment/Department */}
+                {/* Segment/segment */}
                 <div className="form-group">
-                  <label htmlFor="department" className="form-label">
+                  <label htmlFor="segment" className="form-label">
                     Segment <span className="text-red-400">*</span>
                   </label>
                   <div className="input-group">
@@ -602,10 +602,10 @@ const AddAssetForm = () => {
                       <HiOutlineOfficeBuilding />
                     </span>
                     <select
-                      id="department"
-                      value={formData.department}
+                      id="segment"
+                      value={formData.segment}
                       onChange={handleSelectChange}
-                      className={`form-select pl-10 ${errors.department ? "error" : ""}`}
+                      className={`form-select pl-10 ${errors.segment ? "error" : ""}`}
                       disabled={loading.segments}
                     >
                       <option value="">Select Segment</option>
@@ -614,13 +614,13 @@ const AddAssetForm = () => {
                       ) : (
                         Segments.map((segment) => (
                           <option key={segment._id} value={segment.name}>
-                            {segment.name} {segment.department && `(${segment.department})`}
+                            {segment.name} {segment.segment && `(${segment.segment})`}
                           </option>
                         ))
                       )}
                     </select>
                   </div>
-                  {errors.department && (
+                  {errors.segment && (
                     <p className="input-error">Segment is required</p>
                   )}
                 </div>
@@ -1012,7 +1012,7 @@ const AddAssetForm = () => {
                     expires: "",
                     category: "",
                     status: "",
-                    department: "",
+                    segment: "",
                     assetOwner: "",
                     note: "",
                     defaultLocation: "Select Location",

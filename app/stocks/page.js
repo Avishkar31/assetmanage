@@ -3,7 +3,7 @@ import Link from "next/link";
 import Sidebar from "components/Sidebar";
 import DynamicSegmentChart from "@/components/DynamicSegmentChart";
 import ManufacturerPieChart from "components/ManufacturerPieChart";
-import StackedBarChart from "components/StackedBarChart";
+
 import { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import { FiDownload, FiPieChart, FiBarChart2 } from "react-icons/fi";
@@ -31,7 +31,7 @@ function Page() {
 
   const [manufacturers, setManufacturers] = useState([]);
   const [chartKey, setChartKey] = useState(0);
-  
+
   // Keep only one instance of each function
   const toggleDropdown = (setter) => {
     setter((prev) => !prev);
@@ -126,11 +126,11 @@ function Page() {
     async function fetchManufacturersData() {
       try {
         const response = await fetch("/api/Manufacturer");
-        
+
         if (!response.ok) {
           throw new Error("Failed to fetch manufacturers data");
         }
-        
+
         const data = await response.json();
         setManufacturers(data.data || []);
         setChartKey(prevKey => prevKey + 1); // Force chart re-render when data changes
@@ -160,7 +160,7 @@ function Page() {
         <div className="bg-red-900/30 p-6 rounded-lg max-w-md">
           <h2 className="text-xl font-bold mb-2">Error</h2>
           <p>{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="mt-4 bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded"
           >
@@ -170,6 +170,14 @@ function Page() {
       </div>
     );
   }
+
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const now = new Date();
+
+  // Count assets checked out today
+  const todaysDeployed = assetCounts.todaysDeployed || 0;
 
   // Calculate percentages
   const totalActiveAssets = assetCounts.MISStock + assetCounts.deployed;
@@ -262,7 +270,7 @@ function Page() {
               </div>
             </div>
           </header>
-          
+
           {/* Asset Count Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
             <Link
@@ -275,15 +283,15 @@ function Page() {
                   <p className="text-3xl font-bold mt-1 text-white">
                     {getMisStoreTotal().toLocaleString()}
                   </p>
-                  <span className="text-gray-400 text-sm">MISStock + New Purchase</span>
+                  {/* <span className="text-gray-400 text-sm">MISStock + New Purchase</span> */}
                 </div>
                 <div className="bg-blue-500/20 p-3 rounded-full">
                   <BiDevices className="text-blue-400 text-2xl" />
                 </div>
               </div>
             </Link>
-            
-             <Link
+
+            <Link
               href="./stocks/allasset?status=MISStock"
               className="block bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
@@ -293,13 +301,13 @@ function Page() {
                   <p className="text-3xl font-bold mt-1 text-white">{assetCounts.MISStock.toLocaleString()}</p>
                   <span className="text-gray-400 text-sm">Ready For Allocation</span>
                 </div>
-                
+
                 <div className="bg-green-500/20 p-3 rounded-full">
                   <BiCube className="text-green-400 text-2xl" />
                 </div>
               </div>
             </Link>
-            
+
             <Link
               href="./stocks/allasset?status=New Purchase"
               className="block bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
@@ -316,33 +324,23 @@ function Page() {
               </div>
             </Link>
           </div>
+
           
-          {/* Deployment Stats */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            {/* <Link
-             href ="./stocks/allasset?status=Deployed"
-              className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-medium text-purple-400 group-hover:text-purple-300">Deployed</h3>
-                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.deployed.toLocaleString()}</p>
-                 
-                </div>
-                <div className="bg-purple-500/20 p-3 rounded-full">
-                  <BiDevices className="text-purple-400 text-2xl" />
-                </div>
-              </div>
-            </Link> */}
             
+
             <Link
               href="./stocks/allasset?status=deployed&date=today"
               className="flex-1 bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 border border-gray-800 hover:border-gray-700 group"
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-medium text-teal-400 group-hover:text-teal-300">Today's Hardware Allocation</h3>
-                  <p className="text-3xl font-bold mt-1 text-white">{assetCounts.todaysDeployed.toLocaleString()}</p>
+                  <h3 className="text-lg font-medium text-teal-400 group-hover:text-teal-300">
+                    Today's Hardware Allocation
+                  </h3>
+                  <p className="text-3xl font-bold mt-1 text-white">
+                    {todaysDeployed.toLocaleString()}
+                  </p>
                   <span className="text-teal-500 text-sm">Last 24 hours</span>
                 </div>
                 <div className="bg-teal-500/20 p-3 rounded-full">
@@ -354,33 +352,21 @@ function Page() {
 
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800">
-          <h2 className="text-lg font-medium mb-4 text-gray-200">Manufacturer Distribution</h2>
-          <div className="w-full h-96">
-            {/* Pass manufacturers data to the chart */}
-            <ManufacturerPieChart 
-              key={chartKey} 
-              manufacturers={manufacturers} 
-            />
-          </div>
-          {manufacturers.length === 0 && !loading && (
-            <p className="text-center text-gray-400 mt-4">No manufacturer data available</p>
-          )}
-        </div>
-            
             <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800">
-              <h2 className="text-lg font-medium mb-4 text-gray-200">Segment Distribution</h2>
+              <h2 className="text-lg font-medium mb-4 text-gray-200">Manufacturer Distribution</h2>
               <div className="w-full h-96">
-                <DynamicSegmentChart />
+                {/* Pass manufacturers data to the chart */}
+                <ManufacturerPieChart
+                  key={chartKey}
+                  manufacturers={manufacturers}
+                />
               </div>
+              {manufacturers.length === 0 && !loading && (
+                <p className="text-center text-gray-400 mt-4">No manufacturer data available</p>
+              )}
             </div>
-            
-            {/* <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-5 rounded-xl shadow-lg border border-gray-800 col-span-full">
-              <h2 className="text-lg font-medium mb-4 text-gray-200">Category Distribution</h2>
-              <div className="w-full h-80">
-                <StackedBarChart />
-              </div>
-            </div> */}
+
+           
           </div>
         </div>
       </div>

@@ -26,18 +26,16 @@ export async function GET(req) {
       console.log("Status filter:", filter.status);
     }
     
-    // Handle department
-    const department = searchParams.get("department");
-    if (department) filter.department = department;
+    // Handle segment
+    const segment = searchParams.get("segment");
+    if (segment) filter.segment = segment;
     
     // Handle category
     const category = searchParams.get("category");
     if (category) filter.category = category;
 
     // Handle segment
-    const segment = searchParams.get("segment");
-    if (segment) filter.segment = segment;
-
+    
     // Handle purchase date range
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
@@ -84,11 +82,10 @@ export async function GET(req) {
       manufacturer: "Manufacturer",
       type: "Type",
       model: "Model",
-      expires: "Expries",
+      expires: "Expires",
       category: "Categories",
       status: "Status",
       segment: "Segment",
-      department: "Department",
       assetOwner: "AssetOwner",
       note: "Note",
       defaultLocation: "DefaultLocation",
@@ -98,7 +95,7 @@ export async function GET(req) {
       storeLocation: "StoreLocation",
       poNumber: "PONumber",
       order: "Order",
-      purchaseDate: "PurchaseNumber",
+      purchaseDate: "PurchaseDate",
       checkOutDate: "CheckOutDate",
       checkInDate: "CheckInDate"
     };

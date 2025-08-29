@@ -70,7 +70,7 @@ const DynamicSegmentChart = () => {
   const prepareChartData = () => {
     if (!segmentData.length) return null;
     
-    const labels = segmentData.map(item => item.department);
+    const labels = segmentData.map(item => item.segment);
     const values = segmentData.map(item => item.count);
     const { bgColors, borderColors } = generateColors(segmentData.length);
     

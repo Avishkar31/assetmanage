@@ -2,58 +2,76 @@ import { NextResponse } from "next/server";
 import dbConnect from "../../../../lib/dbConnect";
 import Asset from "../../../../models/Asset";
 
-
 export async function POST(req) {
   try {
     await dbConnect();
-    // const user = await verifyToken(req);
-    
-    // if (!user || (user.role !== "admin" && user.role !== "regular")) {
-    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    // }
 
-    const { serialNumber, nodeName, assetUser,assetOwner } = await req.json();
+    // Parse request body
+    const {
+      serialNumber,
+      nodeName,
+      assetUser,
+      assetOwner,
+      status,
+      storeLocation,
+      note,
+      checkinDate
+    } = await req.json();
 
-    if (!serialNumber || !nodeName) {
+    // Validate required fields
+    if (!serialNumber) {
       return NextResponse.json(
-        { error: "Serial number and node name are required." },
+        { error: "Serial number is required." },
         { status: 400 }
       );
     }
 
-    const asset = await Asset.findOne({ serialNumber, nodeName })
-      .populate('assetOwner')
-      .populate('assetHistory.user');
+    // Find the asset by serial number
+    const asset = await Asset.findOne({ serialNumber });
 
+    // Check if asset exists
     if (!asset) {
-      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+      return NextResponse.json(
+        { error: "Asset not found." },
+        { status: 404 }
+      );
     }
 
-    // const previousAssetOwner = asset.assetOwner;
-    
-    asset.status = "MISStock";
-    asset.assetOwner = assetOwner;
-    asset.checkInDate = new Date();
+    // Update asset fields if provided
+    if (nodeName) asset.nodeName = nodeName;
+    if (status) asset.status = status;
+    if (assetOwner) asset.assetOwner = assetOwner;
+    if (storeLocation) asset.storeLocation = storeLocation;
+    if (note) asset.note = note;
+
+    // Set check-in date
+    asset.checkInDate = checkinDate ? new Date(checkinDate) : new Date();
+
+    // Add to asset history - MAKE SURE ACTION IS ONE OF THE ALLOWED ENUM VALUES
     asset.assetHistory.push({
-      user: assetOwner,
-      action: "checkIn",
-      date: new Date(),
-      status: "MISStock",  
-      updatedBy: assetUser, // Assuming assetUser is the user checking in the asset
+      user: assetOwner || "Unknown",
+      action: "checkIn",  // This must be one of: "checkIn", "checkOut", or "update"
+      date: asset.checkInDate,
+      status: status || asset.status,
+      updatedBy: assetUser || "System"
     });
 
+    // Save the updated asset
     await asset.save();
-
-    const populatedAsset = await Asset.findById(asset._id)
-      .populate('assetOwner')
-      .populate('assetHistory.user')
 
     return NextResponse.json({
       message: "Asset checked in successfully",
-      asset: populatedAsset
+      asset: asset
     });
+
   } catch (error) {
-    console.error("Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Check-in API Error:", error);
+    return NextResponse.json(
+      {
+        error: "Failed to check in asset",
+        details: error.message
+      },
+      { status: 500 }
+    );
   }
 }

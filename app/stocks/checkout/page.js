@@ -19,11 +19,10 @@ const CheckoutForm = () => {
         "✗ This asset cannot be checked out. Please change the status accordingly.",
       color: "text-red-500"
     },
-
     {
       label: "Buyback",
       description:
-        "✗  This asset cannot be checked out.  Please changen the status accordingly.",
+        "✗  This asset cannot be checked out.  Please change the status accordingly.",
       color: "text-red-500"
     },
     {
@@ -32,7 +31,6 @@ const CheckoutForm = () => {
         "✗  This asset cannot be checked out.  Please change the status accordingly.",
       color: "text-red-500"
     },
-
     {
       label: "Deployed",
       description:
@@ -47,7 +45,9 @@ const CheckoutForm = () => {
     model: "",
     assetOwner: "",
     checkOutDate: "",
-    note: ""
+    note: "",
+    defaultLocation: "",
+    type: "",
   });
 
   const [serialNumber, setSerialNumber] = useState(null);
@@ -55,6 +55,7 @@ const CheckoutForm = () => {
   const [openSection, setOpenSection] = useState("");
   const dropdownRef = useRef(null);
   const router = useRouter();
+  const [error, setError] = useState("");
 
   const toggleSection = (section) => {
     setOpenSection((prevSection) => (prevSection === section ? "" : section));
@@ -81,10 +82,13 @@ const CheckoutForm = () => {
           model: data.model || "",
           assetOwner: data.assetOwner || "",
           checkOutDate: data.checkOutDate || "",
-          note: ""
+          note: "",
+          defaultLocation: "",
+          type: data.type || ""
         });
       } catch (error) {
         console.error("Error fetching asset details:", error);
+        setError("Error fetching asset details. Please try again.");
       }
     };
 
@@ -104,28 +108,100 @@ const CheckoutForm = () => {
   };
 
   const handleCheckOut = async () => {
-    const { status, assetOwner, checkOutDate } = formData;
+    const { status, assetOwner, checkOutDate, defaultLocation } = formData;
 
     if (!status || !assetOwner) {
-      alert("Please fill out all mandatory fields: Status and Asset Owner.");
+      setError("Please fill out all mandatory fields: Status and Asset Owner.");
       return;
     }
 
-    // Check if status is 'MISStock'
-    if (status == "MISStock" || status == "New Purchase") {
-      alert(
-        "Status cannot be 'MISStock'or 'New Purchase' for checkout. Please select a different status."
-      );
+    if (status === "BuyBack") {
+    const confirmDispose = window.confirm(
+      "Since status is 'BuyBack', this asset will be treated as 'Disposed'. Do you want to continue?"
+    );
+    if (!confirmDispose) {
+      return; // cancel operation
+    }
+
+    // Call your dispose flow instead of checkout
+    try {
+      const response = await fetch("/api/asset/dispose", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          serialNumber,
+          status: "Disposed",
+          defaultLocation: "BuyBack",
+          note: formData.note,
+          disposedBy: JSON.parse(localStorage.getItem("user"))?.siemensId,
+          disposedDate: new Date(),
+        }),
+      });
+
+      if (response.ok) {
+        alert("Asset has been marked as Disposed (BuyBack).");
+        return;
+      } else {
+        const errorData = await response.json();
+        console.error("Failed to dispose asset:", errorData);
+        setError("Failed to dispose asset!");
+        return;
+      }
+    } catch (error) {
+      console.error("Error during disposal:", error);
+      setError(`Error: ${error.message}`);
+      return;
+    }
+  }
+
+    // Check if status is 'MISStock' or 'New Purchase'
+    if (status === "MISStock" || status === "New Purchase") {
+      setError("Status cannot be 'MISStock' or 'New Purchase' for checkout. Please select a different status.");
       return;
     }
 
     // Ensure checkout date is set
     if (!checkOutDate) {
-      alert("Please select a checkout date.");
+      setError("Please select a checkout date.");
       return;
     }
+
+    if (
+      (status === "MISStock" || status === "New Purchase" || status === "BuyBack") &&
+      defaultLocation === "Home"
+    ) {
+      setError("Default Location cannot be 'Home' for 'MISStock', 'New Purchase', or 'BuyBack' status.");
+      return;
+    }
+
+    // Ensure default location is 'Home' only for 'Deployed'
+    if (status === "Deployed" && defaultLocation !== "Home") {
+      setError("Default Location must be 'Home' when status is 'Deployed'.");
+      return;
+    }
+
+    // Ensure BuyBack always has default location 'BuyBack'
+    if (status === "BuyBack" && defaultLocation !== "BuyBack") {
+  setError("Default Location must be 'BuyBack' when status is 'BuyBack'.");
+  return;
+}
+
+    // Ensure dispose confirmation before checkout
+    if (status === "Disposed") {
+      const confirmDispose = window.confirm(
+        "If you select 'Disposed', you will not be able to make changes after checkout. Do you want to continue?"
+      );
+      if (!confirmDispose) {
+        return; // cancel checkout
+      }
+    }
+
     const storedUserData = JSON.parse(localStorage.getItem('user'));
     console.log("Stored User Data:", storedUserData);
+
+    const checkType = (status === "Disposed") 
+    ? "disposed" 
+    : "checkout";
 
     const ddata = {
       model: formData.model,
@@ -134,11 +210,15 @@ const CheckoutForm = () => {
       assetOwner: formData.assetOwner,
       storeLocation: "Storage Room A",
       note: formData.note,
-      checkType: "checkout",
+      checkType,
       serialNumber: serialNumber,
       checkOutDate: formData.checkOutDate,
       assetUser: storedUserData.siemensId, // Assuming userId is the ID of the user checking out the asset
     };
+
+     
+
+    
 
     console.log("Checkout data:", ddata);
 
@@ -154,11 +234,11 @@ const CheckoutForm = () => {
       } else {
         const errorData = await response.json();
         console.error("Failed to check out asset:", errorData);
-        alert("Failed to check out asset!");
+        setError("Failed to check out asset!");
       }
     } catch (error) {
       console.error("Error during checkout:", error);
-      alert(`Error: ${error.message}`);
+      setError(`Error: ${error.message}`);
     }
   };
 
@@ -182,6 +262,12 @@ const CheckoutForm = () => {
               <i className="fas fa-times"></i>
             </div>
           </header>
+
+          {error && (
+            <div className="mb-4 p-3 bg-red-800 border border-red-600 text-white rounded">
+              {error}
+            </div>
+          )}
 
           {/* Model */}
           <div className="mb-4">
@@ -286,33 +372,34 @@ const CheckoutForm = () => {
             </div>
           </div>
 
+          {/* Default Location */}
           <div className="mb-4 ml-10">
-              <div className="flex items-center mb-2">
-                <label
-                  htmlFor="defaultLocation"
-                  className="w-52 text-gray-500 mr-2"
-                >
-                  Default Location <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="defaultLocation"
-                  value={formData.defaultLocation || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, defaultLocation: e.target.value })
-                  }
-                  className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
-                >
-                  <option value="">Select Location</option>
-                  <option value="Home">Home</option>
-                  <option value="MIS Store-2nd Compactor Floor">
-                    MIS Store-2nd Compactor Floor
-                  </option>
-                  <option value="MIS Store-4th Floor">MIS Store-4th Floor</option>
-                  <option value="MIS Store-Basement">MIS Store-Basement</option>
-                  <option value="Buyback">Buyback</option>
-                </select>
-              </div>
+            <div className="flex items-center mb-2">
+              <label
+                htmlFor="defaultLocation"
+                className="w-52 text-gray-500 mr-2"
+              >
+                Default Location <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="defaultLocation"
+                value={formData.defaultLocation || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, defaultLocation: e.target.value })
+                }
+                className="w-3/5 p-3 bg-gray-900 border border-gray-700 rounded text-sm text-gray-400"
+              >
+                <option value="">Select Location</option>
+                <option value="Home">Home</option>
+                <option value="MIS Store-2nd Compactor Floor">
+                  MIS Store-2nd Compactor Floor
+                </option>
+                <option value="MIS Store-4th Floor">MIS Store-4th Floor</option>
+                <option value="MIS Store-Basement">MIS Store-Basement</option>
+                <option value="Buyback">Buyback</option>
+              </select>
             </div>
+          </div>
 
           {/* Checkout Date */}
           <div className="mb-4 ml-10">
@@ -360,6 +447,9 @@ const CheckoutForm = () => {
             onClick={() => {
               const queryParams = new URLSearchParams({
                 nodeName: formData.nodeName,
+                assetOwner: formData.assetOwner,
+                type: formData.type,
+                model: formData.model,
                 serialNumber: new URLSearchParams(window.location.search).get(
                   "SerialNumber"
                 )

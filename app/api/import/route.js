@@ -158,7 +158,7 @@ const transformCSVData = (csvRow, assetUser) => {
     checkInDate = new Date();
     action = "checkIn";
   } else {
-    action = "statusChange"; // Default action for other status changes
+    action = "update"; // Default action for other status changes
   }
 
   function safelyParseDate(dateString) {
@@ -194,7 +194,7 @@ const transformCSVData = (csvRow, assetUser) => {
     category: getColumnValue(csvRow, "Categories"),
     status: status,
     segment: getColumnValue(csvRow, "Segment"),    // ✅ Added
-    department: getColumnValue(csvRow, "Department"),
+    
     assetOwner: getColumnValue(csvRow, "AssetOwner"),
     note: getColumnValue(csvRow, "Note"),
     defaultLocation: getColumnValue(csvRow, "DefaultLocation"),

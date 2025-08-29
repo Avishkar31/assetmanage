@@ -7,7 +7,7 @@ import Segment from "../../../models/Segments";
 export async function GET(req) {
   try {
     await dbConnect();
-    const segments = await Segment.find({}); // Fixed typo: segment → Segment
+    const segments = await Segment.find({});
     return NextResponse.json({ success: true, data: segments });
   } catch (error) {
     console.error("Error fetching segments:", error);
@@ -22,11 +22,11 @@ export async function GET(req) {
 export async function POST(req) {
   try {
     await dbConnect();
-    const { name, description, department } = await req.json();
+    const { name, description, segment } = await req.json();
 
-    if (!name || !department) {
+    if (!name || !segment) {
       return NextResponse.json(
-        { success: false, error: "Name and department are required." },
+        { success: false, error: "Name and segment are required." },
         { status: 400 }
       );
     }
@@ -34,17 +34,17 @@ export async function POST(req) {
     const existingSegment = await Segment.findOne({ name });
     if (existingSegment) {
       return NextResponse.json(
-        { success: false, error: "Segment with this name already exists." }, // Fixed typo: Segments → Segment
+        { success: false, error: "Segment with this name already exists." },
         { status: 400 }
       );
     }
 
-    const segment = await Segment.create({ name, description, department });
-    return NextResponse.json({ success: true, data: segment }, { status: 201 });
+    const newSegment = await Segment.create({ name, description, segment });
+    return NextResponse.json({ success: true, data: newSegment }, { status: 201 });
   } catch (error) {
-    console.error("Error creating segment:", error); // Fixed typo: segment → segment
+    console.error("Error creating segment:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to create segment." }, // Fixed typo: segment → segment
+      { success: false, error: error.message, stack: error.stack },
       { status: 500 }
     );
   }
@@ -60,12 +60,12 @@ export async function PUT(req) {
 
     if (!id) {
       return NextResponse.json(
-        { success: false, error: "Segment ID is required." }, // Fixed typo: Segment → Segment
+        { success: false, error: "Segment ID is required." },
         { status: 400 }
       );
     }
 
-    const updatedSegment = await Segment.findByIdAndUpdate(id, body, { // Fixed typo: segment → Segment
+    const updatedSegment = await Segment.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true
     });
@@ -81,7 +81,7 @@ export async function PUT(req) {
   } catch (error) {
     console.error("Error updating segment:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to update segment." }, // Fixed capitalization: Segment → segment
+      { success: false, error: "Failed to update segment." },
       { status: 500 }
     );
   }

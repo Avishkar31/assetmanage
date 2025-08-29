@@ -7,14 +7,14 @@ import User from "models/User";
 
 export async function POST(req) {
   try {
-    const { username, password, fullName, department, role } = await req.json();
+    const { username, password, fullName, segment, role } = await req.json();
 
     const existingUser = await User.findOne({ username });
     if (existingUser) {
       return NextResponse.json({ error: "Username already exists" }, { status: 400 });
     }
 
-    const newUser = new User({ username, password, fullName, department, role });
+    const newUser = new User({ username, password, fullName, segment, role });
     await newUser.save();
 
     return NextResponse.json({ message: "User created successfully" }, { status: 201 });

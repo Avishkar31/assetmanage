@@ -6,6 +6,7 @@ const PrintSheet = () => {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [debugInfo, setDebugInfo] = useState(null); // Add debug state
   
   // Format current date with day name, date, and time
   const getCurrentDateTime = () => {
@@ -48,10 +49,132 @@ const PrintSheet = () => {
     }
   });
 
-  useEffect(() => {
-    if (!searchParams) return;
+  // Helper function to parse accessories string
+  const parseAccessoriesString = (accessoriesStr) => {
+    if (!accessoriesStr) return {};
     
-    // Load main form fields
+    const result = {};
+    accessoriesStr.split(', ').forEach(item => {
+      const [key, value] = item.split(':');
+      if (key && value) {
+        result[key] = value === '1' || value === 'true';
+      }
+    });
+    return result;
+  };
+
+  useEffect(() => {
+    const fetchAssetDetails = async (serialNumber) => {
+      console.log("🔍 Fetching asset details for serial number:", serialNumber);
+      
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/asset/get?serialNumber=${serialNumber}`);
+        
+        console.log("🌐 API Response status:", response.status);
+        console.log("🌐 API Response ok:", response.ok);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: Failed to fetch asset details`);
+        }
+        
+        const assetData = await response.json();
+        console.log("📦 Raw API Response Data:", assetData);
+        
+        // Set debug info for display
+        setDebugInfo({
+          rawResponse: assetData,
+          responseKeys: Object.keys(assetData),
+          assetOwnerType: typeof assetData.assetOwner,
+          assetOwnerValue: assetData.assetOwner
+        });
+        
+        // Handle various possible formats of the assetOwner field
+        let ownerValue = "";
+        if (assetData.assetOwner) {
+          if (typeof assetData.assetOwner === 'object') {
+            console.log("👤 AssetOwner is object:", assetData.assetOwner);
+            // If it's an object, try to extract a meaningful name
+            ownerValue = assetData.assetOwner.fullName || 
+                        assetData.assetOwner.name || 
+                        assetData.assetOwner.username ||
+                        assetData.assetOwner.displayName ||
+                        assetData.assetOwner.email ||
+                        JSON.stringify(assetData.assetOwner);
+          } else {
+            console.log("👤 AssetOwner is primitive:", assetData.assetOwner);
+            // If it's a string or other primitive, use it directly
+            ownerValue = String(assetData.assetOwner);
+          }
+        } else {
+          console.log("⚠️ AssetOwner is null/undefined");
+        }
+        
+        console.log("👤 Final owner value:", ownerValue);
+        
+        // Parse accessories if it's a string
+        let accessoriesObj = {...formData.accessories};
+        if (assetData.accessories) {
+          if (typeof assetData.accessories === 'string') {
+            accessoriesObj = {
+              ...accessoriesObj,
+              ...parseAccessoriesString(assetData.accessories)
+            };
+          } else if (typeof assetData.accessories === 'object') {
+            accessoriesObj = {
+              ...accessoriesObj,
+              ...assetData.accessories
+            };
+          }
+        }
+        
+        // Update form data with fetched details
+        const updatedFormData = {
+          assetOwner: ownerValue,
+          type: assetData.type || '',
+          model: assetData.model || '',
+          nodeName: assetData.nodeName || '',
+          serialNumber: assetData.serialNumber || serialNumber, // Fallback to URL param
+          issueDate: getCurrentDateTime(),
+          accessories: accessoriesObj
+        };
+        
+        console.log("📝 Updated form data:", updatedFormData);
+        
+        setFormData(updatedFormData);
+        
+      } catch (error) {
+        console.error('❌ Error fetching asset details:', error);
+        setDebugInfo({
+          error: error.message,
+          serialNumber: serialNumber,
+          timestamp: new Date().toISOString()
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    console.log("🚀 useEffect triggered");
+    console.log("🔗 SearchParams:", searchParams);
+
+    if (!searchParams) {
+      console.log("⚠️ No search params available");
+      setLoading(false);
+      return;
+    }
+    
+    const serialNumber = searchParams.get('SerialNumber');
+    console.log("🔢 Serial number from URL:", serialNumber);
+    
+    if (serialNumber && serialNumber.trim() !== '') {
+      fetchAssetDetails(serialNumber.trim());
+    } else {
+      console.log("⚠️ No valid serial number found in URL");
+      setLoading(false);
+    }
+    
+    // Load any overrides from URL parameters
     const fields = [
       "assetOwner", "type", "model", "nodeName", "serialNumber"
     ];
@@ -59,19 +182,19 @@ const PrintSheet = () => {
     const updatedData = {};
     fields.forEach((field) => {
       let value = null;
-
-      // case-insensitive match
       for (const [key, val] of searchParams.entries()) {
         if (key.toLowerCase() === field.toLowerCase()) {
           value = val;
           break;
         }
       }
-
-      if (value) updatedData[field] = value;
+      if (value) {
+        console.log(`🔧 URL override for ${field}:`, value);
+        updatedData[field] = value;
+      }
     });
 
-    // Load accessories
+    // Load accessories from URL
     const updatedAccessories = { ...formData.accessories };
     Object.keys(formData.accessories).forEach((acc) => {
       const paramName = encodeURIComponent(acc).replace(/%20/g, '+');
@@ -81,14 +204,17 @@ const PrintSheet = () => {
       }
     });
 
-    setFormData((prev) => ({
-      ...prev,
-      ...updatedData,
-      accessories: updatedAccessories
-    }));
+    // Apply URL overrides if any
+    if (Object.keys(updatedData).length > 0 || Object.values(updatedAccessories).some(Boolean)) {
+      console.log("🔧 Applying URL overrides:", updatedData);
+      setFormData((prev) => ({
+        ...prev,
+        ...updatedData,
+        accessories: updatedAccessories
+      }));
+    }
 
-    setLoading(false);
-  }, [searchParams]);
+  }, [searchParams]); // Remove formData.accessories dependency to avoid infinite loops
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -160,14 +286,43 @@ const PrintSheet = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-pulse text-gray-600">Loading asset information...</div>
+      <div className="flex flex-col justify-center items-center h-screen">
+        <div className="animate-pulse text-gray-600 mb-4">Loading asset information...</div>
+        {debugInfo && (
+          <div className="bg-yellow-50 border border-yellow-200 rounded p-4 max-w-md">
+            <h4 className="font-bold text-sm">Debug Info:</h4>
+            <pre className="text-xs mt-2 overflow-auto max-h-32">
+              {JSON.stringify(debugInfo, null, 2)}
+            </pre>
+          </div>
+        )}
       </div>
     );
   }
 
   return (
     <div className="p-4 bg-gray-100 min-h-screen">
+      {/* Debug panel - remove this in production */}
+      {debugInfo && process.env.NODE_ENV === 'development' && (
+        <div className="mb-4 bg-gray-50 border border-gray-200 rounded p-4">
+          <h3 className="font-bold text-sm mb-2">🐛 Debug Information (Development Only)</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <div>
+              <strong>Current Form Data:</strong>
+              <pre className="bg-white p-2 rounded mt-1 overflow-auto max-h-32">
+                {JSON.stringify(formData, null, 2)}
+              </pre>
+            </div>
+            <div>
+              <strong>API Debug Info:</strong>
+              <pre className="bg-white p-2 rounded mt-1 overflow-auto max-h-32">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="w-[21cm] h-[29.7cm] mx-auto bg-white shadow-md text-black print:shadow-none border border-gray-300">
         {/* Asset management header */}
         <div className="flex justify-between px-4 py-2 border-b border-gray-300 text-xs">
@@ -211,6 +366,7 @@ const PrintSheet = () => {
                 value={formData.assetOwner}
                 onChange={handleInputChange}
                 className="border-b border-gray-500 flex-grow bg-transparent"
+                placeholder="Asset owner will load here..."
               />
             </div>
             

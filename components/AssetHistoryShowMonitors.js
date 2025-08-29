@@ -40,7 +40,7 @@ const AssetHistoryItem = ({ entry }) => {
         return `Checked in monitor (${status})`;
       case "checkOut":
         return recipient ? `Checked out monitor to ${recipient}` : `Checked out monitor`;
-      case "statusChange":
+      case "update":
         if (status === "deployed" && recipient) {
           return `Deployed monitor to ${recipient}`;
         } else if (status === "MISStock") {

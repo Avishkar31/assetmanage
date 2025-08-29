@@ -14,11 +14,11 @@
           trim: true,
           maxlength: [500, "Description cannot be more than 500 characters"]
         },
-        department: {
+        segment: {
           type: String,
-          required: [true, "Please provide a department name"],
+          required: [true, "Please provide a segment name"],
           trim: true,
-          maxlength: [50, "Department name cannot be more than 50 characters"]
+          maxlength: [50, "Segment name cannot be more than 50 characters"]
         },
         createdAt: {
           type: Date,

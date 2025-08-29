@@ -15,13 +15,13 @@ export async function POST(req) {
       );
     }
        
-    let { siemensId, password, department, role = "regular" } = body;
+    let { siemensId, password, segment, role = "regular" } = body;
 
     siemensId = siemensId?.trim().toLowerCase();
-    department = department?.trim();
+    segment = segment?.trim();
     role = role?.trim();
 
-    if (!siemensId || !password || !department || !role) {
+    if (!siemensId || !password || !segment || !role) {
       return NextResponse.json(
         { error: "All fields are required." },
         { status: 400 }
@@ -53,7 +53,7 @@ export async function POST(req) {
     const newUser = new User({
       siemensId,
       password,
-      department,
+      segment,
       role,
     });
 

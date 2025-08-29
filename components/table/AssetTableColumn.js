@@ -84,8 +84,8 @@ const columnData = [
     enableColumnFilter: true,
   },
   {
-    accessorKey: "department",
-    header: "Department",
+    accessorKey: "segment",
+    header: "Segment",
     minWidth: 130,
     cell: (info) => info.getValue() || "-",
     enableColumnFilter: true,

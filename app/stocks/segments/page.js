@@ -8,7 +8,7 @@ export default function SegmentManagement() {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    department: ""
+    segment: ""
   });
   const [editingSegment, setEditingSegment] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -73,7 +73,7 @@ export default function SegmentManagement() {
       
       if (response.ok) {
         await fetchSegments();
-        setFormData({ name: "", description: "", department: "" });
+        setFormData({ name: "", description: "", segment: "" });
         setEditingSegment(null);
         
         // Show success message
@@ -125,13 +125,13 @@ export default function SegmentManagement() {
     setFormData({
       name: segment.name,
       description: segment.description || "",
-      department: segment.department
+      segment: segment.segment
     });
     setEditingSegment(segment);
   };
 
   const cancelEdit = () => {
-    setFormData({ name: "", description: "", department: "" });
+    setFormData({ name: "", description: "", segment: "" });
     setEditingSegment(null);
   };
 
@@ -179,15 +179,15 @@ export default function SegmentManagement() {
             />
           </div>
           <div className="mb-2">
-            <label className="block mb-1">Department:</label>
+            <label className="block mb-1">Segment:</label>
             <input
               type="text"
-              name="department"
-              value={formData.department}
+              name="segment"
+              value={formData.segment}
               onChange={handleInputChange}
               required
               className="w-full p-2 rounded bg-gray-700"
-              placeholder="Department name"
+              placeholder="Segment name"
             />
           </div>
         </div>
@@ -235,7 +235,7 @@ export default function SegmentManagement() {
             >
               <div className="mb-3">
                 <h3 className="text-lg font-bold">{segment.name}</h3>
-                <div className="text-sm text-teal-300 mb-1">Department: {segment.department}</div>
+                <div className="text-sm text-teal-300 mb-1">Segment: {segment.segment}</div>
                 <p className="text-gray-300 text-sm">{segment.description || "No description provided."}</p>
               </div>
               <div className="flex justify-end gap-2">

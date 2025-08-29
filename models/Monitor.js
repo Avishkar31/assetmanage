@@ -13,7 +13,7 @@ const historyEntrySchema = new mongoose.Schema({
   action: {
     type: String,
     required: true,
-    enum: ['created', 'updated', 'statusChange', 'checkIn', 'checkOut']
+    enum: ['created', 'updated', 'checkIn', 'checkOut']
   },
   date: {
     type: Date,

@@ -84,7 +84,7 @@ export default function MonitorDetailPage({ params }) {
           user: assetOwner,
           assetOwner: assetOwner,
           status: "deployed",
-          action: "statusChange",
+          action: "update",
           previousStatus: monitor.status
         }),
       });
@@ -145,7 +145,7 @@ export default function MonitorDetailPage({ params }) {
             user: "",
             assetOwner: returnTo,   // ✅ store the "Returned to" person in assetOwner
             status: "MISStock",
-            action: "statusChange",
+            action: "update",
             previousAssetOwner: monitor.assetOwner,
             previousStatus: monitor.status,
             note: `Returned to MISStock by ${returnTo}`
@@ -178,7 +178,7 @@ export default function MonitorDetailPage({ params }) {
         body: JSON.stringify({
           updatedBy: currentUser,
           status: "disposed",
-          action: "statusChange",
+          action: "update",
           previousStatus: monitor.status
         }),
       });

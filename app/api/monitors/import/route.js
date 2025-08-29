@@ -54,7 +54,7 @@ export async function POST(req) {
           // If status changed, record previous status
           if (monitorData.status && monitorData.status !== existingMonitor.status) {
             historyEntry.previousStatus = existingMonitor.status;
-            historyEntry.action = "statusChange"; // More specific action
+            historyEntry.action = "update"; // More specific action
           }
           
           // If assetOwner changed, record previous assetOwner
