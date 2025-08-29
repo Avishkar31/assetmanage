@@ -1,10 +1,8 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import Sidebar from "components/Sidebar";
-import {
-  IoMdArrowDropup,
-  IoMdArrowDropdown
-} from "react-icons/io";
+import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import {
   FiLoader,
   FiBox,
@@ -12,9 +10,12 @@ import {
   FiTag,
   FiInfo,
   FiCalendar,
-  FiTool
+  FiTool,
 } from "react-icons/fi";
-import { HiOutlineLocationMarker, HiOutlineOfficeBuilding } from "react-icons/hi";
+import {
+  HiOutlineLocationMarker,
+  HiOutlineOfficeBuilding,
+} from "react-icons/hi";
 import { toast } from "react-hot-toast";
 import getUserData from "@/utils/getUser";
 import "components/AssetForm.css";
@@ -27,16 +28,33 @@ const typeOptions = [
   { label: "Printer", description: "Printer Device" },
   { label: "Server", description: "Server Hardware" },
   { label: "Network Device", description: "Network Equipment" },
-  { label: "Storage", description: "Storage Device" }
+  { label: "Networking", description: "Networking Equipment" },
+  { label: "Storage", description: "Storage Device" },
 ];
 
 const statusOptions = [
   { label: "Default", description: "" },
-  { label: "MISStock", description: "✓ Deployable. Can be checked out.", color: "text-green-500" },
-  { label: "New Purchase", description: "✗ Not deployable.", color: "text-red-500" },
+  {
+    label: "MISStock",
+    description: "✓ Deployable. Can be checked out.",
+    color: "text-green-500",
+  },
+  {
+    label: "New Purchase",
+    description: "✗ Not deployable.",
+    color: "text-red-500",
+  },
   { label: "Buyback", description: "✗ Not deployable.", color: "text-red-500" },
-  { label: "Disposed", description: "✗ Not deployable.", color: "text-red-500" },
-  { label: "Deployed", description: "✓ Deployable. Can be checked out.", color: "text-green-500" }
+  {
+    label: "Disposed",
+    description: "✗ Not deployable.",
+    color: "text-red-500",
+  },
+  {
+    label: "Deployed",
+    description: "✓ Deployable. Can be checked out.",
+    color: "text-green-500",
+  },
 ];
 
 const conditionOptions = [
@@ -44,21 +62,27 @@ const conditionOptions = [
   { label: "Good" },
   { label: "Fair" },
   { label: "Bad" },
-  { label: "Used" }
+  { label: "Used" },
+  { label: "New" },
 ];
 
 const locationOptions = [
   { value: "select", label: "Select Location" },
   { value: "Buyback", label: "Buyback" },
   { value: "Home", label: "Home" },
-  { value: "MIS Store - 2nd floor Compactor Room", label: "MIS Store - 2nd floor Compactor Room" },
+  {
+    value: "MIS Store - 2nd floor Compactor Room",
+    label: "MIS Store - 2nd floor Compactor Room",
+  },
   { value: "MIS Store - 4th Floor", label: "MIS Store - 4th Floor" },
   { value: "basement", label: "Basement" },
   { value: "Branch Office", label: "Branch Office" },
-  { value: "Remote Office", label: "Remote Office" }
+  { value: "Remote Office", label: "Remote Office" },
 ];
 
-const UpdatingAssetForm = ({ assetId }) => {
+const UpdatingAssetForm = () => {
+  const searchParams = useSearchParams();
+  const serialNumber = searchParams.get("serialNumber");
   const [formData, setFormData] = useState({
     nodeName: "",
     manufacturer: "",
@@ -81,7 +105,9 @@ const UpdatingAssetForm = ({ assetId }) => {
     disposedDate: "",
     poNumber: "",
     order: "",
-    purchaseDate: ""
+    purchaseDate: "",
+    checkOutDate: "",
+    checkInDate: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -91,7 +117,7 @@ const UpdatingAssetForm = ({ assetId }) => {
     segments: false,
     manufacturers: false,
     form: false,
-    asset: false
+    asset: false,
   });
   const [showSerialLoader, setShowSerialLoader] = useState(false);
   const [openSection, setOpenSection] = useState("");
@@ -100,71 +126,75 @@ const UpdatingAssetForm = ({ assetId }) => {
   const dropdownRefs = {
     type: useRef(null),
     status: useRef(null),
-    condition: useRef(null)
+    condition: useRef(null),
   };
 
   // Helper function to format date for input fields
   const formatDateForInput = (dateString) => {
     if (!dateString) return "";
     const date = new Date(dateString);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   };
 
   // Fetch asset data to update
   useEffect(() => {
     const fetchAsset = async () => {
-      if (!assetId) return;
-      
-      setLoading(prev => ({ ...prev, asset: true }));
+      if (!serialNumber) return;
+
+      setLoading((prev) => ({ ...prev, asset: true }));
       try {
-        const response = await fetch(`/api/asset/${assetId}`);
-        const data = await response.json();
-        if (data.success && data.asset) {
-          const asset = data.asset;
-          
-          // Pre-fill form data with proper date formatting
+        const response = await fetch(
+          `/api/asset/get?serialNumber=${encodeURIComponent(serialNumber)}`
+        );
+        const assetData = await response.json();
+
+        if (response.ok && assetData) {
+          // Pre-fill form data with proper date formatting - directly from the response
           setFormData({
-            nodeName: asset.nodeName || "",
-            manufacturer: asset.manufacturer || "",
-            serialNumber: asset.serialNumber || "",
-            model: asset.model || "",
-            type: asset.type || "",
-            expires: formatDateForInput(asset.expires),
-            category: asset.category || "",
-            status: asset.status || "",
-            segment: asset.segment || "",
-            assetOwner: asset.assetOwner || "",
-            note: asset.note || "",
-            defaultLocation: asset.defaultLocation || "Select Location",
-            costCenter: asset.costCenter || "",
-            receivedDate: formatDateForInput(asset.receivedDate),
-            condition: asset.condition || "",
-            storeLocation: asset.storeLocation || "",
-            killdiskDate: formatDateForInput(asset.killdiskDate),
-            attachedFile: asset.attachedFile || "",
-            disposedDate: formatDateForInput(asset.disposedDate),
-            poNumber: asset.poNumber || "",
-            order: asset.order || "",
-            purchaseDate: formatDateForInput(asset.purchaseDate)
+            nodeName: assetData.nodeName || "",
+            manufacturer: assetData.manufacturer || "",
+            serialNumber: assetData.serialNumber || "",
+            model: assetData.model || "",
+            type: assetData.type || "",
+            expires: formatDateForInput(assetData.expires),
+            category: assetData.category || "",
+            status: assetData.status || "",
+            segment: assetData.segment || "",
+            assetOwner: assetData.assetOwner || "",
+            note: assetData.note || "",
+            defaultLocation: assetData.defaultLocation || "Select Location",
+            costCenter: assetData.costCenter || "",
+            receivedDate: formatDateForInput(assetData.receivedDate),
+            condition: assetData.condition || "",
+            storeLocation: assetData.storeLocation || "",
+            killdiskDate: formatDateForInput(assetData.killdiskDate),
+            attachedFile: assetData.attachedFile || "",
+            disposedDate: formatDateForInput(assetData.disposedDate),
+            poNumber: assetData.poNumber || "",
+            order: assetData.order || "",
+            purchaseDate: formatDateForInput(assetData.purchaseDate),
+            checkOutDate: formatDateForInput(assetData.checkOutDate),
+            checkInDate: formatDateForInput(assetData.checkInDate),
           });
+          toast.success("Asset data loaded successfully");
         } else {
-          toast.error("Failed to fetch asset data");
+          toast.error(assetData.error || "Failed to fetch asset data");
         }
       } catch (err) {
         console.error("Error fetching asset:", err);
         toast.error("Error fetching asset data");
       } finally {
-        setLoading(prev => ({ ...prev, asset: false }));
+        setLoading((prev) => ({ ...prev, asset: false }));
       }
     };
-    
+
     fetchAsset();
-  }, [assetId]);
+  }, [serialNumber]);
 
   // Fetch segments
   useEffect(() => {
     const fetchSegments = async () => {
-      setLoading(prev => ({ ...prev, segments: true }));
+      setLoading((prev) => ({ ...prev, segments: true }));
       try {
         const res = await fetch("/api/segments");
         const data = await res.json();
@@ -172,7 +202,7 @@ const UpdatingAssetForm = ({ assetId }) => {
       } catch (err) {
         console.error("Error fetching segments:", err);
       } finally {
-        setLoading(prev => ({ ...prev, segments: false }));
+        setLoading((prev) => ({ ...prev, segments: false }));
       }
     };
     fetchSegments();
@@ -181,7 +211,7 @@ const UpdatingAssetForm = ({ assetId }) => {
   // Fetch manufacturers
   useEffect(() => {
     const fetchManufacturers = async () => {
-      setLoading(prev => ({ ...prev, manufacturers: true }));
+      setLoading((prev) => ({ ...prev, manufacturers: true }));
       try {
         const res = await fetch("/api/Manufacturer");
         const data = await res.json();
@@ -189,7 +219,7 @@ const UpdatingAssetForm = ({ assetId }) => {
       } catch (err) {
         console.error("Error fetching manufacturers:", err);
       } finally {
-        setLoading(prev => ({ ...prev, manufacturers: false }));
+        setLoading((prev) => ({ ...prev, manufacturers: false }));
       }
     };
     fetchManufacturers();
@@ -198,7 +228,10 @@ const UpdatingAssetForm = ({ assetId }) => {
   // Notification auto hide
   useEffect(() => {
     if (notification.message) {
-      const timer = setTimeout(() => setNotification({ message: "", type: "" }), 3000);
+      const timer = setTimeout(
+        () => setNotification({ message: "", type: "" }),
+        3000
+      );
       return () => clearTimeout(timer);
     }
   }, [notification]);
@@ -206,8 +239,11 @@ const UpdatingAssetForm = ({ assetId }) => {
   // Outside click handler
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openSection && dropdownRefs[openSection]?.current &&
-        !dropdownRefs[openSection].current.contains(event.target)) {
+      if (
+        openSection &&
+        dropdownRefs[openSection]?.current &&
+        !dropdownRefs[openSection].current.contains(event.target)
+      ) {
         setOpenSection("");
       }
     };
@@ -217,63 +253,82 @@ const UpdatingAssetForm = ({ assetId }) => {
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-    if (errors[id]) setErrors(prev => ({ ...prev, [id]: false }));
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    if (errors[id]) setErrors((prev) => ({ ...prev, [id]: false }));
   };
 
   const handleSelectChange = (e) => {
     const { id, value } = e.target;
-    setFormData(prev => ({ ...prev, [id]: value }));
-    if (errors[id]) setErrors(prev => ({ ...prev, [id]: false }));
+    setFormData((prev) => ({ ...prev, [id]: value }));
+    if (errors[id]) setErrors((prev) => ({ ...prev, [id]: false }));
   };
 
-  const toggleSection = (section) => setOpenSection(prev => prev === section ? "" : section);
+  const toggleSection = (section) =>
+    setOpenSection((prev) => (prev === section ? "" : section));
 
   const handleStatusSelect = (label) => {
-    setFormData(prev => ({ ...prev, status: label }));
+    setFormData((prev) => ({ ...prev, status: label }));
     setOpenSection("");
   };
 
   const handleSubmit = async () => {
-    const requiredFields = ["manufacturer", "serialNumber", "status", "segment", "assetOwner", "type"];
+    const requiredFields = [
+      "manufacturer",
+      "serialNumber",
+      "status",
+      "segment",
+      "assetOwner",
+      "type",
+    ];
     const newErrors = {};
-    requiredFields.forEach(field => {
+    requiredFields.forEach((field) => {
       if (!formData[field]) newErrors[field] = true;
     });
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      setNotification({ message: "Please fill all required fields", type: "error" });
+      setNotification({
+        message: "Please fill all required fields",
+        type: "error",
+      });
       return;
     }
 
-    setLoading(prev => ({ ...prev, form: true }));
+    setLoading((prev) => ({ ...prev, form: true }));
     try {
       const user = await getUserData();
-      const siemensId = user?.siemensId || user?.email || user?.name || "Unknown User";
+      const siemensId =
+        user?.siemensId || user?.email || user?.name || "Unknown User";
 
       const updateData = {
         ...formData,
         updatedBy: siemensId,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
-      const response = await fetch(`/api/asset/${assetId}`, {
+      const response = await fetch(`/api/asset/update`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateData)
+        body: JSON.stringify(updateData),
       });
 
-      if (!response.ok) throw new Error("Failed to update asset");
+      const result = await response.json();
 
-      setNotification({ message: "Asset updated successfully", type: "success" });
-      toast.success("Asset updated successfully");
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to update asset");
+      }
+
+      setNotification({
+        message: result.message || "Asset updated successfully",
+        type: "success",
+      });
+      toast.success(result.message || "Asset updated successfully");
     } catch (err) {
       console.error("Error updating asset:", err);
       setNotification({ message: err.message, type: "error" });
       toast.error(err.message);
     } finally {
-      setLoading(prev => ({ ...prev, form: false }));
+      setLoading((prev) => ({ ...prev, form: false }));
     }
   };
 
@@ -292,6 +347,26 @@ const UpdatingAssetForm = ({ assetId }) => {
     );
   }
 
+  // Show message if no serial number provided
+  if (!serialNumber) {
+    return (
+      <div className="flex flex-col md:flex-row min-h-screen bg-gray-950 text-gray-100">
+        <Sidebar />
+        <div className="flex-grow p-3 md:p-5 lg:p-6 overflow-x-hidden flex items-center justify-center">
+          <div className="text-center">
+            <FiInfo className="text-4xl text-yellow-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">No Asset Selected</h2>
+            <p className="text-gray-400">
+              Please provide a serial number in the URL to update an asset.
+            </p>
+            <p className="text-gray-500 text-sm mt-2">
+              Example: /stocks/updating?serialNumber=SN00008
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-950 text-gray-100">
@@ -302,17 +377,22 @@ const UpdatingAssetForm = ({ assetId }) => {
             <h1 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-blue-500 to-teal-400 bg-clip-text text-transparent">
               Updating Asset
             </h1>
-            <p className="text-gray-400 text-sm">Updating a existing inventory item</p>
+            <p className="text-gray-400 text-sm">
+              {serialNumber
+                ? `Updating asset: ${serialNumber}`
+                : "Updating existing inventory item"}
+            </p>
           </div>
         </header>
 
         {/* Notification */}
         {notification.message && (
           <div
-            className={`fixed top-4 right-4 px-4 py-3 rounded-md shadow-lg z-50 transform transition-all duration-300 ease-in-out ${notification.type === "success"
+            className={`fixed top-4 right-4 px-4 py-3 rounded-md shadow-lg z-50 transform transition-all duration-300 ease-in-out ${
+              notification.type === "success"
                 ? "bg-green-500/90 border-l-4 border-green-700"
                 : "bg-red-500/90 border-l-4 border-red-700"
-              }`}
+            }`}
           >
             {notification.message}
           </div>
@@ -320,8 +400,6 @@ const UpdatingAssetForm = ({ assetId }) => {
 
         {/* Main Form */}
         <div className="bg-gradient-to-b from-gray-800/70 to-gray-900/90 p-5 md:p-6 rounded-xl w-full max-w-6xl mx-auto shadow-xl border border-gray-800/50 backdrop-blur-sm">
-
-
           <div className="space-y-8">
             {/* Essential Information Section */}
             <div className="bg-gray-850/40 rounded-lg p-5 border border-gray-700/30 shadow-inner">
@@ -337,19 +415,18 @@ const UpdatingAssetForm = ({ assetId }) => {
                     Node Name
                   </label>
                   <div className="input-group">
-                    <span className="input-icon">
-                      {/* <FiTag /> */}
-                    </span>
+                    <span className="input-icon">{/* <FiTag /> */}</span>
                     <input
                       type="text"
                       id="nodeName"
                       value={formData.nodeName}
                       onChange={handleInputChange}
                       placeholder="Enter node name"
-                      className={`form-input pl-10 ${errors.nodeName ? "error" : ""}`}
+                      className={`form-input pl-10 ${
+                        errors.nodeName ? "error" : ""
+                      }`}
                     />
                   </div>
-
                 </div>
 
                 {/* Serial Number */}
@@ -358,16 +435,16 @@ const UpdatingAssetForm = ({ assetId }) => {
                     Serial Number <span className="text-red-400">*</span>
                   </label>
                   <div className="input-group">
-                    <span className="input-icon">
-                      {/* <FiTag /> */}
-                    </span>
+                    <span className="input-icon">{/* <FiTag /> */}</span>
                     <input
                       type="text"
                       id="serialNumber"
                       value={formData.serialNumber}
                       onChange={handleInputChange}
                       placeholder="Enter serial number"
-                      className={`form-input pl-10 ${errors.serialNumber ? "error" : ""}`}
+                      className={`form-input pl-10 ${
+                        errors.serialNumber ? "error" : ""
+                      }`}
                     />
                     {showSerialLoader && (
                       <span className="input-loader">
@@ -393,15 +470,22 @@ const UpdatingAssetForm = ({ assetId }) => {
                       id="manufacturer"
                       value={formData.manufacturer}
                       onChange={handleSelectChange}
-                      className={`form-select pl-10 ${errors.manufacturer ? "error" : ""}`}
+                      className={`form-select pl-10 ${
+                        errors.manufacturer ? "error" : ""
+                      }`}
                       disabled={loading.manufacturers}
                     >
                       <option value="">Select Manufacturer</option>
                       {loading.manufacturers ? (
-                        <option value="" disabled>Loading manufacturers...</option>
+                        <option value="" disabled>
+                          Loading manufacturers...
+                        </option>
                       ) : (
                         manufacturers.map((manufacturer) => (
-                          <option key={manufacturer._id} value={manufacturer.name.toLowerCase()}>
+                          <option
+                            key={manufacturer._id}
+                            value={manufacturer.name}
+                          >
                             {manufacturer.name}
                           </option>
                         ))
@@ -412,7 +496,8 @@ const UpdatingAssetForm = ({ assetId }) => {
                     <p className="input-error">Manufacturer is required</p>
                   )}
                   <p className="input-help">
-                    {formData.manufacturer && "Selected manufacturer: " + formData.manufacturer}
+                    {formData.manufacturer &&
+                      "Selected manufacturer: " + formData.manufacturer}
                   </p>
                 </div>
 
@@ -422,39 +507,51 @@ const UpdatingAssetForm = ({ assetId }) => {
                     Type <span className="text-red-400">*</span>
                   </label>
                   <div className="input-group" ref={dropdownRefs.type}>
-                    <span className="input-icon">
-                      {/* <FiType /> */}
-                    </span>
+                    <span className="input-icon">{/* <FiType /> */}</span>
                     <input
                       type="text"
                       id="type"
                       value={formData.type || ""}
                       onChange={(e) => handleInputChange(e)} // Add this onChange handler
                       placeholder="Select or type"
-                      className={`form-input pl-10 ${errors.type ? "error" : ""}`}
+                      className={`form-input pl-10 ${
+                        errors.type ? "error" : ""
+                      }`}
                       onClick={() => toggleSection("type")}
                     />
-                    <span className="input-suffix" onClick={() => toggleSection("type")}>
-                      {openSection === "type" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
+                    <span
+                      className="input-suffix"
+                      onClick={() => toggleSection("type")}
+                    >
+                      {openSection === "type" ? (
+                        <IoMdArrowDropup />
+                      ) : (
+                        <IoMdArrowDropdown />
+                      )}
                     </span>
                     {openSection === "type" && (
                       <div className="dropdown-menu">
-                        {typeOptions.filter(o => o.label !== "Default").map((option) => (
-                          <div
-                            key={option.label}
-                            onClick={() => {
-                              setFormData({
-                                ...formData,
-                                type: option.label,
-                                category: option.label.toLowerCase() !== "default" ? option.label.toLowerCase() : ""
-                              });
-                              toggleSection("");
-                            }}
-                            className="dropdown-item"
-                          >
-                            {option.label}
-                          </div>
-                        ))}
+                        {typeOptions
+                          .filter((o) => o.label !== "Default")
+                          .map((option) => (
+                            <div
+                              key={option.label}
+                              onClick={() => {
+                                setFormData({
+                                  ...formData,
+                                  type: option.label,
+                                  category:
+                                    option.label.toLowerCase() !== "default"
+                                      ? option.label.toLowerCase()
+                                      : "",
+                                });
+                                toggleSection("");
+                              }}
+                              className="dropdown-item"
+                            >
+                              {option.label}
+                            </div>
+                          ))}
                       </div>
                     )}
                   </div>
@@ -462,13 +559,17 @@ const UpdatingAssetForm = ({ assetId }) => {
                     <p className="input-error">Type is required</p>
                   )}
                   <p className="input-help">
-                    {typeOptions.find((option) => option.label === formData.type)?.description || ""}
+                    {typeOptions.find(
+                      (option) => option.label === formData.type
+                    )?.description || ""}
                   </p>
                 </div>
 
                 {/* Model */}
                 <div className="form-group">
-                  <label htmlFor="model" className="form-label">Model</label>
+                  <label htmlFor="model" className="form-label">
+                    Model
+                  </label>
                   <div className="input-group">
                     <span className="input-icon">
                       <FiBox />
@@ -499,26 +600,40 @@ const UpdatingAssetForm = ({ assetId }) => {
                       value={formData.status || ""}
                       readOnly
                       placeholder="Select status"
-                      className={`form-input pl-10 ${errors.status ? "error" : ""}`}
+                      className={`form-input pl-10 ${
+                        errors.status ? "error" : ""
+                      }`}
                       onClick={() => toggleSection("status")}
                     />
-                    <span className="input-suffix" onClick={() => toggleSection("status")}>
-                      {openSection === "status" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
+                    <span
+                      className="input-suffix"
+                      onClick={() => toggleSection("status")}
+                    >
+                      {openSection === "status" ? (
+                        <IoMdArrowDropup />
+                      ) : (
+                        <IoMdArrowDropdown />
+                      )}
                     </span>
                     {openSection === "status" && (
                       <div className="dropdown-menu">
-                        {statusOptions.filter(o => o.label !== "Default").map((option) => (
-                          <div
-                            key={option.label}
-                            onClick={() => handleStatusSelect(option.label)}
-                            className="dropdown-item"
-                          >
-                            <span className={`mr-2 ${option.color}`}>
-                              {option.label === "MISStock" || option.label === "Deployed" ? "✓" : "✗"}
-                            </span>
-                            <span>{option.label}</span>
-                          </div>
-                        ))}
+                        {statusOptions
+                          .filter((o) => o.label !== "Default")
+                          .map((option) => (
+                            <div
+                              key={option.label}
+                              onClick={() => handleStatusSelect(option.label)}
+                              className="dropdown-item"
+                            >
+                              <span className={`mr-2 ${option.color}`}>
+                                {option.label === "MISStock" ||
+                                option.label === "Deployed"
+                                  ? "✓"
+                                  : "✗"}
+                              </span>
+                              <span>{option.label}</span>
+                            </div>
+                          ))}
                       </div>
                     )}
                   </div>
@@ -526,7 +641,9 @@ const UpdatingAssetForm = ({ assetId }) => {
                     <p className="input-error">Status is required</p>
                   )}
                   <p className="input-help">
-                    {statusOptions.find((option) => option.label === formData.status)?.description || ""}
+                    {statusOptions.find(
+                      (option) => option.label === formData.status
+                    )?.description || ""}
                   </p>
                 </div>
 
@@ -543,16 +660,21 @@ const UpdatingAssetForm = ({ assetId }) => {
                       id="segment"
                       value={formData.segment}
                       onChange={handleSelectChange}
-                      className={`form-select pl-10 ${errors.segment ? "error" : ""}`}
+                      className={`form-select pl-10 ${
+                        errors.segment ? "error" : ""
+                      }`}
                       disabled={loading.segments}
                     >
                       <option value="">Select Segment</option>
                       {loading.segments ? (
-                        <option value="" disabled>Loading segments...</option>
+                        <option value="" disabled>
+                          Loading segments...
+                        </option>
                       ) : (
                         segments.map((segment) => (
                           <option key={segment._id} value={segment.name}>
-                            {segment.name} {segment.segment && `(${segment.segment})`}
+                            {segment.name}{" "}
+                            {segment.segment && `(${segment.segment})`}
                           </option>
                         ))
                       )}
@@ -578,7 +700,9 @@ const UpdatingAssetForm = ({ assetId }) => {
                       value={formData.assetOwner}
                       onChange={handleInputChange}
                       placeholder="Enter recipient name"
-                      className={`form-input pl-10 ${errors.assetOwner ? "error" : ""}`}
+                      className={`form-input pl-10 ${
+                        errors.assetOwner ? "error" : ""
+                      }`}
                     />
                   </div>
                   {errors.assetOwner && (
@@ -597,7 +721,9 @@ const UpdatingAssetForm = ({ assetId }) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {/* Category */}
                 <div className="form-group">
-                  <label htmlFor="category" className="form-label">Category</label>
+                  <label htmlFor="category" className="form-label">
+                    Category
+                  </label>
                   <div className="input-group">
                     <span className="input-icon">
                       <FiBox />
@@ -613,14 +739,20 @@ const UpdatingAssetForm = ({ assetId }) => {
                       <option value="laptop">Laptop</option>
                       <option value="monitor">Monitor</option>
                       <option value="printer">Printer</option>
+                      <option value="HR">HR</option>
+                      <option value="IT">IT</option>
+                      <option value="Finance">Finance</option>
+                      <option value="Operations">Operations</option>
                     </select>
                   </div>
-                  <p className="input-help">Auto-selected based on type</p>
+                  <p className="input-help">Asset category or department</p>
                 </div>
 
                 {/* Expires */}
                 <div className="form-group">
-                  <label htmlFor="expires" className="form-label">Warranty Expire</label>
+                  <label htmlFor="expires" className="form-label">
+                    Warranty Expire
+                  </label>
                   <div className="input-group">
                     <span className="input-icon">
                       <FiCalendar />
@@ -637,7 +769,10 @@ const UpdatingAssetForm = ({ assetId }) => {
 
                 {/* Default Location */}
                 <div className="form-group">
-                  <label htmlFor="defaultLocation" className="form-label"> Location</label>
+                  <label htmlFor="defaultLocation" className="form-label">
+                    {" "}
+                    Location
+                  </label>
                   <div className="input-group">
                     <span className="input-icon">
                       <HiOutlineLocationMarker />
@@ -648,8 +783,10 @@ const UpdatingAssetForm = ({ assetId }) => {
                       onChange={handleSelectChange}
                       className="form-select pl-10"
                     >
-                      {locationOptions.map(option => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
+                      {locationOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
                       ))}
                     </select>
                   </div>
@@ -657,7 +794,9 @@ const UpdatingAssetForm = ({ assetId }) => {
 
                 {/* Condition */}
                 <div className="form-group">
-                  <label htmlFor="condition" className="form-label">Condition</label>
+                  <label htmlFor="condition" className="form-label">
+                    Condition
+                  </label>
                   <div className="input-group" ref={dropdownRefs.condition}>
                     <span className="input-icon">
                       <FiInfo />
@@ -671,8 +810,15 @@ const UpdatingAssetForm = ({ assetId }) => {
                       className="form-input pl-10"
                       onClick={() => toggleSection("condition")}
                     />
-                    <span className="input-suffix" onClick={() => toggleSection("condition")}>
-                      {openSection === "condition" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
+                    <span
+                      className="input-suffix"
+                      onClick={() => toggleSection("condition")}
+                    >
+                      {openSection === "condition" ? (
+                        <IoMdArrowDropup />
+                      ) : (
+                        <IoMdArrowDropdown />
+                      )}
                     </span>
                     {openSection === "condition" && (
                       <div className="dropdown-menu">
@@ -680,7 +826,10 @@ const UpdatingAssetForm = ({ assetId }) => {
                           <div
                             key={option.label}
                             onClick={() => {
-                              setFormData({ ...formData, condition: option.label });
+                              setFormData({
+                                ...formData,
+                                condition: option.label,
+                              });
                               toggleSection("");
                             }}
                             className="dropdown-item"
@@ -695,7 +844,9 @@ const UpdatingAssetForm = ({ assetId }) => {
 
                 {/* Received Date */}
                 <div className="form-group">
-                  <label htmlFor="receivedDate" className="form-label">Received Date</label>
+                  <label htmlFor="receivedDate" className="form-label">
+                    Received Date
+                  </label>
                   <div className="input-group">
                     <span className="input-icon">
                       <FiCalendar />
@@ -713,7 +864,9 @@ const UpdatingAssetForm = ({ assetId }) => {
 
                 {/* Store Location */}
                 <div className="form-group">
-                  <label htmlFor="storeLocation" className="form-label">Store Location</label>
+                  <label htmlFor="storeLocation" className="form-label">
+                    Store Location
+                  </label>
                   <div className="input-group">
                     <span className="input-icon">
                       <HiOutlineLocationMarker />
@@ -729,11 +882,51 @@ const UpdatingAssetForm = ({ assetId }) => {
                   </div>
                 </div>
 
+                {/* Check Out Date */}
+                <div className="form-group">
+                  <label htmlFor="checkOutDate" className="form-label">
+                    Check Out Date
+                  </label>
+                  <div className="input-group">
+                    <span className="input-icon">
+                      <FiCalendar />
+                    </span>
+                    <input
+                      type="date"
+                      id="checkOutDate"
+                      value={formData.checkOutDate}
+                      onChange={handleInputChange}
+                      className="form-input pl-10"
+                    />
+                  </div>
+                  <p className="input-help">When the asset was checked out</p>
+                </div>
 
+                {/* Check In Date */}
+                <div className="form-group">
+                  <label htmlFor="checkInDate" className="form-label">
+                    Check In Date
+                  </label>
+                  <div className="input-group">
+                    <span className="input-icon">
+                      <FiCalendar />
+                    </span>
+                    <input
+                      type="date"
+                      id="checkInDate"
+                      value={formData.checkInDate}
+                      onChange={handleInputChange}
+                      className="form-input pl-10"
+                    />
+                  </div>
+                  <p className="input-help">When the asset was checked in</p>
+                </div>
 
                 {/* Cost Center */}
                 <div className="form-group">
-                  <label htmlFor="costCenter" className="form-label">Cost Center</label>
+                  <label htmlFor="costCenter" className="form-label">
+                    Cost Center
+                  </label>
                   <div className="input-group">
                     <span className="input-icon">
                       <FiTag />
@@ -751,7 +944,9 @@ const UpdatingAssetForm = ({ assetId }) => {
 
                 {/* Notes - Full width */}
                 <div className="form-group md:col-span-2">
-                  <label htmlFor="note" className="form-label">Notes</label>
+                  <label htmlFor="note" className="form-label">
+                    Notes
+                  </label>
                   <div className="input-group h-auto">
                     <textarea
                       id="note"
@@ -767,7 +962,9 @@ const UpdatingAssetForm = ({ assetId }) => {
             </div>
 
             {/* Conditional Sections */}
-            {(formData.status === "Inactive" || formData.status === "Disposed" || formData.status === "Buyback") && (
+            {(formData.status === "Inactive" ||
+              formData.status === "Disposed" ||
+              formData.status === "Buyback") && (
               <div className="space-y-5">
                 {/* Killdisk Section */}
                 <div className="collapsible-section">
@@ -781,7 +978,11 @@ const UpdatingAssetForm = ({ assetId }) => {
                       <span className="font-medium">Killdisk Information</span>
                     </span>
                     <span>
-                      {openSection === "killdiskDate" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
+                      {openSection === "killdiskDate" ? (
+                        <IoMdArrowDropup />
+                      ) : (
+                        <IoMdArrowDropdown />
+                      )}
                     </span>
                   </button>
 
@@ -789,7 +990,9 @@ const UpdatingAssetForm = ({ assetId }) => {
                     <div className="collapsible-content">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="form-group">
-                          <label htmlFor="killdiskDate" className="form-label">Killdisk Date</label>
+                          <label htmlFor="killdiskDate" className="form-label">
+                            Killdisk Date
+                          </label>
                           <div className="input-group">
                             <span className="input-icon">
                               <FiCalendar />
@@ -804,7 +1007,9 @@ const UpdatingAssetForm = ({ assetId }) => {
                           </div>
                         </div>
                         <div className="form-group">
-                          <label htmlFor="attachedFile" className="form-label">Attach File</label>
+                          <label htmlFor="attachedFile" className="form-label">
+                            Attach File
+                          </label>
                           <div className="input-group">
                             <input
                               type="file"
@@ -813,7 +1018,7 @@ const UpdatingAssetForm = ({ assetId }) => {
                               onChange={(e) => {
                                 setFormData((prev) => ({
                                   ...prev,
-                                  attachedFile: e.target.files[0]?.name || ""
+                                  attachedFile: e.target.files[0]?.name || "",
                                 }));
                               }}
                             />
@@ -836,14 +1041,20 @@ const UpdatingAssetForm = ({ assetId }) => {
                       <span className="font-medium">Disposal Information</span>
                     </span>
                     <span>
-                      {openSection === "disposed" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
+                      {openSection === "disposed" ? (
+                        <IoMdArrowDropup />
+                      ) : (
+                        <IoMdArrowDropdown />
+                      )}
                     </span>
                   </button>
 
                   {openSection === "disposed" && (
                     <div className="collapsible-content">
                       <div className="form-group">
-                        <label htmlFor="disposedDate" className="form-label">Disposed Date</label>
+                        <label htmlFor="disposedDate" className="form-label">
+                          Disposed Date
+                        </label>
                         <div className="input-group">
                           <span className="input-icon">
                             <FiCalendar />
@@ -875,7 +1086,11 @@ const UpdatingAssetForm = ({ assetId }) => {
                   <span className="font-medium">Order Information</span>
                 </span>
                 <span>
-                  {openSection === "orderInfo" ? <IoMdArrowDropup /> : <IoMdArrowDropdown />}
+                  {openSection === "orderInfo" ? (
+                    <IoMdArrowDropup />
+                  ) : (
+                    <IoMdArrowDropdown />
+                  )}
                 </span>
               </button>
 
@@ -883,7 +1098,9 @@ const UpdatingAssetForm = ({ assetId }) => {
                 <div className="collapsible-content">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="form-group">
-                      <label htmlFor="poNumber" className="form-label">PO Number</label>
+                      <label htmlFor="poNumber" className="form-label">
+                        PO Number
+                      </label>
                       <div className="input-group">
                         <span className="input-icon">
                           <FiTag />
@@ -899,7 +1116,9 @@ const UpdatingAssetForm = ({ assetId }) => {
                       </div>
                     </div>
                     <div className="form-group">
-                      <label htmlFor="order" className="form-label">Order</label>
+                      <label htmlFor="order" className="form-label">
+                        Order
+                      </label>
                       <div className="input-group">
                         <span className="input-icon">
                           <FiTag />
@@ -915,7 +1134,9 @@ const UpdatingAssetForm = ({ assetId }) => {
                       </div>
                     </div>
                     <div className="form-group">
-                      <label htmlFor="purchaseDate" className="form-label">Purchase Date</label>
+                      <label htmlFor="purchaseDate" className="form-label">
+                        Purchase Date
+                      </label>
                       <div className="input-group">
                         <span className="input-icon">
                           <FiCalendar />
@@ -956,15 +1177,16 @@ const UpdatingAssetForm = ({ assetId }) => {
                     defaultLocation: "Select Location",
                     costCenter: "",
                     receivedDate: "",
-
                     condition: "",
-                    storeLocation: "Rack No",
+                    storeLocation: "",
                     killdiskDate: "",
                     attachedFile: "",
                     disposedDate: "",
                     poNumber: "",
                     order: "",
-                    purchaseDate: ""
+                    purchaseDate: "",
+                    checkOutDate: "",
+                    checkInDate: "",
                   });
                   setErrors({});
                 }}
@@ -974,7 +1196,7 @@ const UpdatingAssetForm = ({ assetId }) => {
 
               <button
                 type="button"
-                className={`btn-primary ${loading.form ? 'loading' : ''}`}
+                className={`btn-primary ${loading.form ? "loading" : ""}`}
                 onClick={handleSubmit}
                 disabled={loading.form}
               >
@@ -984,19 +1206,15 @@ const UpdatingAssetForm = ({ assetId }) => {
                     <span>Updating...</span>
                   </>
                 ) : (
-                  'Save Asset'
+                  "Save Asset"
                 )}
               </button>
             </div>
           </div>
         </div>
       </div>
-      </div>
-
-
-    
+    </div>
   );
 };
-
 
 export default UpdatingAssetForm;
