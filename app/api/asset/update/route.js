@@ -2,7 +2,6 @@
 import { NextResponse } from "next/server";
 import dbConnect from "../../../../lib/dbConnect";
 import Asset from "../../../../models/Asset";
-import getUserData from "../../../../utils/getUser";
 
 export async function PUT(req) {
   try {
@@ -36,7 +35,8 @@ export async function PUT(req) {
       checkOutDate,
       checkInDate,
       updatedBy,
-      accessories
+      accessories,
+      changedFields, // Array of field names that were changed on client side
     } = data;
 
     // Validate required fields
@@ -58,10 +58,7 @@ export async function PUT(req) {
     const existingAsset = await Asset.findOne({ serialNumber });
 
     if (!existingAsset) {
-      return NextResponse.json(
-        { error: "Asset not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Asset not found" }, { status: 404 });
     }
 
     // Store previous values for history tracking
@@ -82,36 +79,36 @@ export async function PUT(req) {
       note: note || existingAsset.note,
       defaultLocation: defaultLocation || existingAsset.defaultLocation,
       costCenter: costCenter || existingAsset.costCenter,
-      receivedDate: receivedDate ? new Date(receivedDate) : existingAsset.receivedDate,
+      receivedDate: receivedDate
+        ? new Date(receivedDate)
+        : existingAsset.receivedDate,
       condition: condition || existingAsset.condition,
       storeLocation: storeLocation || existingAsset.storeLocation,
-      killdiskDate: killdiskDate ? new Date(killdiskDate) : existingAsset.killdiskDate,
+      killdiskDate: killdiskDate
+        ? new Date(killdiskDate)
+        : existingAsset.killdiskDate,
       attachedFile: attachedFile || existingAsset.attachedFile,
-      disposedDate: disposedDate ? new Date(disposedDate) : existingAsset.disposedDate,
+      disposedDate: disposedDate
+        ? new Date(disposedDate)
+        : existingAsset.disposedDate,
       poNumber: poNumber || existingAsset.poNumber,
       order: order || existingAsset.order,
-      purchaseDate: purchaseDate ? new Date(purchaseDate) : existingAsset.purchaseDate,
-      checkOutDate: checkOutDate ? new Date(checkOutDate) : existingAsset.checkOutDate,
-      checkInDate: checkInDate ? new Date(checkInDate) : existingAsset.checkInDate,
-      accessories: accessories || existingAsset.accessories
+      purchaseDate: purchaseDate
+        ? new Date(purchaseDate)
+        : existingAsset.purchaseDate,
+      checkOutDate: checkOutDate
+        ? new Date(checkOutDate)
+        : existingAsset.checkOutDate,
+      checkInDate: checkInDate
+        ? new Date(checkInDate)
+        : existingAsset.checkInDate,
+      accessories: accessories || existingAsset.accessories,
     };
 
     // ----------------------------
-    // Track field-level changes
+    // Use client-provided changed fields
     // ----------------------------
-    let changes = {};
-    Object.keys(updateData).forEach((field) => {
-      const oldVal = existingAsset[field];
-      const newVal = updateData[field];
-
-      // compare values (simple check for now)
-      const oldString = oldVal instanceof Date ? oldVal.toISOString() : String(oldVal || "");
-      const newString = newVal instanceof Date ? newVal.toISOString() : String(newVal || "");
-
-      if (oldString !== newString) {
-        changes[field] = { old: oldVal || null, new: newVal || null };
-      }
-    });
+    const fieldsChanged = changedFields || [];
 
     // Determine the action type based on changes
     let actionType = "update";
@@ -138,9 +135,11 @@ export async function PUT(req) {
       status: status,
       updatedBy: updatedBy || "System",
       assetOwner: assetOwner || existingAsset.assetOwner,
+      lastChange: fieldsChanged, // Store the field names that were changed
       note: historyNote,
-      changes // 👈 field-level changes stored here
     };
+
+    console.log("historyEntry", historyEntry);
 
     // Initialize assetHistory if it doesn't exist
     if (!existingAsset.assetHistory) {
@@ -155,11 +154,11 @@ export async function PUT(req) {
       {
         ...updateData,
         assetHistory: existingAsset.assetHistory,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       },
       {
         new: true,
-        runValidators: true
+        runValidators: true,
       }
     );
 
@@ -174,7 +173,7 @@ export async function PUT(req) {
       {
         success: true,
         message: "Asset updated successfully",
-        asset: updatedAsset
+        asset: updatedAsset,
       },
       { status: 200 }
     );
@@ -185,13 +184,13 @@ export async function PUT(req) {
     if (error.name === "ValidationError") {
       const errors = Object.keys(error.errors).map((key) => ({
         field: key,
-        message: error.errors[key].message
+        message: error.errors[key].message,
       }));
 
       return NextResponse.json(
         {
           error: "Validation failed",
-          details: errors
+          details: errors,
         },
         { status: 400 }
       );
@@ -208,7 +207,7 @@ export async function PUT(req) {
     return NextResponse.json(
       {
         error: "Internal server error",
-        details: error.message
+        details: error.message,
       },
       { status: 500 }
     );

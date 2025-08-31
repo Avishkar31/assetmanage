@@ -213,16 +213,16 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
           }
         } else {
           info = <>{info} updated the asset</>;
-          if (entry.changes && Array.isArray(entry.changes) && entry.changes.length > 0) {
+            if (entry.lastChange && Array.isArray(entry.lastChange) && entry.lastChange.length > 0) {
             info = (
               <>
-                {info}
-                <span className="text-xs text-gray-400 ml-1">
-                  ({entry.changes.length} field{entry.changes.length !== 1 ? 's' : ''} modified)
-                </span>
+              {info}
+              <span className="text-xs text-gray-400 ml-1">
+                ({entry.lastChange.map(formatFieldName).join(', ')} modified)
+              </span>
               </>
             );
-          }
+            }
         }
         break;
       default:

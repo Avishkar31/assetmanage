@@ -17,12 +17,12 @@ const assetSchema = new mongoose.Schema({
       "Buyback",
       "Disposed",
       "Inactive",
-      "Deployed"
+      "Deployed",
     ],
-    required: true
+    required: true,
   },
   segment: String,
-  assetOwner: { type: String }, 
+  assetOwner: { type: String },
   note: String,
   defaultLocation: { type: String, required: false },
   costCenter: String,
@@ -42,16 +42,19 @@ const assetSchema = new mongoose.Schema({
       user: String,
       action: {
         type: String,
-        enum: ["created", "checkIn", "checkOut", "update", "disposed"]
+        enum: ["created", "checkIn", "checkOut", "update", "disposed"],
       },
       date: { type: Date, default: Date.now },
       status: String,
       updatedBy: String,
       assetOwner: String,
-      changes: [
-        
-      ]
-    }
+      previousAssetOwner: String,
+      lastChange: {
+        type: [{ String }],
+        default: [],
+      },
+      note: String,
+    },
   ],
   accessories: {
     CPU: { type: Boolean, default: false },
@@ -68,8 +71,8 @@ const assetSchema = new mongoose.Schema({
     Headphone: { type: Boolean, default: false },
     Cardreader: { type: Boolean, default: false },
     Printer: { type: Boolean, default: false },
-    Mobile: { type: Boolean, default: false }
-  }
+    Mobile: { type: Boolean, default: false },
+  },
 });
 
 export default mongoose.models.Asset || mongoose.model("Asset", assetSchema);
