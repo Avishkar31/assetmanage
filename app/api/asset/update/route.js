@@ -1,3 +1,4 @@
+// api>asset>update>route.js
 import { NextResponse } from "next/server";
 import dbConnect from "../../../../lib/dbConnect";
 import Asset from "../../../../models/Asset";
@@ -6,9 +7,9 @@ import getUserData from "../../../../utils/getUser";
 export async function PUT(req) {
   try {
     await dbConnect();
-    
+
     const data = await req.json();
-    
+
     const {
       nodeName,
       serialNumber,
@@ -55,7 +56,7 @@ export async function PUT(req) {
 
     // Find the existing asset by serial number
     const existingAsset = await Asset.findOne({ serialNumber });
-    
+
     if (!existingAsset) {
       return NextResponse.json(
         { error: "Asset not found" },
@@ -67,7 +68,7 @@ export async function PUT(req) {
     const previousStatus = existingAsset.status;
     const previousOwner = existingAsset.assetOwner;
 
-    // Update the asset with new data
+    // Prepare update data
     const updateData = {
       nodeName: nodeName || existingAsset.nodeName,
       manufacturer: manufacturer || existingAsset.manufacturer,
@@ -95,6 +96,23 @@ export async function PUT(req) {
       accessories: accessories || existingAsset.accessories
     };
 
+    // ----------------------------
+    // Track field-level changes
+    // ----------------------------
+    let changes = {};
+    Object.keys(updateData).forEach((field) => {
+      const oldVal = existingAsset[field];
+      const newVal = updateData[field];
+
+      // compare values (simple check for now)
+      const oldString = oldVal instanceof Date ? oldVal.toISOString() : String(oldVal || "");
+      const newString = newVal instanceof Date ? newVal.toISOString() : String(newVal || "");
+
+      if (oldString !== newString) {
+        changes[field] = { old: oldVal || null, new: newVal || null };
+      }
+    });
+
     // Determine the action type based on changes
     let actionType = "update";
     let historyNote = note || "Asset updated";
@@ -119,7 +137,9 @@ export async function PUT(req) {
       date: new Date(),
       status: status,
       updatedBy: updatedBy || "System",
-      assetOwner: assetOwner || existingAsset.assetOwner
+      assetOwner: assetOwner || existingAsset.assetOwner,
+      note: historyNote,
+      changes // 👈 field-level changes stored here
     };
 
     // Initialize assetHistory if it doesn't exist
@@ -137,7 +157,7 @@ export async function PUT(req) {
         assetHistory: existingAsset.assetHistory,
         lastUpdated: new Date()
       },
-      { 
+      {
         new: true,
         runValidators: true
       }
@@ -151,26 +171,25 @@ export async function PUT(req) {
     }
 
     return NextResponse.json(
-      { 
-        success: true, 
+      {
+        success: true,
         message: "Asset updated successfully",
-        asset: updatedAsset 
+        asset: updatedAsset
       },
       { status: 200 }
     );
-
   } catch (error) {
     console.error("Error updating asset:", error);
-    
+
     // Handle validation errors
-    if (error.name === 'ValidationError') {
-      const errors = Object.keys(error.errors).map(key => ({
+    if (error.name === "ValidationError") {
+      const errors = Object.keys(error.errors).map((key) => ({
         field: key,
         message: error.errors[key].message
       }));
-      
+
       return NextResponse.json(
-        { 
+        {
           error: "Validation failed",
           details: errors
         },
@@ -187,7 +206,7 @@ export async function PUT(req) {
     }
 
     return NextResponse.json(
-      { 
+      {
         error: "Internal server error",
         details: error.message
       },

@@ -4,7 +4,7 @@ import Sidebar from "components/Sidebar";
 import AssetHistoryShow from "@/components/AssetHistoryShow";
 import { toast } from "react-hot-toast";
 
-// Reusabnent
+// Reusable Input Component
 const InputComponent = ({ id, value }) => (
   <input
     id={id}
@@ -44,7 +44,7 @@ const ViewAsset = () => {
   const [accessories, setAccessories] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isMobileView, setIsMobileView] = useState(false);
-  const [userRole, setUserRole] = useState(""); // Add userRole state
+  const [userRole, setUserRole] = useState("");
   const [isEditingAccessories, setIsEditingAccessories] = useState(false);
   const [editableAccessories, setEditableAccessories] = useState({});
   const [newAccessory, setNewAccessory] = useState({ name: "", quantity: 1 });
@@ -106,19 +106,21 @@ const ViewAsset = () => {
     }
   }, [serialNumber]);
 
-useEffect(() => {
-  // Get user role from localStorage
-  const user = localStorage.getItem("user");
-  if (user) {
-    try {
-      const userData = JSON.parse(user);
-      setUserRole((userData.role || "").toLowerCase()); // Convert to lowercase for consistent comparison
-    } catch (e) {
-      console.error("Error parsing user data:", e);
-      setUserRole("");
+  useEffect(() => {
+    // Get user role from localStorage - only run on client side
+    if (typeof window !== 'undefined') {
+      const user = window.localStorage?.getItem("user");
+      if (user) {
+        try {
+          const userData = JSON.parse(user);
+          setUserRole((userData.role || "").toLowerCase());
+        } catch (e) {
+          console.error("Error parsing user data:", e);
+          setUserRole("");
+        }
+      }
     }
-  }
-}, []);
+  }, []);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -174,8 +176,6 @@ useEffect(() => {
     }
   };
 
-  const toggleReadOnly = () => setIsReadOnly(!isReadOnly);
-
   const handleCheckoutToggle = () => {
     const targetUrl =
       formData.status === "Deployed"
@@ -185,42 +185,122 @@ useEffect(() => {
   };
 
   const handleUpdateAccessories = () => {
+    // Only allow editing if asset is not checked out (deployed)
+    if (formData.status === "MISStock" || formData.status === "Disposed" || formData.status === "New Purchase" || formData.status === "Buyback") {
+      toast.error("Cannot edit accessories for checked out assets");
+      return;
+    }
     setEditableAccessories({...accessories});
     setIsEditingAccessories(true);
   };
 
+  // Function to compare accessories and generate change details
+  const generateAccessoryChanges = (oldAccessories, newAccessories) => {
+    const changes = [];
+    
+    // Get all unique accessory names
+    const allAccessories = new Set([
+      ...Object.keys(oldAccessories),
+      ...Object.keys(newAccessories)
+    ]);
+
+    allAccessories.forEach(accessory => {
+      const oldQty = oldAccessories[accessory] || 0;
+      const newQty = newAccessories[accessory] || 0;
+
+      if (oldQty !== newQty) {
+        if (oldQty === 0) {
+          // Added new accessory
+          changes.push({
+            field: `accessories.${accessory}`,
+            oldValue: null,
+            newValue: newQty,
+            changeType: 'added'
+          });
+        } else if (newQty === 0) {
+          // Removed accessory
+          changes.push({
+            field: `accessories.${accessory}`,
+            oldValue: oldQty,
+            newValue: null,
+            changeType: 'removed'
+          });
+        } else {
+          // Quantity changed
+          changes.push({
+            field: `accessories.${accessory}`,
+            oldValue: oldQty,
+            newValue: newQty,
+            changeType: 'modified'
+          });
+        }
+      }
+    });
+
+    return changes;
+  };
+
   const handleSaveAccessories = async () => {
     try {
+      // Generate change details for history
+      const accessoryChanges = generateAccessoryChanges(accessories, editableAccessories);
+      
+      // Prepare the update payload
+      const updatePayload = {
+        accessories: editableAccessories,
+        // Include change tracking for history
+        updateType: 'accessories',
+        accessoryChanges: accessoryChanges
+      };
+
       const response = await fetch(`/api/asset/${assetId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          accessories: editableAccessories
-        })
+        body: JSON.stringify(updatePayload)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update accessories');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update accessories');
       }
 
+      const updatedAsset = await response.json();
+      
+      // Update local state
       setAccessories(editableAccessories);
       setIsEditingAccessories(false);
+      
+      // Update history if returned from API
+      if (updatedAsset.assetHistory) {
+        setHistory(updatedAsset.assetHistory);
+      }
+      
       toast.success('Accessories updated successfully');
     } catch (error) {
       console.error('Error updating accessories:', error);
-      toast.error('Failed to update accessories');
+      toast.error(error.message || 'Failed to update accessories');
     }
   };
 
   const handleAddAccessory = () => {
     if (newAccessory.name.trim()) {
+      const trimmedName = newAccessory.name.trim();
+      
+      // Check if accessory already exists
+      if (editableAccessories[trimmedName]) {
+        toast.error("Accessory already exists. Please update the quantity instead.");
+        return;
+      }
+      
       setEditableAccessories(prev => ({
         ...prev,
-        [newAccessory.name]: newAccessory.quantity
+        [trimmedName]: newAccessory.quantity
       }));
       setNewAccessory({ name: "", quantity: 1 });
+    } else {
+      toast.error("Please enter a valid accessory name");
     }
   };
 
@@ -229,6 +309,21 @@ useEffect(() => {
     delete updatedAccessories[accessoryName];
     setEditableAccessories(updatedAccessories);
   };
+
+  const handleQuantityChange = (accessoryName, newQuantity) => {
+    if (newQuantity < 1) {
+      toast.error("Quantity must be at least 1");
+      return;
+    }
+    
+    setEditableAccessories(prev => ({
+      ...prev,
+      [accessoryName]: newQuantity
+    }));
+  };
+
+  // Check if accessories can be edited (not when asset is deployed/checked out)
+  const canEditAccessories = formData.status !== "MISStock" && formData.status !== "Disposed" && formData.status !== "New Purchase" && formData.status !== "Buyback";
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-900 text-white overflow-hidden">
@@ -257,16 +352,11 @@ useEffect(() => {
                 ["Status", "status"],
                 ["Node Name", "nodeName"],
                 ["Serial Number", "serialNumber"],
-                // ["Category", "category"],
                 ["Type", "type"],
                 ["Model", "model"],
-                // ["Desk Location", "deskLocation"],
                 ["Asset Owner", "assetOwner"],
-                // ["Allocation", "allocation"],
-                // ["Period", "period"],
                 ["Expires", "expires"],
                 ["Default Location", "defaultLocation"],
-
                 ["Cost Center", "costCenter"],
                 ["Received Date", "receivedDate"],
                 ["Asset Condition", "condition"],
@@ -279,7 +369,7 @@ useEffect(() => {
                   <div className="w-full md:w-1/2 lg:w-3/5">
                     <InputComponent
                       id={id}
-                      value={formData[id] || ""} // Default to empty string if undefined
+                      value={formData[id] || ""}
                     />
                   </div>
                 </div>
@@ -320,14 +410,6 @@ useEffect(() => {
               Update Asset
             </button>
 
-            {/* <button
-              type="button" 
-              className="py-2 px-4 mb-2 w-full text-sm font-medium text-white focus:outline-none bg-green-600 rounded-lg border border-green-700 hover:bg-green-700 focus:z-10 focus:ring-4 focus:ring-green-300"
-              onClick={handlePrintForm}
-            >
-              Print Form
-            </button> */}
-
             <button
               type="button"
               className="py-2 px-4 mb-2 w-full text-sm font-medium text-white focus:outline-none bg-red-600 rounded-lg border border-red-700 hover:bg-red-700 focus:z-10 focus:ring-4 focus:ring-red-300"
@@ -345,11 +427,24 @@ useEffect(() => {
                 </h3>
                 <button
                   onClick={handleUpdateAccessories}
-                  className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  disabled={!canEditAccessories}
+                  className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                    canEditAccessories
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                  }`}
+                  title={!canEditAccessories ? "Cannot edit accessories for checked out assets" : ""}
                 >
                   Edit Accessories
                 </button>
               </div>
+              
+              {!canEditAccessories && (
+                <div className="mb-3 p-2 bg-yellow-800 border border-yellow-600 rounded text-yellow-200 text-xs">
+                  <strong>Note:</strong> Accessories cannot be edited for checked out assets.
+                </div>
+              )}
+              
               {Object.keys(accessories).length === 0 ? (
                 <p className="dark:text-gray-400 text-sm">
                   No Accessories available for this asset.
@@ -379,71 +474,88 @@ useEffect(() => {
       {/* Edit Accessories Modal */}
       {isEditingAccessories && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg w-96 max-w-full mx-4">
+          <div className="bg-gray-800 p-6 rounded-lg w-96 max-w-full mx-4 max-h-[80vh] overflow-y-auto">
             <h2 className="text-xl font-bold mb-4">Edit Accessories</h2>
-            
-            {/* Add new accessory */}
-            <div className="mb-4 flex space-x-2">
-              <input
-                type="text"
-                placeholder="Accessory name"
-                value={newAccessory.name}
-                onChange={(e) => setNewAccessory(prev => ({ ...prev, name: e.target.value }))}
-                className="flex-1 px-3 py-2 bg-gray-700 rounded-lg text-white"
-              />
-              <input
-                type="number"
-                min="1"
-                value={newAccessory.quantity}
-                onChange={(e) => setNewAccessory(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-                className="w-20 px-3 py-2 bg-gray-700 rounded-lg text-white"
-              />
-              <button
-                onClick={handleAddAccessory}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg"
-              >
-                Add
-              </button>
+
+            {/* Add new accessory section */}
+            <div className="mb-6 p-4 bg-gray-700 rounded-lg">
+              <h3 className="text-md font-semibold mb-3">Add New Accessory</h3>
+              <div className="space-y-3">
+                <input
+                  type="text"
+                  placeholder="Accessory name"
+                  value={newAccessory.name}
+                  onChange={(e) => setNewAccessory(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                />
+                <div className="flex space-x-2">
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Quantity"
+                    value={newAccessory.quantity}
+                    onChange={(e) => setNewAccessory(prev => ({ 
+                      ...prev, 
+                      quantity: parseInt(e.target.value) || 1 
+                    }))}
+                    className="flex-1 px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
+                  />
+                  <button
+                    onClick={handleAddAccessory}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Accessories list */}
+            {/* Existing accessories list */}
             <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
-              {Object.entries(editableAccessories).map(([accessory, quantity], index) => (
-                <div key={index} className="flex items-center justify-between bg-gray-700 p-2 rounded-lg">
-                  <span className="text-white">{accessory}</span>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="number"
-                      min="1"
-                      value={quantity}
-                      onChange={(e) => setEditableAccessories(prev => ({
-                        ...prev,
-                        [accessory]: parseInt(e.target.value) || 1
-                      }))}
-                      className="w-16 px-2 py-1 bg-gray-600 rounded text-white"
-                    />
-                    <button
-                      onClick={() => handleRemoveAccessory(accessory)}
-                      className="text-red-500 hover:text-red-400"
-                    >
-                      ✕
-                    </button>
+              <h3 className="text-md font-semibold mb-2">Current Accessories</h3>
+              {Object.keys(editableAccessories).length === 0 ? (
+                <p className="text-gray-400 text-sm text-center py-4">
+                  No accessories added yet.
+                </p>
+              ) : (
+                Object.entries(editableAccessories).map(([accessory, quantity], index) => (
+                  <div key={index} className="flex items-center justify-between bg-gray-700 p-3 rounded-lg">
+                    <span className="text-white font-medium">{accessory}</span>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        min="1"
+                        value={quantity}
+                        onChange={(e) => handleQuantityChange(accessory, parseInt(e.target.value) || 1)}
+                        className="w-16 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-center focus:outline-none focus:border-blue-500"
+                      />
+                      <button
+                        onClick={() => handleRemoveAccessory(accessory)}
+                        className="text-red-500 hover:text-red-400 font-bold text-lg leading-none"
+                        title="Remove accessory"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
 
             {/* Action buttons */}
-            <div className="flex justify-end space-x-2">
+            <div className="flex justify-end space-x-2 pt-4 border-t border-gray-600">
               <button
-                onClick={() => setIsEditingAccessories(false)}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg"
+                onClick={() => {
+                  setIsEditingAccessories(false);
+                  setNewAccessory({ name: "", quantity: 1 });
+                }}
+                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveAccessories}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg"
+                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
               >
                 Save Changes
               </button>

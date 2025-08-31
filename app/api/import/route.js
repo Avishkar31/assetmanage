@@ -147,18 +147,17 @@ const validateCSV = (data, requiredColumns) => {
 
 const transformCSVData = (csvRow, assetUser) => {
   const status = getColumnValue(csvRow, "Status");
+  
+  // For imports, we set checkOutDate and checkInDate based on status,
+  // but we always use "created" as the action
   let checkOutDate = null;
   let checkInDate = null;
-  let action = null;
-
+  
+  // Set dates based on status, but don't change the action
   if (status === "Deployed") {
     checkOutDate = new Date();
-    action = "checkOut";
   } else if (["MISStock", "Inactive"].includes(status)) {
     checkInDate = new Date();
-    action = "checkIn";
-  } else {
-    action = "update"; // Default action for other status changes
   }
 
   function safelyParseDate(dateString) {
@@ -188,12 +187,12 @@ const transformCSVData = (csvRow, assetUser) => {
     nodeName: getColumnValue(csvRow, "NodeName"),
     serialNumber: getColumnValue(csvRow, "SerialNumber"),
     manufacturer: getColumnValue(csvRow, "Manufacturer"),
-    type: getColumnValue(csvRow, "Type"),          // ✅ Added
+    type: getColumnValue(csvRow, "Type"),
     model: getColumnValue(csvRow, "Model"),
     expires: safelyParseDate(getColumnValue(csvRow, "Expries")),
     category: getColumnValue(csvRow, "Categories"),
     status: status,
-    segment: getColumnValue(csvRow, "Segment"),    // ✅ Added
+    segment: getColumnValue(csvRow, "Segment"),
     
     assetOwner: getColumnValue(csvRow, "AssetOwner"),
     note: getColumnValue(csvRow, "Note"),
@@ -210,8 +209,8 @@ const transformCSVData = (csvRow, assetUser) => {
     assetHistory: [
       {
         user: getColumnValue(csvRow, "AssetOwner") || "None",
-        updatedBy: assetUser, // ✅ Consistent with user tracking
-        action,
+        updatedBy: assetUser,
+        action: "created", // Always "created" for imports
         date: new Date(),
         status
       }

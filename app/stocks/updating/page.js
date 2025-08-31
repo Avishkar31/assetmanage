@@ -296,9 +296,10 @@ const UpdatingAssetForm = () => {
 
     setLoading((prev) => ({ ...prev, form: true }));
     try {
-      const user = await getUserData();
+      const storedUserData = JSON.parse(localStorage.getItem('user'));
+      console.log("Stored User Data:", storedUserData);
       const siemensId =
-        user?.siemensId || user?.email || user?.name || "Unknown User";
+        storedUserData?.siemensId || "Unknown User";
 
       const updateData = {
         ...formData,
@@ -388,11 +389,10 @@ const UpdatingAssetForm = () => {
         {/* Notification */}
         {notification.message && (
           <div
-            className={`fixed top-4 right-4 px-4 py-3 rounded-md shadow-lg z-50 transform transition-all duration-300 ease-in-out ${
-              notification.type === "success"
-                ? "bg-green-500/90 border-l-4 border-green-700"
-                : "bg-red-500/90 border-l-4 border-red-700"
-            }`}
+            className={`fixed top-4 right-4 px-4 py-3 rounded-md shadow-lg z-50 transform transition-all duration-300 ease-in-out ${notification.type === "success"
+              ? "bg-green-500/90 border-l-4 border-green-700"
+              : "bg-red-500/90 border-l-4 border-red-700"
+              }`}
           >
             {notification.message}
           </div>
@@ -422,9 +422,8 @@ const UpdatingAssetForm = () => {
                       value={formData.nodeName}
                       onChange={handleInputChange}
                       placeholder="Enter node name"
-                      className={`form-input pl-10 ${
-                        errors.nodeName ? "error" : ""
-                      }`}
+                      className={`form-input pl-10 ${errors.nodeName ? "error" : ""
+                        }`}
                     />
                   </div>
                 </div>
@@ -439,12 +438,12 @@ const UpdatingAssetForm = () => {
                     <input
                       type="text"
                       id="serialNumber"
+                      readOnly
                       value={formData.serialNumber}
                       onChange={handleInputChange}
                       placeholder="Enter serial number"
-                      className={`form-input pl-10 ${
-                        errors.serialNumber ? "error" : ""
-                      }`}
+                      className={`form-input pl-10 ${errors.serialNumber ? "error" : ""
+                        }`}
                     />
                     {showSerialLoader && (
                       <span className="input-loader">
@@ -470,9 +469,8 @@ const UpdatingAssetForm = () => {
                       id="manufacturer"
                       value={formData.manufacturer}
                       onChange={handleSelectChange}
-                      className={`form-select pl-10 ${
-                        errors.manufacturer ? "error" : ""
-                      }`}
+                      className={`form-select pl-10 ${errors.manufacturer ? "error" : ""
+                        }`}
                       disabled={loading.manufacturers}
                     >
                       <option value="">Select Manufacturer</option>
@@ -514,9 +512,8 @@ const UpdatingAssetForm = () => {
                       value={formData.type || ""}
                       onChange={(e) => handleInputChange(e)} // Add this onChange handler
                       placeholder="Select or type"
-                      className={`form-input pl-10 ${
-                        errors.type ? "error" : ""
-                      }`}
+                      className={`form-input pl-10 ${errors.type ? "error" : ""
+                        }`}
                       onClick={() => toggleSection("type")}
                     />
                     <span
@@ -590,7 +587,7 @@ const UpdatingAssetForm = () => {
                   <label htmlFor="status" className="form-label">
                     Status <span className="text-red-400">*</span>
                   </label>
-                  <div className="input-group" ref={dropdownRefs.status}>
+                  <div className="input-group">
                     <span className="input-icon">
                       <FiInfo />
                     </span>
@@ -598,44 +595,12 @@ const UpdatingAssetForm = () => {
                       type="text"
                       id="status"
                       value={formData.status || ""}
+                      placeholder="Status"
+                      className={`form-input pl-10 bg-gray-700 text-gray-400 cursor-not-allowed ${errors.status ? "error" : ""
+                        }`}
                       readOnly
-                      placeholder="Select status"
-                      className={`form-input pl-10 ${
-                        errors.status ? "error" : ""
-                      }`}
-                      onClick={() => toggleSection("status")}
+                      disabled // ✅ prevents any click or editing
                     />
-                    <span
-                      className="input-suffix"
-                      onClick={() => toggleSection("status")}
-                    >
-                      {openSection === "status" ? (
-                        <IoMdArrowDropup />
-                      ) : (
-                        <IoMdArrowDropdown />
-                      )}
-                    </span>
-                    {openSection === "status" && (
-                      <div className="dropdown-menu">
-                        {statusOptions
-                          .filter((o) => o.label !== "Default")
-                          .map((option) => (
-                            <div
-                              key={option.label}
-                              onClick={() => handleStatusSelect(option.label)}
-                              className="dropdown-item"
-                            >
-                              <span className={`mr-2 ${option.color}`}>
-                                {option.label === "MISStock" ||
-                                option.label === "Deployed"
-                                  ? "✓"
-                                  : "✗"}
-                              </span>
-                              <span>{option.label}</span>
-                            </div>
-                          ))}
-                      </div>
-                    )}
                   </div>
                   {errors.status && (
                     <p className="input-error">Status is required</p>
@@ -660,9 +625,8 @@ const UpdatingAssetForm = () => {
                       id="segment"
                       value={formData.segment}
                       onChange={handleSelectChange}
-                      className={`form-select pl-10 ${
-                        errors.segment ? "error" : ""
-                      }`}
+                      className={`form-select pl-10 ${errors.segment ? "error" : ""
+                        }`}
                       disabled={loading.segments}
                     >
                       <option value="">Select Segment</option>
@@ -700,9 +664,8 @@ const UpdatingAssetForm = () => {
                       value={formData.assetOwner}
                       onChange={handleInputChange}
                       placeholder="Enter recipient name"
-                      className={`form-input pl-10 ${
-                        errors.assetOwner ? "error" : ""
-                      }`}
+                      className={`form-input pl-10 ${errors.assetOwner ? "error" : ""
+                        }`}
                     />
                   </div>
                   {errors.assetOwner && (
@@ -965,33 +928,95 @@ const UpdatingAssetForm = () => {
             {(formData.status === "Inactive" ||
               formData.status === "Disposed" ||
               formData.status === "Buyback") && (
-              <div className="space-y-5">
-                {/* Killdisk Section */}
-                <div className="collapsible-section">
-                  <button
-                    type="button"
-                    onClick={() => toggleSection("killdiskDate")}
-                    className="collapsible-header"
-                  >
-                    <span className="flex items-center">
-                      <FiTool className="mr-2 text-blue-400" />
-                      <span className="font-medium">Killdisk Information</span>
-                    </span>
-                    <span>
-                      {openSection === "killdiskDate" ? (
-                        <IoMdArrowDropup />
-                      ) : (
-                        <IoMdArrowDropdown />
-                      )}
-                    </span>
-                  </button>
+                <div className="space-y-5">
+                  {/* Killdisk Section */}
+                  <div className="collapsible-section">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection("killdiskDate")}
+                      className="collapsible-header"
+                    >
+                      <span className="flex items-center">
+                        <FiTool className="mr-2 text-blue-400" />
+                        <span className="font-medium">Killdisk Information</span>
+                      </span>
+                      <span>
+                        {openSection === "killdiskDate" ? (
+                          <IoMdArrowDropup />
+                        ) : (
+                          <IoMdArrowDropdown />
+                        )}
+                      </span>
+                    </button>
 
-                  {openSection === "killdiskDate" && (
-                    <div className="collapsible-content">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {openSection === "killdiskDate" && (
+                      <div className="collapsible-content">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="form-group">
+                            <label htmlFor="killdiskDate" className="form-label">
+                              Killdisk Date
+                            </label>
+                            <div className="input-group">
+                              <span className="input-icon">
+                                <FiCalendar />
+                              </span>
+                              <input
+                                type="date"
+                                id="killdiskDate"
+                                value={formData.killdiskDate}
+                                onChange={handleInputChange}
+                                className="form-input pl-10"
+                              />
+                            </div>
+                          </div>
+                          <div className="form-group">
+                            <label htmlFor="attachedFile" className="form-label">
+                              Attach File
+                            </label>
+                            <div className="input-group">
+                              <input
+                                type="file"
+                                id="attachedFile"
+                                className="form-file-input"
+                                onChange={(e) => {
+                                  setFormData((prev) => ({
+                                    ...prev,
+                                    attachedFile: e.target.files[0]?.name || "",
+                                  }));
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Disposed Section */}
+                  <div className="collapsible-section">
+                    <button
+                      type="button"
+                      onClick={() => toggleSection("disposed")}
+                      className="collapsible-header"
+                    >
+                      <span className="flex items-center">
+                        <FiTool className="mr-2 text-blue-400" />
+                        <span className="font-medium">Disposal Information</span>
+                      </span>
+                      <span>
+                        {openSection === "disposed" ? (
+                          <IoMdArrowDropup />
+                        ) : (
+                          <IoMdArrowDropdown />
+                        )}
+                      </span>
+                    </button>
+
+                    {openSection === "disposed" && (
+                      <div className="collapsible-content">
                         <div className="form-group">
-                          <label htmlFor="killdiskDate" className="form-label">
-                            Killdisk Date
+                          <label htmlFor="disposedDate" className="form-label">
+                            Disposed Date
                           </label>
                           <div className="input-group">
                             <span className="input-icon">
@@ -999,80 +1024,18 @@ const UpdatingAssetForm = () => {
                             </span>
                             <input
                               type="date"
-                              id="killdiskDate"
-                              value={formData.killdiskDate}
+                              id="disposedDate"
+                              value={formData.disposedDate}
                               onChange={handleInputChange}
                               className="form-input pl-10"
                             />
                           </div>
                         </div>
-                        <div className="form-group">
-                          <label htmlFor="attachedFile" className="form-label">
-                            Attach File
-                          </label>
-                          <div className="input-group">
-                            <input
-                              type="file"
-                              id="attachedFile"
-                              className="form-file-input"
-                              onChange={(e) => {
-                                setFormData((prev) => ({
-                                  ...prev,
-                                  attachedFile: e.target.files[0]?.name || "",
-                                }));
-                              }}
-                            />
-                          </div>
-                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-
-                {/* Disposed Section */}
-                <div className="collapsible-section">
-                  <button
-                    type="button"
-                    onClick={() => toggleSection("disposed")}
-                    className="collapsible-header"
-                  >
-                    <span className="flex items-center">
-                      <FiTool className="mr-2 text-blue-400" />
-                      <span className="font-medium">Disposal Information</span>
-                    </span>
-                    <span>
-                      {openSection === "disposed" ? (
-                        <IoMdArrowDropup />
-                      ) : (
-                        <IoMdArrowDropdown />
-                      )}
-                    </span>
-                  </button>
-
-                  {openSection === "disposed" && (
-                    <div className="collapsible-content">
-                      <div className="form-group">
-                        <label htmlFor="disposedDate" className="form-label">
-                          Disposed Date
-                        </label>
-                        <div className="input-group">
-                          <span className="input-icon">
-                            <FiCalendar />
-                          </span>
-                          <input
-                            type="date"
-                            id="disposedDate"
-                            value={formData.disposedDate}
-                            onChange={handleInputChange}
-                            className="form-input pl-10"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+              )}
 
             {/* Order Information Section */}
             <div className="collapsible-section">
