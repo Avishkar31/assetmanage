@@ -1,3 +1,4 @@
+
 import dbConnect from "@/lib/dbConnect";
 import { NextResponse } from "next/server";
 import { parse } from "csv-parse/sync";
@@ -9,100 +10,161 @@ export async function POST(req) {
 
     const formData = await req.formData();
     const file = formData.get("file");
-    const assetUser = formData.get("assetUser") || "SYSTEM"; // Added to get the current user
+    const assetUser = formData.get("assetUser") || "SYSTEM";
 
+    // 1. Check if file exists
     if (!file) {
-      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+      return NextResponse.json({ 
+        success: false,
+        error: "No file provided",
+        userMessage: "Please select a CSV file to upload."
+      }, { status: 400 });
     }
 
-    // Read file content
+    // 2. Check file type
+    if (!file.name.endsWith('.csv')) {
+      return NextResponse.json({ 
+        success: false,
+        error: "Invalid file type",
+        userMessage: "Please upload only CSV files (.csv extension required)."
+      }, { status: 400 });
+    }
+
+    // 3. Read and parse CSV
     const fileBuffer = Buffer.from(await file.arrayBuffer());
     const fileContent = fileBuffer.toString();
 
-    // Parse CSV
-    const csvData = parse(fileContent, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true
-    });
-
-    console.log("CSV data sample:", csvData.slice(0, 2));
-    console.log("CSV columns:", csvData.length > 0 ? Object.keys(csvData[0]) : []);
-
-    // Validate CSV structure
-    const requiredColumns = [
-      "NodeName",
-      "Manufacturer",
-      "Type",          // ✅ ensure required
-      "SerialNumber",
-      "Model",
-      "Expries",
-      "Categories",
-      "Status",
-      "Segment",       // ✅ ensure required
-      "assetOwner",
-      "Note",
-      "DefaultLocation",
-      "CostCenter",
-      "ReceivedDate",
-      "Condition",
-      "StoreLocation",
-      "PONumber",
-      "Order",
-      "PurchaseNumber"
-    ];
-
-    // Improved validation
-    const validationResult = validateCSV(csvData, requiredColumns);
-    if (!validationResult.valid) {
-      return NextResponse.json(
-        { 
-          error: "Invalid CSV file structure. Missing required columns.",
-          missingColumns: validationResult.missingColumns,
-          foundColumns: validationResult.foundColumns
-        },
-        { status: 400 }
-      );
+    let csvData;
+    try {
+      csvData = parse(fileContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+    } catch (parseError) {
+      return NextResponse.json({ 
+        success: false,
+        error: "CSV parsing failed",
+        userMessage: "Your CSV file format is invalid. Please check:\n• Use comma separators\n• Ensure all rows have same number of columns\n• Remove special characters"
+      }, { status: 400 });
     }
 
-    // Check for duplicate serial numbers
-    const serialNumbers = csvData.map(row => getColumnValue(row, "SerialNumber"));
+    // 4. Check if CSV has data
+    if (!csvData || csvData.length === 0) {
+      return NextResponse.json({ 
+        success: false,
+        error: "Empty CSV file",
+        userMessage: "Your CSV file is empty. Please add data rows and try again."
+      }, { status: 400 });
+    }
+
+    // 5. Validate required columns
+    const requiredColumns = [
+      "NodeName", "Manufacturer", "Type", "SerialNumber", "Model", 
+      "Expries", "Categories", "Status", "Segment", "assetOwner",
+      "Note", "DefaultLocation", "CostCenter", "ReceivedDate", 
+      "Condition", "StoreLocation", "PONumber", "Order", "PurchaseNumber"
+    ];
+
+    const headers = Object.keys(csvData[0]);
+    const missingColumns = requiredColumns.filter(reqCol => 
+      !headers.find(header => header.toLowerCase().trim() === reqCol.toLowerCase().trim())
+    );
+
+    if (missingColumns.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: "Missing required columns",
+        userMessage: `Missing columns: ${missingColumns.join(', ')}\n\nRequired columns:\n${requiredColumns.join(', ')}\n\nYour file has:\n${headers.join(', ')}`,
+        missingColumns,
+        foundColumns: headers,
+        requiredColumns
+      }, { status: 400 });
+    }
+
+    // 6. Validate data in rows
+    const validationErrors = [];
+    const validStatuses = ["Active", "Deployed", "MISStock", "Inactive", "Disposed"];
+
+    csvData.forEach((row, index) => {
+      const rowNum = index + 2; // +2 for header row
+
+      // Check required fields
+      if (!getColumnValue(row, "SerialNumber")) {
+        validationErrors.push(`Row ${rowNum}: SerialNumber is required`);
+      }
+      if (!getColumnValue(row, "Type")) {
+        validationErrors.push(`Row ${rowNum}: Type is required`);
+      }
+      if (!getColumnValue(row, "Status")) {
+        validationErrors.push(`Row ${rowNum}: Status is required`);
+      }
+      if (!getColumnValue(row, "Segment")) {
+        validationErrors.push(`Row ${rowNum}: Segment is required`);
+      }
+
+      // Validate status
+      const status = getColumnValue(row, "Status");
+      if (status && !validStatuses.includes(status)) {
+        validationErrors.push(`Row ${rowNum}: Invalid status '${status}'. Use: ${validStatuses.join(', ')}`);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: "Data validation failed",
+        userMessage: `Please fix these issues:\n\n${validationErrors.slice(0, 5).join('\n')}${validationErrors.length > 5 ? `\n\n...and ${validationErrors.length - 5} more issues` : ''}`,
+        validationErrors
+      }, { status: 400 });
+    }
+
+    // 7. Check for duplicate serial numbers
+    const serialNumbers = csvData.map(row => getColumnValue(row, "SerialNumber")).filter(sn => sn);
+    const duplicatesInFile = serialNumbers.filter((item, index) => serialNumbers.indexOf(item) !== index);
+    
+    if (duplicatesInFile.length > 0) {
+      return NextResponse.json({
+        success: false,
+        error: "Duplicate serial numbers in file",
+        userMessage: `Duplicate serial numbers found in your file:\n${[...new Set(duplicatesInFile)].join(', ')}\n\nPlease make each serial number unique.`,
+        duplicates: [...new Set(duplicatesInFile)]
+      }, { status: 400 });
+    }
+
+    // 8. Check existing serial numbers in database
     const existingAssets = await Asset.find({
       serialNumber: { $in: serialNumbers }
     });
 
     if (existingAssets.length > 0) {
-      const duplicates = existingAssets.map((asset) => asset.serialNumber);
-      return NextResponse.json(
-        {
-          error: "Duplicate serial numbers found",
-          duplicates
-        },
-        { status: 400 }
-      );
+      const existingSerials = existingAssets.map(asset => asset.serialNumber);
+      return NextResponse.json({
+        success: false,
+        error: "Serial numbers already exist",
+        userMessage: `These serial numbers already exist in database:\n${existingSerials.join(', ')}\n\nPlease change them to unique values or remove these rows.`,
+        duplicates: existingSerials
+      }, { status: 400 });
     }
 
-    // Transform and insert data
+    // 9. Transform and insert data
     const transformedData = csvData.map(row => transformCSVData(row, assetUser));
     const result = await Asset.insertMany(transformedData);
 
-    return NextResponse.json(
-      {
-        message: "Data successfully imported!",
-        insertedCount: result.length,
-        assets: result
-      },
-      { status: 201 }
-    );
+    return NextResponse.json({
+      success: true,
+      message: "Data successfully imported!",
+      insertedCount: result.length,
+      assets: result
+    }, { status: 201 });
+
   } catch (err) {
     console.error("API Error:", err);
-    return NextResponse.json(
-      {
-        error: "Internal Server Error",
-        details: err.message
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      success: false,
+      error: "Internal Server Error",
+      userMessage: "Something went wrong. Please try again or contact support."
+    }, { status: 500 });
   }
 }
 
@@ -115,45 +177,12 @@ function getColumnValue(row, columnName) {
   return key ? row[key] : undefined;
 }
 
-// Helper function to validate CSV structure with improved error reporting
-const validateCSV = (data, requiredColumns) => {
-  if (!data || data.length === 0) {
-    return { 
-      valid: false, 
-      missingColumns: requiredColumns,
-      foundColumns: [] 
-    };
-  }
-
-  const headers = Object.keys(data[0]).map(h => h.toLowerCase().trim());
-  console.log("Normalized headers in CSV:", headers);
-  console.log("Required columns:", requiredColumns.map(c => c.toLowerCase().trim()));
-
-  const missingColumns = [];
-  
-  for (const col of requiredColumns) {
-    const normalizedCol = col.toLowerCase().trim();
-    if (!headers.includes(normalizedCol)) {
-      missingColumns.push(col);
-    }
-  }
-
-  return { 
-    valid: missingColumns.length === 0,
-    missingColumns,
-    foundColumns: headers
-  };
-};
-
 const transformCSVData = (csvRow, assetUser) => {
   const status = getColumnValue(csvRow, "Status");
   
-  // For imports, we set checkOutDate and checkInDate based on status,
-  // but we always use "created" as the action
   let checkOutDate = null;
   let checkInDate = null;
   
-  // Set dates based on status, but don't change the action
   if (status === "Deployed") {
     checkOutDate = new Date();
   } else if (["MISStock", "Inactive"].includes(status)) {
@@ -162,8 +191,6 @@ const transformCSVData = (csvRow, assetUser) => {
 
   function safelyParseDate(dateString) {
     if (!dateString) return null;
-
-    // Try formats: DD-MM-YYYY, MM-DD-YYYY, YYYY-MM-DD
     try {
       if (dateString.includes('-')) {
         const parts = dateString.split('-');
@@ -178,7 +205,6 @@ const transformCSVData = (csvRow, assetUser) => {
       const date = new Date(dateString);
       return isNaN(date) ? null : date;
     } catch (e) {
-      console.error("Date parsing error:", e);
       return null;
     }
   }
@@ -193,8 +219,7 @@ const transformCSVData = (csvRow, assetUser) => {
     category: getColumnValue(csvRow, "Categories"),
     status: status,
     segment: getColumnValue(csvRow, "Segment"),
-    
-    assetOwner: getColumnValue(csvRow, "AssetOwner"),
+    assetOwner: getColumnValue(csvRow, "assetOwner"),
     note: getColumnValue(csvRow, "Note"),
     defaultLocation: getColumnValue(csvRow, "DefaultLocation"),
     costCenter: getColumnValue(csvRow, "CostCenter"),
@@ -208,9 +233,9 @@ const transformCSVData = (csvRow, assetUser) => {
     checkInDate,
     assetHistory: [
       {
-        user: getColumnValue(csvRow, "AssetOwner") || "None",
+        user: getColumnValue(csvRow, "assetOwner") || "None",
         updatedBy: assetUser,
-        action: "created", // Always "created" for imports
+        action: "created",
         date: new Date(),
         status
       }

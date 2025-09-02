@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react'; 
-import { Calendar, Clock, UserCircle, Activity, ChevronDown, ChevronUp, Package, Plus, Minus, Edit } from "lucide-react";
+import { useState, useEffect } from 'react';
+import { Calendar, Clock, UserCircle, Activity, ChevronDown, ChevronUp, Package, Plus, Minus, Edit, RefreshCw } from "lucide-react";
 
-// Move utility functions outside (they don't need to be inside components)
 const getSiemensId = (entry) =>
   entry.updatedBy ? entry.updatedBy.split("@")[0] : "Unknown";
 
@@ -27,10 +26,6 @@ const formatTime = (dateString) => {
   });
 };
 
-const getAssetOwner = (storedUserData) => {
-  if (storedUserData.user) return storedUserData.user;
-};
-
 const formatFieldName = (fieldName) => {
   if (!fieldName) return "Unknown Field";
 
@@ -44,61 +39,86 @@ const formatFieldName = (fieldName) => {
     .trim();
 };
 
-const ChangeDetail = ({ change }) => {
-  const { field, oldValue, newValue, changeType } = change;
-  const formattedField = formatFieldName(field);
-
-  if (field.startsWith('accessories.')) {
-    const accessoryName = field.replace('accessories.', '');
-
-    if (changeType === 'added') {
-      return (
-        <li className="text-gray-400 text-sm flex items-center">
-          <Plus size={14} className="text-green-400 mr-2" />
-          <span className="font-semibold text-green-400">Added:</span>
-          <span className="ml-1">{accessoryName} (Qty: {newValue})</span>
-        </li>
-      );
-    } else if (changeType === 'removed') {
-      return (
-        <li className="text-gray-400 text-sm flex items-center">
-          <Minus size={14} className="text-red-400 mr-2" />
-          <span className="font-semibold text-red-400">Removed:</span>
-          <span className="ml-1">{accessoryName} (was Qty: {oldValue})</span>
-        </li>
-      );
-    } else if (changeType === 'modified') {
-      return (
-        <li className="text-gray-400 text-sm flex items-center">
-          <Edit size={14} className="text-blue-400 mr-2" />
-          <span className="font-semibold text-blue-400">Modified:</span>
-          <span className="ml-1">{accessoryName}: </span>
-          <span className="line-through text-red-400">{oldValue}</span>
-          <span className="mx-1">→</span>
-          <span className="text-green-400">{newValue}</span>
-        </li>
-      );
-    }
+const DetailedChangeItem = ({ fieldName, changeData }) => {
+  const { from, to, type, accessoryName, changeType } = changeData;
+  
+  if (type === 'accessory_added') {
+    return (
+      <li className="text-gray-400 text-sm flex items-center py-1">
+        <Plus size={14} className="text-green-400 mr-2 flex-shrink-0" />
+        <span className="font-semibold text-green-400">Added:</span>
+        <span className="ml-1 text-gray-300">{accessoryName}</span>
+        <span className="ml-1 text-gray-400">(Qty: {to})</span>
+      </li>
+    );
   }
-
-  const displayOldValue = oldValue === null || oldValue === undefined ? "N/A" : (typeof oldValue === 'object' ? JSON.stringify(oldValue) : String(oldValue));
-  const displayNewValue = newValue === null || newValue === undefined ? "N/A" : (typeof newValue === 'object' ? JSON.stringify(newValue) : String(newValue));
-
+  
+  if (type === 'accessory_removed') {
+    return (
+      <li className="text-gray-400 text-sm flex items-center py-1">
+        <Minus size={14} className="text-red-400 mr-2 flex-shrink-0" />
+        <span className="font-semibold text-red-400">Removed:</span>
+        <span className="ml-1 text-gray-300">{accessoryName}</span>
+        <span className="ml-1 text-gray-400">(was Qty: {from})</span>
+      </li>
+    );
+  }
+  
+  if (type === 'accessory_modified') {
+    return (
+      <li className="text-gray-400 text-sm flex items-center py-1">
+        <Edit size={14} className="text-blue-400 mr-2 flex-shrink-0" />
+        <span className="font-semibold text-blue-400">Modified:</span>
+        <span className="ml-1 text-gray-300">{accessoryName}:</span>
+        <span className="ml-1 line-through text-red-400">{from}</span>
+        <span className="mx-1 text-gray-500">→</span>
+        <span className="text-green-400">{to}</span>
+      </li>
+    );
+  }
+  
+  // Regular field changes
+  const displayFrom = from === null || from === undefined || from === '' ? "N/A" : String(from);
+  const displayTo = to === null || to === undefined || to === '' ? "N/A" : String(to);
+  
   return (
-    <li className="text-gray-400 text-sm">
-      <span className="font-semibold text-gray-300">{formattedField}:</span>{" "}
-      <span className="line-through text-red-400">{displayOldValue}</span> {"→"} <span className="text-green-400">{displayNewValue}</span>
+    <li className="text-gray-400 text-sm flex items-start py-1">
+      <RefreshCw size={14} className="text-blue-400 mr-2 mt-0.5 flex-shrink-0" />
+      <div className="flex-1">
+        <span className="font-semibold text-gray-300">{formatFieldName(fieldName)}:</span>
+        <div className="mt-1 flex items-center flex-wrap">
+          <span className="bg-red-900/30 px-2 py-1 rounded text-red-400 line-through text-xs mr-2">
+            {displayFrom}
+          </span>
+          <span className="text-gray-500 mx-1">→</span>
+          <span className="bg-green-900/30 px-2 py-1 rounded text-green-400 text-xs">
+            {displayTo}
+          </span>
+        </div>
+      </div>
     </li>
   );
 };
 
-const AssetHistoryItem = ({ entry, storedUserData }) => {
+const AssetHistoryItem = ({ entry }) => {
   const [showDetails, setShowDetails] = useState(false);
 
-  const isAccessoriesUpdate = entry.action === "update" &&
-    entry.changes &&
-    Array.isArray(entry.changes) &&
-    entry.changes.every(change => change.field?.startsWith("accessories."));
+  // Extract detailed changes
+  const detailedChanges = entry.detailedChanges || {};
+  const changedFields = entry.changedFields || [];
+  
+  // Check if this is an accessories update
+  const isAccessoriesUpdate = changedFields.includes('accessories') || 
+    Object.keys(detailedChanges).some(key => key.startsWith('accessories.'));
+  
+  // Count different types of changes
+  const accessoryChanges = Object.entries(detailedChanges).filter(([key]) => key.startsWith('accessories.'));
+  const fieldChanges = Object.entries(detailedChanges).filter(([key]) => !key.startsWith('accessories.'));
+  
+  const addedCount = accessoryChanges.filter(([_, data]) => data.type === 'accessory_added').length;
+  const removedCount = accessoryChanges.filter(([_, data]) => data.type === 'accessory_removed').length;
+  const modifiedAccessoriesCount = accessoryChanges.filter(([_, data]) => data.type === 'accessory_modified').length;
+  const modifiedFieldsCount = fieldChanges.length;
 
   const getActionIcon = () => {
     switch (entry.action) {
@@ -111,7 +131,7 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
       case "disposed":
         return <Activity size={20} className="text-white" />;
       case "update":
-        return isAccessoriesUpdate ?
+        return isAccessoriesUpdate && fieldChanges.length === 0 ?
           <Package size={20} className="text-white" /> :
           <Activity size={20} className="text-white" />;
       default:
@@ -130,7 +150,7 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
       case "disposed":
         return "border-red-500";
       case "update":
-        return isAccessoriesUpdate ? "border-orange-500" : "border-blue-500";
+        return isAccessoriesUpdate && fieldChanges.length === 0 ? "border-orange-500" : "border-blue-500";
       default:
         return "border-blue-500";
     }
@@ -147,7 +167,7 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
       case "disposed":
         return "bg-red-600";
       case "update":
-        return isAccessoriesUpdate ? "bg-orange-600" : "bg-blue-600";
+        return isAccessoriesUpdate && fieldChanges.length === 0 ? "bg-orange-600" : "bg-blue-600";
       default:
         return "bg-blue-600";
     }
@@ -155,74 +175,92 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
 
   const getActorInfo = () => {
     const actor = getSiemensId(entry);
-    const user = getAssetOwner(entry);
     let info = <span className="text-blue-400">{actor}</span>;
 
     switch (entry.action) {
       case "created":
         info = <>{info} created the asset</>;
         if (entry.status) {
-          info = <>{info} with status <span className="font-semibold">{entry.status}</span></>;
+          info = <>{info} with status <span className="font-semibold text-teal-300">{entry.status}</span></>;
         }
-        if (user) {
-          info = <>{info} for <span className="text-teal-300">{user}</span></>;
+        if (entry.assetOwner) {
+          info = <>{info} assigned to <span className="text-teal-300">{entry.assetOwner}</span></>;
         }
         break;
       case "checkIn":
         info = (
           <>
-            checkIn the asset (Status:{" "}
-            <span className="text-teal-300">{entry.status}</span>)
-            {entry.assetOwner && (
-              <> on user <span className="text-purple-300">{user}</span></>
-            )}
+            {info} returned ownership to{" "}
+            <span className="text-purple-300">{entry.assetOwner}</span>
+            {" "}with status{" "}
+            <span className="text-teal-300">{entry.status}</span>
           </>
         );
         break;
       case "checkOut":
-        info = <> checkOut the asset</>;
-        if (user) {
-          info = <>{info} to <span className="text-teal-300">{user}</span></>;
-        }
+        info = (
+          <>
+            {info} transferred ownership to{" "}
+            <span className="text-teal-300">{entry.assetOwner}</span>
+            {" "} with status <span className="text-green-400">{entry.status}</span>
+          </>
+        );
         break;
       case "disposed":
-        info = <span className="text-red-400">{actor}</span>;
         info = <>{info} disposed the asset</>;
         break;
       case "update":
-        if (isAccessoriesUpdate) {
+        if (isAccessoriesUpdate && fieldChanges.length === 0) {
+          // Only accessories changes
           info = <>{info} updated accessories</>;
-          const addedCount = entry.changes.filter(c => c.changeType === 'added').length;
-          const removedCount = entry.changes.filter(c => c.changeType === 'removed').length;
-          const modifiedCount = entry.changes.filter(c => c.changeType === 'modified').length;
-
           const changesSummary = [];
           if (addedCount > 0) changesSummary.push(`${addedCount} added`);
           if (removedCount > 0) changesSummary.push(`${removedCount} removed`);
-          if (modifiedCount > 0) changesSummary.push(`${modifiedCount} modified`);
+          if (modifiedAccessoriesCount > 0) changesSummary.push(`${modifiedAccessoriesCount} modified`);
 
           if (changesSummary.length > 0) {
             info = (
               <>
                 {info}
-                <span className="text-xs text-gray-400 ml-1">
-                  ({changesSummary.join(', ')})
+                <span className="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-1 rounded">
+                  {changesSummary.join(', ')}
+                </span>
+              </>
+            );
+          }
+        } else if (fieldChanges.length > 0 && accessoryChanges.length === 0) {
+          // Only field changes
+          info = <>{info} updated asset fields</>;
+          if (modifiedFieldsCount > 0) {
+            const fieldNames = fieldChanges.map(([key]) => formatFieldName(key));
+            info = (
+              <>
+                {info}
+                <span className="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-1 rounded">
+                  {fieldNames.join(', ')}
                 </span>
               </>
             );
           }
         } else {
+          // Mixed changes
           info = <>{info} updated the asset</>;
-            if (entry.lastChange && Array.isArray(entry.lastChange) && entry.lastChange.length > 0) {
+          const changesSummary = [];
+          if (modifiedFieldsCount > 0) changesSummary.push(`${modifiedFieldsCount} fields`);
+          if (addedCount > 0) changesSummary.push(`${addedCount} accessories added`);
+          if (removedCount > 0) changesSummary.push(`${removedCount} accessories removed`);
+          if (modifiedAccessoriesCount > 0) changesSummary.push(`${modifiedAccessoriesCount} accessories modified`);
+
+          if (changesSummary.length > 0) {
             info = (
               <>
-              {info}
-              <span className="text-xs text-gray-400 ml-1">
-                ({entry.lastChange.map(formatFieldName).join(', ')} modified)
-              </span>
+                {info}
+                <span className="text-xs text-gray-400 ml-2 bg-gray-800 px-2 py-1 rounded">
+                  {changesSummary.join(', ')}
+                </span>
               </>
             );
-            }
+          }
         }
         break;
       default:
@@ -231,10 +269,12 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
     return info;
   };
 
+  const totalChanges = Object.keys(detailedChanges).length;
+
   return (
     <div className={`bg-gray-800 rounded-lg p-4 mb-3 border-l-4 ${getBorderColor()} shadow-md text-sm md:text-base`}>
       <div className="flex items-start">
-        <div className={`${getIconBgColor()} p-2 rounded-full mr-3`}>
+        <div className={`${getIconBgColor()} p-2 rounded-full mr-3 flex-shrink-0`}>
           {getActionIcon()}
         </div>
         <div className="flex-1">
@@ -261,11 +301,12 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
             </div>
           )}
 
-          {entry.action === "update" && entry.changes && Array.isArray(entry.changes) && entry.changes.length > 0 && (
+          {/* Show details button if there are changes to display */}
+          {entry.action === "update" && totalChanges > 0 && (
             <div className="mt-3">
               <button
                 onClick={() => setShowDetails(!showDetails)}
-                className="flex items-center text-blue-400 hover:text-blue-300 focus:outline-none text-sm"
+                className="flex items-center text-blue-400 hover:text-blue-300 focus:outline-none text-sm transition-colors"
               >
                 {showDetails ? (
                   <>
@@ -274,39 +315,68 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
                 ) : (
                   <>
                     <ChevronDown size={16} className="mr-1" />
-                    {isAccessoriesUpdate ? "Show Accessory Changes" : "Show Details"}
+                    Show Details
+                    <span className="ml-1 text-xs text-gray-500 bg-gray-700 px-2 py-0.5 rounded">
+                      {totalChanges} change{totalChanges !== 1 ? 's' : ''}
+                    </span>
                   </>
                 )}
               </button>
+              
               {showDetails && (
-                <div className="mt-2 pl-4 border-l border-gray-600">
-                  {isAccessoriesUpdate ? (
-                    <div className="space-y-1">
-                      <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center">
+                <div className="mt-3 pl-4 border-l-2 border-gray-600">
+                  {/* Accessories Changes Section */}
+                  {accessoryChanges.length > 0 && (
+                    <div className="mb-4">
+                      <h4 className="text-sm font-semibold text-orange-300 mb-2 flex items-center">
                         <Package size={14} className="mr-1" />
-                        Accessory Changes:
+                        Accessory Changes ({accessoryChanges.length}):
                       </h4>
-                      <ul className="space-y-1">
-                        {entry.changes.map((change, idx) => (
-                          <ChangeDetail key={idx} change={change} />
+                      <ul className="space-y-1 bg-gray-900/50 rounded p-2">
+                        {accessoryChanges.map(([fieldName, changeData], idx) => (
+                          <DetailedChangeItem key={`accessory-${idx}`} fieldName={fieldName} changeData={changeData} />
                         ))}
                       </ul>
                     </div>
-                  ) : (
-                    <ul className="space-y-1">
-                      {entry.changes.map((change, idx) => (
-                        <ChangeDetail key={idx} change={change} />
-                      ))}
-                    </ul>
+                  )}
+                  
+                  {/* Field Changes Section */}
+                  {fieldChanges.length > 0 && (
+                    <div className="mb-2">
+                      <h4 className="text-sm font-semibold text-blue-300 mb-2 flex items-center">
+                        <Edit size={14} className="mr-1" />
+                        Field Changes ({fieldChanges.length}):
+                      </h4>
+                      <ul className="space-y-1 bg-gray-900/50 rounded p-2">
+                        {fieldChanges.map(([fieldName, changeData], idx) => (
+                          <DetailedChangeItem key={`field-${idx}`} fieldName={fieldName} changeData={changeData} />
+                        ))}
+                      </ul>
+                    </div>
                   )}
                 </div>
               )}
             </div>
           )}
 
-          {isAccessoriesUpdate && (
+          {/* Fallback message if no detailed changes but we know something changed */}
+          {entry.action === "update" && totalChanges === 0 && changedFields.length > 0 && (
+            <div className="mt-2 text-xs text-gray-500 italic bg-gray-900/30 p-2 rounded">
+              Fields modified: {changedFields.map(formatFieldName).join(', ')}
+              <br />
+              <span className="text-yellow-400">Note: Detailed change information not available for this entry.</span>
+            </div>
+          )}
+
+          {/* Show update note */}
+          {entry.action === "update" && (
             <div className="mt-2 text-xs text-gray-500 italic">
-              Accessories configuration updated
+              {isAccessoriesUpdate && fieldChanges.length === 0 
+                ? "Accessories configuration updated" 
+                : fieldChanges.length > 0 && accessoryChanges.length === 0
+                ? "Asset information updated"
+                : "Asset and accessories updated"
+              }
             </div>
           )}
         </div>
@@ -315,22 +385,28 @@ const AssetHistoryItem = ({ entry, storedUserData }) => {
   );
 };
 
-// ✅ SOLUTION: Move hooks inside the main component
 const AssetHistoryShow = ({ history }) => {
-  // ✅ Hooks are now inside the component function
   const [storedUserData, setStoredUserData] = useState(null);
 
   useEffect(() => {
-    // Runs only on client, so localStorage is available
     const user = localStorage.getItem("user");
     if (user) {
       setStoredUserData(JSON.parse(user));
-      console.log("Stored User Data:", JSON.parse(user));
     }
   }, []);
 
   // Sort history by date (most recent first)
   const sortedHistory = [...history].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  // Debug logging
+  useEffect(() => {
+    if (history.length > 0) {
+      console.log("Asset History Sample Entry:", history[0]);
+      if (history[0].detailedChanges) {
+        console.log("Detailed Changes:", history[0].detailedChanges);
+      }
+    }
+  }, [history]);
 
   return (
     <div className="mt-6">
@@ -341,13 +417,12 @@ const AssetHistoryShow = ({ history }) => {
         </div>
       </div>
 
-      <div className="max-h-[400px] overflow-y-auto space-y-1 bg-gray-900 p-4 rounded-lg shadow-md">
+      <div className="max-h-[500px] overflow-y-auto space-y-1 bg-gray-900 p-4 rounded-lg shadow-md">
         {sortedHistory.length > 0 ? (
           sortedHistory.map((entry, index) => (
-            <AssetHistoryItem 
-              key={index} 
-              entry={entry} 
-              storedUserData={storedUserData} 
+            <AssetHistoryItem
+              key={`history-${index}-${entry.date}`}
+              entry={entry}
             />
           ))
         ) : (

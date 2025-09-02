@@ -15,7 +15,7 @@ export async function POST(req) {
       status,
       storeLocation,
       note,
-      checkinDate
+      user // ✅ ADD: Get user data from frontend
     } = await req.json();
 
     // Validate required fields
@@ -37,6 +37,9 @@ export async function POST(req) {
       );
     }
 
+    // ✅ CHANGE: Store previous asset owner before updating
+    const previousAssetOwner = asset.assetOwner;
+
     // Update asset fields if provided
     if (nodeName) asset.nodeName = nodeName;
     if (status) asset.status = status;
@@ -44,16 +47,23 @@ export async function POST(req) {
     if (storeLocation) asset.storeLocation = storeLocation;
     if (note) asset.note = note;
 
-    // Set check-in date
-    asset.checkInDate = checkinDate ? new Date(checkinDate) : new Date();
+    // Set check-in date - ✅ CHANGE: Use full date object
+    asset.checkInDate = new Date();
+    
+    // ✅ CHANGE: Clear checkout date when checking in
+    asset.checkOutDate = null;
 
-    // Add to asset history - MAKE SURE ACTION IS ONE OF THE ALLOWED ENUM VALUES
+    // ✅ CHANGE: Add to asset history with proper schema fields
     asset.assetHistory.push({
-      user: assetOwner || "Unknown",
-      action: "checkIn",  // This must be one of: "checkIn", "checkOut", or "update"
+      user: user?.siemensId || assetUser || "System", // ✅ Who performed the action
+      action: "checkIn", // ✅ This matches your enum
       date: asset.checkInDate,
       status: status || asset.status,
-      updatedBy: assetUser || "System"
+      updatedBy: user?.siemensId || assetUser || "System", // ✅ Who updated the record
+      assetOwner: assetOwner || asset.assetOwner, // ✅ Current asset owner
+      previousAssetOwner: previousAssetOwner, // ✅ Previous asset owner
+      lastChange: [], // ✅ Array of strings for changes
+      note: note || `Asset checked in with status: ${status || asset.status}` // ✅ Descriptive note
     });
 
     // Save the updated asset

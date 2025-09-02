@@ -425,7 +425,7 @@ const ViewAsset = () => {
                 <h3 className="text-md md:text-lg font-medium dark:text-white">
                   Accessories
                 </h3>
-                <button
+                {/* <button
                   onClick={handleUpdateAccessories}
                   disabled={!canEditAccessories}
                   className={`px-3 py-1 text-sm rounded-lg transition-colors ${
@@ -436,7 +436,7 @@ const ViewAsset = () => {
                   title={!canEditAccessories ? "Cannot edit accessories for checked out assets" : ""}
                 >
                   Edit Accessories
-                </button>
+                </button> */}
               </div>
               
               {!canEditAccessories && (
@@ -471,98 +471,7 @@ const ViewAsset = () => {
         </div>
       </div>
 
-      {/* Edit Accessories Modal */}
-      {isEditingAccessories && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 p-6 rounded-lg w-96 max-w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <h2 className="text-xl font-bold mb-4">Edit Accessories</h2>
-
-            {/* Add new accessory section */}
-            <div className="mb-6 p-4 bg-gray-700 rounded-lg">
-              <h3 className="text-md font-semibold mb-3">Add New Accessory</h3>
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Accessory name"
-                  value={newAccessory.name}
-                  onChange={(e) => setNewAccessory(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                />
-                <div className="flex space-x-2">
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Quantity"
-                    value={newAccessory.quantity}
-                    onChange={(e) => setNewAccessory(prev => ({ 
-                      ...prev, 
-                      quantity: parseInt(e.target.value) || 1 
-                    }))}
-                    className="flex-1 px-3 py-2 bg-gray-600 border border-gray-500 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
-                  />
-                  <button
-                    onClick={handleAddAccessory}
-                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Existing accessories list */}
-            <div className="space-y-2 max-h-60 overflow-y-auto mb-4">
-              <h3 className="text-md font-semibold mb-2">Current Accessories</h3>
-              {Object.keys(editableAccessories).length === 0 ? (
-                <p className="text-gray-400 text-sm text-center py-4">
-                  No accessories added yet.
-                </p>
-              ) : (
-                Object.entries(editableAccessories).map(([accessory, quantity], index) => (
-                  <div key={index} className="flex items-center justify-between bg-gray-700 p-3 rounded-lg">
-                    <span className="text-white font-medium">{accessory}</span>
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="number"
-                        min="1"
-                        value={quantity}
-                        onChange={(e) => handleQuantityChange(accessory, parseInt(e.target.value) || 1)}
-                        className="w-16 px-2 py-1 bg-gray-600 border border-gray-500 rounded text-white text-center focus:outline-none focus:border-blue-500"
-                      />
-                      <button
-                        onClick={() => handleRemoveAccessory(accessory)}
-                        className="text-red-500 hover:text-red-400 font-bold text-lg leading-none"
-                        title="Remove accessory"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex justify-end space-x-2 pt-4 border-t border-gray-600">
-              <button
-                onClick={() => {
-                  setIsEditingAccessories(false);
-                  setNewAccessory({ name: "", quantity: 1 });
-                }}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveAccessories}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+     
     </div>
   );
 };

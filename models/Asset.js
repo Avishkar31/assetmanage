@@ -5,7 +5,7 @@ const assetSchema = new mongoose.Schema({
   nodeName: String,
   serialNumber: { type: String, required: true, unique: true },
   manufacturer: String,
-  type: String, // Changed to String for consistency
+  type: String,
   model: String,
   expires: Date,
   category: String,
@@ -49,30 +49,22 @@ const assetSchema = new mongoose.Schema({
       updatedBy: String,
       assetOwner: String,
       previousAssetOwner: String,
-      lastChange: {
-        type: [{ String }],
-        default: [],
+      changedFields: [String], // Array of field names that changed
+      // Store detailed changes as plain object instead of Map for better MongoDB compatibility
+      detailedChanges: {
+        type: Object,
+        default: {}
       },
       note: String,
     },
   ],
+  // Changed accessories to be more flexible - can store as string or object
   accessories: {
-    CPU: { type: Boolean, default: false },
-    "LCD Monitor": { type: Boolean, default: false },
-    "Docking Station": { type: Boolean, default: false },
-    Keyboard: { type: Boolean, default: false },
-    Mouse: { type: Boolean, default: false },
-    "Power Adapter (Laptop)": { type: Boolean, default: false },
-    "Power Adaptor (Docking station)": { type: Boolean, default: false },
-    "Laptop Bag": { type: Boolean, default: false },
-    "Modular Battery": { type: Boolean, default: false },
-    "Laptop Lock": { type: Boolean, default: false },
-    "Internal HDD/ External HDD": { type: Boolean, default: false },
-    Headphone: { type: Boolean, default: false },
-    Cardreader: { type: Boolean, default: false },
-    Printer: { type: Boolean, default: false },
-    Mobile: { type: Boolean, default: false },
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
   },
+  lastUpdated: { type: Date, default: Date.now },
+  updatedBy: String
 });
 
 export default mongoose.models.Asset || mongoose.model("Asset", assetSchema);

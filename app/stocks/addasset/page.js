@@ -8,58 +8,41 @@ import { toast } from "react-hot-toast";
 import getUserData from "@/utils/getUser";
 import "components/AssetForm.css";
 
-// Option definitions remain the same
+// Option definitions
 const typeOptions = [
   { label: "Default", description: "Please select a type" },
   { label: "Desktop", description: "Desktop Computer" },
   { label: "Laptop", description: "Laptop Computer" },
-  // { label: "Monitor", description: "Computer Monitor" },
   { label: "Printer", description: "Printer Device" },
   { label: "Server", description: "Server Hardware" },
   { label: "Network Device", description: "Network Equipment" },
-  // { label: "Peripheral", description: "Peripheral Device" },
-  // { label: "Other", description: "Other Equipment" }
 ];
 
 const statusOptions = [
   { label: "Default", description: "" },
   {
     label: "MISStock",
-    description: "✓  That status is deployable. This asset can be checked out.",
+    description: "✓ That status is deployable. This asset can be checked out.",
     color: "text-green-500"
   },
   {
     label: "New Purchase",
-    description:
-      "✗ That asset status is not deployable. This asset cannot be checked out.",
+    description: "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
-  // {
-  //   label: "MIS Store",
-  //   description: "✓  That status is deployable. This asset can be checked out.",
-  //   color: "text-green-500"
-  // },
   {
     label: "Buyback",
-    description:
-      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    description: "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
   {
     label: "Disposed",
-    description:
-      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    description: "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
-  // {
-  //   label: "Inactive",
-  //   description:
-  //     "✗  That asset status is not deployable. This asset cannot be checked out.",
-  //   color: "text-red-500"
-  // },
   {
     label: "Deployed",
-    description: "✓  That status is deployable. This asset can be checked out.",
+    description: "✓ That status is deployable. This asset can be checked out.",
     color: "text-green-500"
   }
 ];
@@ -81,8 +64,8 @@ const locationOptions = [
 ];
 
 const AddAssetForm = () => {
-  // All state declarations and fetch functions remain the same
-  const [formData, setFormData] = useState({
+  // Initial form data
+  const initialFormData = {
     nodeName: "",
     manufacturer: "",
     serialNumber: "",
@@ -97,7 +80,6 @@ const AddAssetForm = () => {
     defaultLocation: "Select Location",
     costCenter: "",
     receivedDate: "",
-
     condition: "",
     storeLocation: "Rack No",
     killdiskDate: "",
@@ -106,8 +88,10 @@ const AddAssetForm = () => {
     poNumber: "",
     order: "",
     purchaseDate: ""
-  });
+  };
 
+  // State declarations
+  const [formData, setFormData] = useState(initialFormData);
   const [errors, setErrors] = useState({
     nodeName: false,
     manufacturer: false,
@@ -118,10 +102,10 @@ const AddAssetForm = () => {
     type: false
   });
 
-  const [Segments, setSegments] = useState([]);
+  const [segments, setSegments] = useState([]); // Fixed: lowercase 's'
   const [manufacturers, setManufacturers] = useState([]);
   const [loading, setLoading] = useState({
-    Segments: false,
+    segments: false, // Fixed: lowercase 's'
     manufacturers: false,
     form: false
   });
@@ -142,14 +126,19 @@ const AddAssetForm = () => {
       setLoading(prev => ({ ...prev, segments: true }));
       try {
         const response = await fetch("/api/segments");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         if (data.success) {
           setSegments(data.data);
         } else {
           console.error("Failed to fetch segments:", data.error);
+          toast.error("Failed to fetch segments");
         }
       } catch (error) {
         console.error("Error fetching segments:", error);
+        toast.error("Error fetching segments");
       } finally {
         setLoading(prev => ({ ...prev, segments: false }));
       }
@@ -164,14 +153,19 @@ const AddAssetForm = () => {
       setLoading(prev => ({ ...prev, manufacturers: true }));
       try {
         const response = await fetch("/api/Manufacturer");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const data = await response.json();
         if (data.data) {
           setManufacturers(data.data);
         } else {
           console.error("Failed to fetch manufacturers:", data.error);
+          toast.error("Failed to fetch manufacturers");
         }
       } catch (error) {
         console.error("Error fetching manufacturers:", error);
+        toast.error("Error fetching manufacturers");
       } finally {
         setLoading(prev => ({ ...prev, manufacturers: false }));
       }
@@ -180,6 +174,7 @@ const AddAssetForm = () => {
     fetchManufacturers();
   }, []);
 
+  // Notification auto-hide
   useEffect(() => {
     if (notification.message) {
       const timer = setTimeout(() => {
@@ -189,28 +184,66 @@ const AddAssetForm = () => {
     }
   }, [notification]);
 
+  // Click outside handler
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openSection &&
+        dropdownRefs[openSection] &&
+        !dropdownRefs[openSection].current?.contains(event.target)) {
+        setOpenSection("");
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [openSection]); // Fixed: moved this logic to separate useEffect
+
+  // Auto-set location based on status
+  useEffect(() => {
+    if (formData.status === "Deployed") {
+      setFormData((prev) => ({ ...prev, defaultLocation: "Home" }));
+    }
+  }, [formData.status]); // Fixed: separate useEffect for status changes
+
   const showNotification = (message, type) => {
     setNotification({ message, type });
   };
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
+    
+    // Determine category based on type
+    let newCategory = formData.category;
+    if (id === "type") {
+      const lowerValue = value.toLowerCase();
+      switch (lowerValue) {
+        case "laptop":
+          newCategory = "laptop";
+          break;
+        case "desktop":
+          newCategory = "desktop";
+          break;
+        case "monitor":
+          newCategory = "monitor";
+          break;
+        case "printer":
+          newCategory = "printer";
+          break;
+        default:
+          // Keep existing category if type doesn't match predefined ones
+          break;
+      }
+    }
+
     setFormData((prevData) => ({
       ...prevData,
       [id]: value,
-
-      category:
-        id === "type" && value.toLowerCase() === "laptop"
-          ? "laptop"
-          : id === "type" && value.toLowerCase() === "desktop"
-            ? "desktop"
-            : id === "type" && value.toLowerCase() === "monitor"
-              ? "monitor"
-              : id === "type" && value.toLowerCase() === "printer"
-                ? "printer"
-                : prevData.category
+      ...(id === "type" && { category: newCategory })
     }));
 
+    // Clear error for this field
     if (errors[id]) {
       setErrors((prev) => ({ ...prev, [id]: false }));
     }
@@ -232,22 +265,18 @@ const AddAssetForm = () => {
     setOpenSection((prevSection) => (prevSection === section ? "" : section));
   };
 
-  const handleClickOutside = (event) => {
-    if (openSection &&
-      dropdownRefs[openSection] &&
-      !dropdownRefs[openSection].current?.contains(event.target)) {
-      setOpenSection("");
-    }
-  };
-
   const handleStatusSelect = (label) => {
-    setFormData({ ...formData, status: label });
+    setFormData(prev => ({ ...prev, status: label }));
     setOpenSection("");
+    
+    // Clear status error if it exists
+    if (errors.status) {
+      setErrors(prev => ({ ...prev, status: false }));
+    }
   };
 
   const handleSubmit = async () => {
     const requiredFields = [
-
       "manufacturer",
       "serialNumber",
       "status",
@@ -256,9 +285,10 @@ const AddAssetForm = () => {
       "type"
     ];
 
+    // Validate required fields
     const newErrors = {};
     requiredFields.forEach((field) => {
-      if (!formData[field]) {
+      if (!formData[field] || formData[field] === "Default" || formData[field] === "Select Location") {
         newErrors[field] = true;
       }
     });
@@ -266,95 +296,75 @@ const AddAssetForm = () => {
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       showNotification("Please fill all required fields", "error");
+      toast.error("Please fill all required fields");
       return;
     }
 
     setLoading(prev => ({ ...prev, form: true }));
 
     try {
+      // Filter out empty values
       const formDataFinal = Object.fromEntries(
-        Object.entries(formData).filter(([_, v]) => v !== "")
+        Object.entries(formData).filter(([_, v]) => v !== "" && v !== "Default" && v !== "Select Location")
       );
 
-      // Get user data for history entry
-      const user = await getUserData();
-      const siemensId = user?.siemensId || user?.email || user?.name || "Unknown User";
-
-      const formDataUpdate = {
-        user,
-        ...formDataFinal,
-        assetHistory: [
-          {
-            date: new Date(),
-            updatedBy: siemensId,
-            action: "created",
-            status: formDataFinal.status
-          }
-        ]
-      };
-
-      const response = await fetch("/api/asset/post", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formDataUpdate)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to add asset.");
+      // Get user data from localStorage with error handling
+      let storedUserData = null;
+      try {
+        const userDataString = localStorage.getItem('user');
+        if (userDataString) {
+          storedUserData = JSON.parse(userDataString);
+          console.log("Stored User Data:", storedUserData);
+        } else {
+          throw new Error("No user data found in localStorage");
+        }
+      } catch (parseError) {
+        console.error("Error parsing user data:", parseError);
+        toast.error("User authentication error. Please login again.");
+        return;
       }
 
-      await response.json();
+      // Prepare request data
+      const requestData = {
+        ...formDataFinal,
+        user: storedUserData,
+      };
+
+      console.log("Sending request data:", requestData);
+
+      // Make API call
+      const response = await fetch("/api/asset/post", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      const responseData = await response.json();
+      console.log("API Response:", responseData);
+
+      if (!response.ok) {
+        throw new Error(responseData.error || responseData.message || "Failed to add asset.");
+      }
+
+      // Success
       showNotification("Asset added successfully", "success");
       toast.success("Asset added successfully");
 
       // Reset form
-      setFormData({
-        nodeName: "",
-        manufacturer: "",
-        serialNumber: "",
-        model: "",
-        type: "",
-        expires: "",
-        category: "",
-        status: "",
-        segment: "",
-        assetOwner: "",
-        note: "",
-        defaultLocation: "Select Location",
-        costCenter: "",
-        receivedDate: "",
-        condition: "",
-        storeLocation: "Rack No",
-        killdiskDate: "",
-        attachedFile: "",
-        disposedDate: "",
-        poNumber: "",
-        order: "",
-        purchaseDate: ""
-      });
-
+      setFormData(initialFormData);
       setErrors({});
+
     } catch (error) {
       console.error("Error submitting form:", error);
-      showNotification(`Error: ${error?.message || "Something went wrong!"}`, "error");
-      toast.error(`Error: ${error?.message || "Something went wrong!"}`);
+      const errorMessage = error?.message || "Something went wrong!";
+      showNotification(`Error: ${errorMessage}`, "error");
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setLoading(prev => ({ ...prev, form: false }));
     }
   };
-
-  useEffect(() => {
-    document.addEventListener("mousedown", handleClickOutside);
-
-    if (formData.status === "Deployed") {
-      setFormData((prev) => ({ ...prev, defaultLocation: "Home" }));
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [formData.status, openSection]);
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-950 text-gray-100">
@@ -612,7 +622,7 @@ const AddAssetForm = () => {
                       {loading.segments ? (
                         <option value="" disabled>Loading segments...</option>
                       ) : (
-                        Segments.map((segment) => (
+                        segments.map((segment) => (
                           <option key={segment._id} value={segment.name}>
                             {segment.name} {segment.segment && `(${segment.segment})`}
                           </option>

@@ -128,6 +128,8 @@ export async function PUT(req, { params }) {
       }
     }
 
+    
+
     existingAsset.assetHistory.push({
       user: user?._id || null,
       action: historyAction,

@@ -3,41 +3,38 @@ import React, { useState, useEffect, useRef } from "react";
 import { IoMdArrowDropup, IoMdArrowDropdown } from "react-icons/io";
 import Sidebar from "components/Sidebar";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast"; // Add this for better notifications
 
 const statusOptions = [
   { label: "Default", description: "" },
   {
     label: "MISStock",
-    description: "✓  That status is deployable. This asset can be checked out.",
+    description: "✓ That status is deployable. This asset can be checked out.",
     color: "text-green-500"
   },
   {
     label: "New Purchase",
-    description:
-      "✗ That asset status is not deployable. This asset cannot be checked out.",
+    description: "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
   {
     label: "Buyback",
-    description:
-      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    description: "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
   {
     label: "Disposed",
-    description:
-      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    description: "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
   {
     label: "Inactive",
-    description:
-      "✗  That asset status is not deployable. This asset cannot be checked out.",
+    description: "✗ That asset status is not deployable. This asset cannot be checked out.",
     color: "text-red-500"
   },
   {
     label: "Deployed",
-    description: "✓  That status is deployable. This asset can be checked out.",
+    description: "✓ That status is deployable. This asset can be checked out.",
     color: "text-green-500"
   }
 ];
@@ -51,10 +48,12 @@ const Dashboard = () => {
     checkinDate: "",
     note: ""
   });
+  
   const [serialNumber, setSerialNumber] = useState(null);
   const [openSection, setOpenSection] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [assetData, setAssetData] = useState(null); // Store complete asset data
   const dropdownRef = useRef(null);
   const router = useRouter();
 
@@ -68,36 +67,54 @@ const Dashboard = () => {
     }
   };
 
+  const handleStatusSelect = (label) => {
+    setFormData(prev => ({ ...prev, status: label }));
+    setOpenSection("");
+    setError(""); // Clear error when status is selected
+  };
+
   useEffect(() => {
     document.addEventListener("mousedown", handleClickOutside);
+    
+    // Get serial number from URL
     const urlParams = new URLSearchParams(window.location.search);
     const sn = urlParams.get("SerialNumber");
     setSerialNumber(sn);
 
     const fetchAssetData = async () => {
-      if (!sn) return;
+      if (!sn) {
+        setError("No serial number provided in URL");
+        return;
+      }
       
       try {
         setLoading(true);
-        const response = await fetch(`/api/asset/get?serialNumber=${sn}`);
+        setError("");
+        
+        const response = await fetch(`/api/asset/get?serialNumber=${encodeURIComponent(sn)}`);
         
         if (!response.ok) {
-          throw new Error(`Failed to fetch asset: ${response.statusText}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || `Failed to fetch asset: ${response.statusText}`);
         }
         
         const data = await response.json();
+        setAssetData(data); // Store complete asset data
         
+        // Set form data with current date as default check-in date
         setFormData({
           nodeName: data.nodeName || "",
           status: data.status || "",
           assetOwner: data.assetOwner || "",
-          defaultLocation: data.defaultLocation || "",
-          checkinDate: new Date().toISOString().split("T")[0], // Today's date as default
+          defaultLocation: data.defaultLocation || data.storeLocation || "",
+          checkinDate: new Date().toISOString().split('T')[0], // Today's date in YYYY-MM-DD format
           note: ""
         });
+        
       } catch (err) {
         console.error("Error fetching asset data:", err);
-        setError("Could not load asset information. Please try again.");
+        setError(`Could not load asset information: ${err.message}`);
+        toast.error(`Failed to load asset: ${err.message}`);
       } finally {
         setLoading(false);
       }
@@ -108,26 +125,77 @@ const Dashboard = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [serialNumber]);
+  }, []); // Remove serialNumber dependency to avoid infinite loop
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.id]: e.target.value
-    });
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: value
+    }));
+    
+    // Clear error when user starts typing
+    if (error) setError("");
   };
 
-  const handleCheckIn = async () => {
-    // Validate required fields
-    if (!formData.status || !formData.assetOwner || !formData.defaultLocation || !formData.checkinDate) {
-      setError("Please fill in all mandatory fields: Status, Asset Owner, Location, and Check-in Date.");
-      return;
+  const validateForm = () => {
+    const requiredFields = {
+      status: "Status",
+      assetOwner: "Asset Owner", 
+      defaultLocation: "Location",
+      checkinDate: "Check-in Date"
+    };
+
+    const missingFields = [];
+    
+    Object.entries(requiredFields).forEach(([field, label]) => {
+      if (!formData[field] || formData[field] === "Default") {
+        missingFields.push(label);
+      }
+    });
+
+    if (missingFields.length > 0) {
+      return `Please fill in all mandatory fields: ${missingFields.join(", ")}`;
     }
 
     // Validate status for check-in
     const invalidStatuses = ["Deployed", "Buyback", "Disposed"];
     if (invalidStatuses.includes(formData.status)) {
-      setError(`Status cannot be '${formData.status}' for check-in. Please select a different status.`);
+      return `Status cannot be '${formData.status}' for check-in. Please select a different status.`;
+    }
+
+    return null;
+  };
+
+  const resetAccessories = () => {
+    // Reset all accessories to false
+    const resetAccessories = {
+      CPU: false,
+      "LCD Monitor": false,
+      "Docking Station": false,
+      Keyboard: false,
+      Mouse: false,
+      "Power Adapter (Laptop)": false,
+      "Power Adaptor (Docking station)": false,
+      "Laptop Bag": false,
+      "Modular Battery": false,
+      "Laptop Lock": false,
+      "Internal HDD/ External HDD": false,
+      Headphone: false,
+      Cardreader: false,
+      Printer: false,
+      Mobile: false,
+    };
+    
+    return resetAccessories;
+  };
+
+  const handleCheckIn = async () => {
+    // Validate form
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
@@ -136,55 +204,98 @@ const Dashboard = () => {
 
     try {
       // Get user information from local storage
-      const storedUserData = JSON.parse(localStorage.getItem("user")) || {};
+      const storedUserData = JSON.parse(localStorage.getItem("user"));
       
+      if (!storedUserData || !storedUserData.siemensId) {
+        throw new Error("User not authenticated. Please login again.");
+      }
+
       const checkInData = {
         serialNumber: serialNumber,
         nodeName: formData.nodeName,
         status: formData.status,
         assetOwner: formData.assetOwner,
-        storeLocation: formData.defaultLocation, // This maps to storeLocation in the API
+        storeLocation: formData.defaultLocation,
         note: formData.note || "Standard check-in",
-        checkinDate: formData.checkinDate,
-        assetUser: storedUserData.siemensId || "unknown-user" // Fallback if not logged in
+         // Convert to full ISO string
+        assetUser: storedUserData.siemensId,
+        user: storedUserData, // ✅ Add complete user data
+        accessories: resetAccessories() // ✅ Reset all accessories to false
       };
 
       console.log("Sending check-in data:", checkInData);
       
       const response = await fetch("/api/asset/checkin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(checkInData)
       });
 
+      const result = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to check-in asset");
+        throw new Error(result.error || "Failed to check-in asset");
       }
 
-      const result = await response.json();
       console.log("Check-in successful:", result);
-      alert("Asset checked in successfully!");
-      router.push("/stocks/allasset");
+      toast.success("Asset checked in successfully!");
+      
+      // Redirect after a short delay to show the success message
+      setTimeout(() => {
+        router.push("/stocks/allasset");
+      }, 1500);
+      
     } catch (err) {
       console.error("Check-in error:", err);
-      setError(`Error: ${err.message}`);
+      const errorMessage = err.message || "An unexpected error occurred";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading && !formData.nodeName) {
+  // Loading state
+  if (loading && !assetData) {
     return (
       <div className="flex">
         <Sidebar />
         <div className="flex-grow p-5 flex justify-center items-center">
-          <p>Loading asset information...</p>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading asset information...</p>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Error state
+  if (error && !assetData) {
+    return (
+      <div className="flex">
+        <Sidebar />
+        <div className="flex-grow p-5 flex justify-center items-center">
+          <div className="text-center">
+            <div className="text-red-500 mb-4">
+              <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-red-600 mb-4">{error}</p>
+            <button 
+              onClick={() => router.back()} 
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex">
       <Sidebar />

@@ -31,7 +31,8 @@ export async function POST(req) {
       poNumber,
       order,
       purchaseDate,
-      user,
+      accessories,
+      user, // ✅ Add this - user data should come from frontend
     } = data;
 
     // Check if asset exists
@@ -46,15 +47,30 @@ export async function POST(req) {
     // Determine checkIn/checkOut logic
     let checkOutDate = null;
     let checkInDate = null;
-    let action = null;
 
     if (status === "Deployed") {
       checkOutDate = new Date();
-      action = "checkOut";
     } else if (["MISStock", "Inactive"].includes(status)) {
       checkInDate = new Date();
-      action = "checkIn";
     }
+
+    // Alternative accessories handling
+    const assetAccessories = {};
+    const defaultAccessories = [
+      "CPU", "LCD Monitor", "Docking Station", "Keyboard", "Mouse",
+      "Power Adapter (Laptop)", "Power Adaptor (Docking station)", 
+      "Laptop Bag", "Modular Battery", "Laptop Lock", 
+      "Internal HDD/ External HDD", "Headphone", "Cardreader", 
+      "Printer", "Mobile"
+    ];
+
+    defaultAccessories.forEach(accessory => {
+      assetAccessories[accessory] = accessories?.[accessory] || false;
+    });
+
+    // ❌ REMOVE THIS - localStorage doesn't work on server
+    // const storedUserData = JSON.parse(localStorage.getItem('user'));
+    // console.log("Stored User Data:", storedUserData);
 
     // Create new asset
     const newAsset = new Asset({
@@ -72,7 +88,6 @@ export async function POST(req) {
       defaultLocation,
       costCenter,
       receivedDate,
-      assetOwner,
       condition,
       storeLocation,
       killdiskDate,
@@ -83,13 +98,18 @@ export async function POST(req) {
       purchaseDate,
       checkOutDate,
       checkInDate,
+      accessories: assetAccessories,
       assetHistory: [
         {
-           user: assetOwner || "None", // Store recipient
-           updatedBy: user.siemensId, // Add this line to store who performed the action
-           action,
-           date: new Date(),
-            status,
+          user: user?.siemensId || "System", // ✅ Add user field
+          action: "created",
+          date: new Date(),
+          status: status,
+          updatedBy: user?.siemensId || "System", // ✅ Use user from request
+          assetOwner: assetOwner || "None",
+          previousAssetOwner: null,
+          lastChange: [],
+          note: note || `Asset created with initial status: ${status}`,
         },
       ],
     });
